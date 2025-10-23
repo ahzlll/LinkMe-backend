@@ -8,16 +8,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoggingAspect {
 
-    @Pointcut("execution(public * com.linkme.backend.module..*(..))")
-    public void modules() {}
+//    @Pointcut("execution(public * com.linkme.backend.module..*(..))")
+//    public void modules() {}
 
-    @Before("modules()")
-    public void before(JoinPoint jp) {
-        System.out.println("[LOG] -> " + jp.getSignature());
-    }
-
-    @AfterReturning(pointcut="modules()", returning="ret")
-    public void after(JoinPoint jp, Object ret) {
-        System.out.println("[LOG] <- " + jp.getSignature());
-    }
+//    @Before("modules()")
+//    public void before(JoinPoint jp) {
+//        System.out.println("[LOG] -> " + jp.getSignature());
+//    }
+//
+//    @AfterReturning(pointcut="modules()", returning="ret")
+//    public void after(JoinPoint jp, Object ret) {
+//        System.out.println("[LOG] <- " + jp.getSignature());
+//    }
 }
