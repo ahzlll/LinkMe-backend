@@ -228,14 +228,6 @@ http://localhost:8080/swagger-ui.html
 4. 配置日志级别
 5. 设置服务器端口
 
-### Docker 部署
-
-```dockerfile
-FROM openjdk:17-jre-slim
-COPY target/linkme-backend-*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app.jar"]
-```
 
 ## 贡献指南
 
@@ -256,9 +248,9 @@ MIT License
 
 ## 更新日志
 
-### v1.0.0 (2024-01-01)
+### v1.0.0 (2025-10-23)
 
 - 初始版本发布
-- 完成核心功能开发
+- 完成数据库设计
 - 完善 API 文档
-- 添加单元测试
+- 功能初始搭建
