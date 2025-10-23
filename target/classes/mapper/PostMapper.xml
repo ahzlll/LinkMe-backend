@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.PostMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="PostResultMap" type="com.linkme.backend.entity.Post">
+        <id column="post_id" property="postId"/>
+        <result column="user_id" property="userId"/>
+        <result column="content" property="content"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 根据帖子ID查询帖子信息 -->
+    <select id="selectById" resultMap="PostResultMap">
+        SELECT * FROM post WHERE post_id = #{postId}
+    </select>
+
+    <!-- 根据用户ID查询帖子列表 -->
+    <select id="selectByUserId" resultMap="PostResultMap">
+        SELECT * FROM post WHERE user_id = #{userId} ORDER BY created_at DESC LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询所有帖子（分页） -->
+    <select id="selectAll" resultMap="PostResultMap">
+        SELECT * FROM post ORDER BY created_at DESC LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据标签查询帖子列表 -->
+    <select id="selectByTag" resultMap="PostResultMap">
+        SELECT p.* FROM post p
+        INNER JOIN post_tag pt ON p.post_id = pt.post_id
+        WHERE pt.tag_id = #{tagId}
+        ORDER BY p.created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 插入新帖子 -->
+    <insert id="insert" parameterType="com.linkme.backend.entity.Post" useGeneratedKeys="true" keyProperty="postId">
+        INSERT INTO post (user_id, content, created_at)
+        VALUES (#{userId}, #{content}, #{createdAt})
+    </insert>
+
+    <!-- 更新帖子信息 -->
+    <update id="update" parameterType="com.linkme.backend.entity.Post">
+        UPDATE post SET
+            content = #{content}
+        WHERE post_id = #{postId}
+    </update>
+
+    <!-- 根据帖子ID删除帖子 -->
+    <delete id="deleteById">
+        DELETE FROM post WHERE post_id = #{postId}
+    </delete>
+
+    <!-- 统计帖子总数 -->
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM post
+    </select>
+
+    <!-- 根据用户ID统计帖子数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM post WHERE user_id = #{userId}
+    </select>
+
+</mapper>
