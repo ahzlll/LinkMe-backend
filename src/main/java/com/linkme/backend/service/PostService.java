@@ -2,16 +2,18 @@ package com.linkme.backend.service;
 
 import com.linkme.backend.entity.Post;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 帖子服务接口
- * 
- * 功能描述：
- * - 提供帖子相关的业务逻辑处理
- * - 包括帖子发布、编辑、删除、查询等功能
- * 
- * @author Ahz, riki
- * @version 1.0
+ *
+ * 职责：
+ * - 提供帖子相关的业务逻辑
+ * - 支持帖子创建（可带图片/标签）、编辑、删除、查询
+ * - 提供帖子详情聚合（图片、标签、点赞数）
+ *
+ * author: riki
+ * version: 1.1
  */
 public interface PostService {
     
@@ -90,4 +92,10 @@ public interface PostService {
      * @return 帖子数量
      */
     int getPostCountByUserId(Integer userId);
+
+    // 聚合：返回帖子详情的图片、标签、点赞数
+    Map<String, Object> getPostAggregates(Integer postId);
+
+    // 扩展创建：带图片与标签
+    boolean createPostWithMediaAndTags(Integer userId, String content, java.util.List<String> images, java.util.List<Integer> tagIds);
 }
