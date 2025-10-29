@@ -31,6 +31,8 @@ public class JwtInterceptor implements HandlerInterceptor {
         
         if (token == null || !token.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"code\":401,\"message\":\"未提供有效的认证token\"}");
             return false;
         }
@@ -42,6 +44,8 @@ public class JwtInterceptor implements HandlerInterceptor {
             // 验证token
             if (jwtUtil.isTokenExpired(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setCharacterEncoding("UTF-8");
+                response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"code\":401,\"message\":\"token已过期\"}");
                 return false;
             }
@@ -55,6 +59,8 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"code\":401,\"message\":\"token无效\"}");
             return false;
         }
