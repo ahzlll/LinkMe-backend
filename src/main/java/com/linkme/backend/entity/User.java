@@ -1,5 +1,6 @@
 package com.linkme.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,6 +44,7 @@ public class User {
     /**
      * 密码哈希 - 存储加密后的密码
      */
+    @JsonAlias({"password_hash", "passwordHash"})
     private String passwordHash;
     
     /**

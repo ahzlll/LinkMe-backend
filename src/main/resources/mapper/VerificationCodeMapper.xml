@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.VerificationCodeMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.linkme.backend.entity.VerificationCode">
+        <id column="code_id" property="codeId"/>
+        <result column="user_id" property="userId"/>
+        <result column="code" property="code"/>
+        <result column="type" property="type"/>
+        <result column="purpose" property="purpose"/>
+        <result column="expire_at" property="expireAt"/>
+        <result column="is_used" property="isUsed"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+    
+    <!-- 插入验证码 -->
+    <insert id="insert" parameterType="com.linkme.backend.entity.VerificationCode" useGeneratedKeys="true" keyProperty="codeId">
+        INSERT INTO verification_code (user_id, code, type, purpose, expire_at, is_used, created_at)
+        VALUES (#{userId}, #{code}, #{type}, #{purpose}, #{expireAt}, #{isUsed}, #{createdAt})
+    </insert>
+    
+    <!-- 根据验证码、类型和用途查询有效的验证码 -->
+    <select id="selectValidCode" resultMap="BaseResultMap">
+        SELECT code_id, user_id, code, type, purpose, expire_at, is_used, created_at
+        FROM verification_code
+        WHERE code = #{code}
+          AND type = #{type}
+          AND purpose = #{purpose}
+          <if test="userId != null">
+          AND user_id = #{userId}
+          </if>
+          AND is_used = FALSE
+          AND expire_at > NOW()
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+    
+    <!-- 根据邮箱或手机号和用途查询最新的有效验证码 -->
+    <select id="selectLatestByContact" resultMap="BaseResultMap">
+        SELECT vc.code_id, vc.user_id, vc.code, vc.type, vc.purpose, vc.expire_at, vc.is_used, vc.created_at
+        FROM verification_code vc
+        <if test="type == 'email'">
+            INNER JOIN user u ON vc.user_id = u.user_id
+            WHERE u.email = #{email}
+              AND vc.type = #{type}
+              AND vc.purpose = #{purpose}
+              AND vc.is_used = FALSE
+              AND vc.expire_at > NOW()
+        </if>
+        <if test="type == 'phone'">
+            INNER JOIN user u ON vc.user_id = u.user_id
+            WHERE u.phone = #{phone}
+              AND vc.type = #{type}
+              AND vc.purpose = #{purpose}
+              AND vc.is_used = FALSE
+              AND vc.expire_at > NOW()
+        </if>
+        ORDER BY vc.created_at DESC
+        LIMIT 1
+    </select>
+    
+    <!-- 标记验证码为已使用 -->
+    <update id="markAsUsed">
+        UPDATE verification_code
+        SET is_used = TRUE
+        WHERE code_id = #{codeId}
+    </update>
+    
+    <!-- 删除过期的验证码 -->
+    <delete id="deleteExpiredCodes">
+        DELETE FROM verification_code
+        WHERE expire_at &lt; NOW()
+    </delete>
+    
+</mapper>
+

@@ -13,7 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * - 注册拦截器和跨域配置
  * 
  * @author Ahz, riki
- * @version 1.0
+ * @version 1.1
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -26,14 +26,29 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
+                        "/",  // 根路径
                         "/user/register",
                         "/user/login",
+                        "/user/forgot-password/send-code",
+                        "/user/forgot-password/reset",
+                        // Swagger/OpenAPI 相关路径
                         "/swagger-ui.html",
                         "/swagger-ui/**",
+                        "/swagger-ui/index.html",
+                        "/v3/api-docs",
                         "/v3/api-docs/**",
                         "/swagger-resources/**",
                         "/webjars/**",
-                        "/error"
+                        "/swagger-ui/index.html/**",
+                        "/favicon.ico",
+                        "/error",
+                        // 静态资源
+                        "/css/**",
+                        "/js/**",
+                        "/images/**",
+                        "/**.html",
+                        "/**.css",
+                        "/**.js"
                 );
     }
 }

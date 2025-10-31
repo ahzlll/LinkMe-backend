@@ -10,8 +10,8 @@ import java.util.List;
  * - 提供用户相关的业务逻辑处理
  * - 包括用户注册、登录、信息管理等功能
  * 
- * @author Ahz, riki
- * @version 1.0
+ * @author Ahz
+ * @version 1.1
  */
 public interface UserService {
     
@@ -71,6 +71,25 @@ public interface UserService {
      * @return 更新结果
      */
     boolean updateUser(User user);
+    
+    /**
+     * 修改密码
+     * 
+     * @param userId 用户ID
+     * @param oldPassword 旧密码
+     * @param newPassword 新密码
+     * @return 更新结果
+     */
+    boolean changePassword(Integer userId, String oldPassword, String newPassword);
+    
+    /**
+     * 重置密码（忘记密码时使用，不需要旧密码）
+     * 
+     * @param userId 用户ID
+     * @param newPassword 新密码
+     * @return 更新结果
+     */
+    boolean resetPassword(Integer userId, String newPassword);
     
     /**
      * 删除用户

@@ -14,7 +14,7 @@ import java.util.List;
  * - likes：点赞数
  *
  * author: riki
- * version: 1.0
+ * version: 1.1
  */
 @Data
 public class PostDetailResponse {

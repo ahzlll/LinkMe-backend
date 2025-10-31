@@ -13,8 +13,8 @@ import java.util.List;
  * - 提供用户数据的增删改查操作
  * - 支持用户注册、登录、信息更新等功能
  * 
- * @author Ahz, riki
- * @version 1.0
+ * @author Ahz
+ * @version 1.1
  */
 @Mapper
 public interface UserMapper {
@@ -66,6 +66,15 @@ public interface UserMapper {
      * @return 影响行数
      */
     int update(User user);
+    
+    /**
+     * 更新用户密码
+     * 
+     * @param userId 用户ID
+     * @param passwordHash 加密后的密码
+     * @return 影响行数
+     */
+    int updatePassword(@Param("userId") Integer userId, @Param("passwordHash") String passwordHash);
     
     /**
      * 根据用户ID删除用户

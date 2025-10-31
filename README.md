@@ -192,8 +192,38 @@ mvn spring-boot:run
 5. **访问 API 文档**
 
 ```
+# Swagger UI (推荐)
+http://localhost:8080/swagger-ui/index.html
+
+# 或直接访问（如果配置了路径）
 http://localhost:8080/swagger-ui.html
+
+# OpenAPI JSON文档
+http://localhost:8080/v3/api-docs
 ```
+
+### 在 Swagger UI 中使用 Token 认证
+
+1. **获取 Token**
+   - 首先调用 `/user/register`（注册）或 `/user/login`（登录）接口
+   - 从响应的 `data.token` 字段中复制 token
+
+2. **设置 Token**
+   - 在 Swagger UI 页面右上角找到 🔒 **Authorize** 按钮并点击
+   - 在弹出的对话框中：
+     - 找到 `bearerAuth` 输入框
+     - **输入 token（不需要包含 'Bearer' 前缀）**
+     - 点击 **Authorize** 按钮
+     - 点击 **Close** 关闭对话框
+
+3. **测试需要认证的接口**
+   - 现在所有标记了 🔒 图标的接口都会自动在请求头中包含 token
+   - token 会被持久化保存，刷新页面后仍然有效
+
+**注意事项：**
+- 注册和登录接口不需要 token（它们是公开接口）
+- 其他接口（如获取用户信息、更新用户信息等）都需要 token
+- token 有效期由配置文件中的 `jwt.expire-seconds` 设置（默认 24 小时）
 
 ## 开发规范
 
@@ -254,3 +284,23 @@ MIT License
 - 完成数据库设计
 - 完善 API 文档
 - 功能初始搭建
+
+
+### v1.1.0 (2025.10.31)
+
+**用户管理功能**
+- 新增密码修改和忘记密码功能
+- 新增密码、邮箱、手机号验证器
+- 新增验证码服务
+- 新增用户列表和删除用户接口
+- 完善 Swagger API 文档和 Token 认证配置
+- 优化参数验证和异常处理
+
+**帖子管理功能**
+- 新增完整的帖子 CRUD 功能（创建、查询、编辑、删除）
+- 新增支持图片和标签的帖子创建功能
+- 新增帖子详情聚合功能（图片、标签、点赞数）
+- 新增评论功能（发表评论、获取评论列表）
+- 新增点赞功能（点赞、取消点赞）
+- 新增帖子列表查询功能（支持分页、按用户ID、按标签筛选）
+- 新增 PostCreateRequest 和 PostDetailResponse DTO 类

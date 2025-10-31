@@ -17,8 +17,8 @@ import java.util.List;
  * - 实现用户相关的业务逻辑处理
  * - 包括用户注册、登录、信息管理等功能
  * 
- * @author Ahz, riki
- * @version 1.0
+ * @author Ahz
+ * @version 1.1
  */
 @Service
 public class UserServiceImpl implements UserService {
@@ -35,17 +35,26 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public User getUserByEmail(String email) {
-        return userMapper.selectByEmail(email);
+        if (email == null || email.trim().isEmpty()) {
+            return null;
+        }
+        return userMapper.selectByEmail(email.trim());
     }
     
     @Override
     public User getUserByPhone(String phone) {
-        return userMapper.selectByPhone(phone);
+        if (phone == null || phone.trim().isEmpty()) {
+            return null;
+        }
+        return userMapper.selectByPhone(phone.trim());
     }
     
     @Override
     public User getUserByUsername(String username) {
-        return userMapper.selectByUsername(username);
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+        return userMapper.selectByUsername(username.trim());
     }
     
     @Override
@@ -75,8 +84,12 @@ public class UserServiceImpl implements UserService {
             user.setCreatedAt(LocalDateTime.now());
             
             // 插入用户
-            return userMapper.insert(user) > 0;
+            int result = userMapper.insert(user);
+            return result > 0;
         } catch (Exception e) {
+            // 记录异常信息以便调试
+            System.err.println("注册失败，异常信息: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -107,6 +120,43 @@ public class UserServiceImpl implements UserService {
     public boolean updateUser(User user) {
         try {
             return userMapper.update(user) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean changePassword(Integer userId, String oldPassword, String newPassword) {
+        try {
+            // 获取用户信息
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                return false;
+            }
+            
+            // 验证旧密码
+            if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+                return false; // 旧密码错误
+            }
+            
+            // 加密新密码
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            
+            // 更新密码
+            return userMapper.updatePassword(userId, encodedPassword) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean resetPassword(Integer userId, String newPassword) {
+        try {
+            // 加密新密码
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            
+            // 更新密码
+            return userMapper.updatePassword(userId, encodedPassword) > 0;
         } catch (Exception e) {
             return false;
         }

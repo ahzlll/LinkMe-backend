@@ -10,6 +10,7 @@ import com.linkme.backend.controller.dto.PostCreateRequest;
 import com.linkme.backend.controller.dto.PostDetailResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ import java.util.List;
  *
  * 说明：严格遵循 API.md/README.md 约定，不修改接口路径与入参结构。
  *
- * author: riki, Ahz
+ * author: riki
  * version: 1.1
  */
 @RestController
@@ -51,7 +52,8 @@ public class PostController {
      * @return 帖子列表
      */
     @GetMapping
-    @Operation(summary = "获取帖子列表", description = "支持分页和过滤的帖子列表")
+    @Operation(summary = "获取帖子列表", description = "支持分页和过滤的帖子列表",
+               security = @SecurityRequirement(name = "bearerAuth"))
     public R<List<Post>> getPosts(@RequestParam(defaultValue = "1") Integer page,
                                  @RequestParam(defaultValue = "10") Integer limit,
                                  @RequestParam(required = false) Integer tag,
@@ -76,7 +78,8 @@ public class PostController {
      * @return 创建结果
      */
     @PostMapping
-    @Operation(summary = "创建帖子", description = "发布新帖子")
+    @Operation(summary = "创建帖子", description = "发布新帖子",
+               security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> createPost(@RequestBody PostCreateRequest req) {
         boolean success = postService.createPostWithMediaAndTags(req.getUserId(), req.getContent(), req.getImages(), req.getTags());
         if (success) {
@@ -93,7 +96,8 @@ public class PostController {
      * @return 帖子详情
      */
     @GetMapping("/{postId}")
-    @Operation(summary = "获取帖子详情", description = "根据帖子ID获取帖子详细信息")
+    @Operation(summary = "获取帖子详情", description = "根据帖子ID获取帖子详细信息",
+               security = @SecurityRequirement(name = "bearerAuth"))
     public R<PostDetailResponse> getPostById(@PathVariable @Parameter(description = "帖子ID") Integer postId) {
         Post post = postService.getPostById(postId);
         if (post == null) {
@@ -123,7 +127,8 @@ public class PostController {
      * @return 更新结果
      */
     @PutMapping("/{postId}")
-    @Operation(summary = "编辑帖子", description = "更新帖子内容")
+    @Operation(summary = "编辑帖子", description = "更新帖子内容",
+               security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> updatePost(@PathVariable @Parameter(description = "帖子ID") Integer postId,
                               @RequestBody Post post) {
         post.setPostId(postId);
@@ -142,7 +147,8 @@ public class PostController {
      * @return 删除结果
      */
     @DeleteMapping("/{postId}")
-    @Operation(summary = "删除帖子", description = "根据帖子ID删除帖子")
+    @Operation(summary = "删除帖子", description = "根据帖子ID删除帖子",
+               security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> deletePost(@PathVariable @Parameter(description = "帖子ID") Integer postId) {
         boolean success = postService.deletePost(postId);
         if (success) {
@@ -154,7 +160,7 @@ public class PostController {
 
     // 发表评论
     @PostMapping("/{postId}/comments")
-    @Operation(summary = "发表评论")
+    @Operation(summary = "发表评论", security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> addComment(@PathVariable Integer postId, @RequestBody Comment comment) {
         comment.setPostId(postId);
         comment.setCreatedAt(java.time.LocalDateTime.now());
@@ -164,7 +170,7 @@ public class PostController {
 
     // 获取评论列表
     @GetMapping("/{postId}/comments")
-    @Operation(summary = "获取评论列表")
+    @Operation(summary = "获取评论列表", security = @SecurityRequirement(name = "bearerAuth"))
     public R<java.util.List<Comment>> listComments(@PathVariable Integer postId,
                                                    @RequestParam(defaultValue = "1") Integer page,
                                                    @RequestParam(defaultValue = "10") Integer limit) {
@@ -175,7 +181,7 @@ public class PostController {
 
     // 点赞帖子
     @PostMapping("/{postId}/like")
-    @Operation(summary = "点赞帖子")
+    @Operation(summary = "点赞帖子", security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> likePost(@PathVariable Integer postId, @RequestBody com.linkme.backend.entity.Like body) {
         if (likeMapper.selectByUserAndPost(body.getUserId(), postId) != null) {
             return R.ok("已点赞");
@@ -188,7 +194,7 @@ public class PostController {
 
     // 取消点赞
     @DeleteMapping("/{postId}/like")
-    @Operation(summary = "取消点赞")
+    @Operation(summary = "取消点赞", security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> unlikePost(@PathVariable Integer postId, @RequestBody com.linkme.backend.entity.Like body) {
         int rows = likeMapper.deleteByUserAndPost(body.getUserId(), postId);
         return rows > 0 ? R.ok("已取消点赞") : R.fail("取消失败");

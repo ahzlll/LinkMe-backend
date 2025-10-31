@@ -13,7 +13,7 @@ import java.util.List;
  * - tags: 标签 ID 列表
  *
  * author: riki
- * version: 1.0
+ * version: 1.1
  */
 @Data
 public class PostCreateRequest {

@@ -50,7 +50,9 @@
             username = #{username},
             email = #{email},
             phone = #{phone},
+            <if test="passwordHash != null">
             password_hash = #{passwordHash},
+            </if>
             nickname = #{nickname},
             gender = #{gender},
             birthday = #{birthday},
@@ -59,7 +61,13 @@
             bio = #{bio}
         WHERE user_id = #{userId}
     </update>
-
+    
+    <!-- 更新用户密码 -->
+    <update id="updatePassword">
+        UPDATE user SET password_hash = #{passwordHash}
+        WHERE user_id = #{userId}
+    </update>
+    
     <!-- 根据用户ID删除用户 -->
     <delete id="deleteById">
         DELETE FROM user WHERE user_id = #{userId}
