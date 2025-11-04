@@ -70,4 +70,30 @@ public interface MessageMapper {
      * @return 消息数量
      */
     int countByConversationId(@Param("conversationId") Integer conversationId);
+    
+    /**
+     * 标记消息为已读
+     * 
+     * @param conversationId 会话ID
+     * @param userId 用户ID（接收者）
+     * @return 影响行数
+     */
+    int markAsRead(@Param("conversationId") Integer conversationId, @Param("userId") Integer userId);
+    
+    /**
+     * 获取会话未读消息数量
+     * 
+     * @param conversationId 会话ID
+     * @param userId 用户ID（接收者）
+     * @return 未读消息数量
+     */
+    int countUnreadByConversationId(@Param("conversationId") Integer conversationId, @Param("userId") Integer userId);
+    
+    /**
+     * 获取会话的最新一条消息
+     * 
+     * @param conversationId 会话ID
+     * @return 最新消息
+     */
+    Message selectLatestByConversationId(@Param("conversationId") Integer conversationId);
 }

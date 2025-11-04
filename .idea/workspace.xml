@@ -4,89 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1356ec96-0f6d-4866-8e90-80fe6b8a2756" name="Changes" comment="后端项目初始化">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/API_TEST_REQUESTS.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/HomeController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/VerificationCodeMapper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/EmailService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/SmsService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/VerificationCodeService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/EmailServiceImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/SmsServiceImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/VerificationCodeServiceImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/util/EmailValidator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/util/PasswordValidator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/util/PhoneValidator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/VerificationCodeMapper.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/JwtInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/JwtInterceptor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/OpenApiConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/OpenApiConfig.java" afterDir="false" />
+    <list default="true" id="1356ec96-0f6d-4866-8e90-80fe6b8a2756" name="Changes" comment="更新数据库逻辑&amp;数据">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API_TEST_REQUESTS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/chat/websocket/ChatWebSocketHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/chat/websocket/ChatWebSocketHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/common/LoggingAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/common/LoggingAspect.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/WebMvcConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/WebMvcConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/PostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/PostController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostCreateRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostCreateRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostDetailResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostDetailResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/VerificationCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/VerificationCode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/UserMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/UserServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/UserServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/UserMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/UserMapper.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/LinkMeApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/LinkMeApplication.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/WebSocketConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/WebSocketConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/ChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/ChatController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/Notification.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/Notification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/MessageMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/MessageMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sql/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sql/init.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/chat/websocket/ChatWebSocketHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/chat/websocket/ChatWebSocketHandler.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/GlobalExceptionHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/GlobalExceptionHandler.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/JwtUtil.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/JwtUtil.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/LoggingAspect.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/LoggingAspect.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/R.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/common/R.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/JwtInterceptor.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/JwtInterceptor.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/OpenApiConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/OpenApiConfig.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/WebMvcConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/WebMvcConfig.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/WebSocketConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/config/WebSocketConfig.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/PostController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/PostController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/UserController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/dto/PostCreateRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/dto/PostCreateRequest.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/dto/PostDetailResponse.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/controller/dto/PostDetailResponse.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Comment.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Comment.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Conversation.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Conversation.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Favorite.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Favorite.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/FavoriteFolder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/FavoriteFolder.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Follow.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Follow.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Heart.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Heart.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Like.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Like.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Match.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Match.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Message.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Message.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Notification.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Notification.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Post.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Post.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/PostImage.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/PostImage.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/PostTag.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/PostTag.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/PrivacySetting.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/PrivacySetting.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/TagDef.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/TagDef.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/User.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/UserTag.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/UserTag.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/VerificationCode.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/VerificationCode.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/CommentMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/CommentMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/ConversationMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/ConversationMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/FollowMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/FollowMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/HeartMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/HeartMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/LikeMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/LikeMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/MatchMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/MatchMapper.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/MessageMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/MessageMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/NotificationMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/NotificationMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/PostImageMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/PostImageMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/PostMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/PostMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/PostTagMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/PostTagMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/UserMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/mapper/UserMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/PostService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/PostService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/UserService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/UserService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/impl/PostServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/impl/PostServiceImpl.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/impl/UserServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/service/impl/UserServiceImpl.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/mapper/UserMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/mapper/UserMapper.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/sql/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/sql/init.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,6 +34,11 @@
         <option name="argument" value="--follow-tags" />
         <option name="title" value="Current Branch" />
       </GitPushTagMode>
+    </option>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -134,11 +74,12 @@
     "RequestMappingsPanelWidth0": "75",
     "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "SONARLINT_PRECOMMIT_ANALYSIS": "true",
     "Spring Boot.LinkMeApplication.executor": "Run",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "chat",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "E:/t",
@@ -187,7 +128,8 @@
       <updated>1761188135308</updated>
       <workItem from="1761188138643" duration="5412000" />
       <workItem from="1761663499122" duration="1697000" />
-      <workItem from="1761909968019" duration="44000" />
+      <workItem from="1761909968019" duration="594000" />
+      <workItem from="1762242155817" duration="2566000" />
     </task>
     <task id="LOCAL-00001" summary="后端项目初始化">
       <option name="closed" value="true" />
@@ -205,14 +147,61 @@
       <option name="project" value="LOCAL" />
       <updated>1761192940322</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="v1.1.0 : 实现用户登陆、注册、验证码服务功能，完善 Token 认证配置">
+      <option name="closed" value="true" />
+      <created>1761910327277</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1761910327277</updated>
+    </task>
+    <task id="LOCAL-00004" summary="v1.2.0：初步实现实时聊天功能">
+      <option name="closed" value="true" />
+      <created>1762070644075</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1762070644075</updated>
+    </task>
+    <task id="LOCAL-00005" summary="v1.2.0：初步实现实时聊天模块">
+      <option name="closed" value="true" />
+      <created>1762242365004</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1762242365004</updated>
+    </task>
+    <task id="LOCAL-00006" summary="更新数据库逻辑&amp;数据">
+      <option name="closed" value="true" />
+      <created>1762245670547</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1762245670547</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="后端项目初始化" />
-    <option name="LAST_COMMIT_MESSAGE" value="后端项目初始化" />
+    <MESSAGE value="v1.1.0 : 实现用户登陆、注册、验证码服务功能，完善 Token 认证配置" />
+    <MESSAGE value="v1.2.0：初步实现实时聊天功能" />
+    <MESSAGE value="v1.2.0：初步实现实时聊天模块" />
+    <MESSAGE value="更新数据库逻辑&amp;数据" />
+    <option name="LAST_COMMIT_MESSAGE" value="更新数据库逻辑&amp;数据" />
   </component>
 </project>

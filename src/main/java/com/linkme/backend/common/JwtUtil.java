@@ -19,8 +19,8 @@ import java.util.Map;
  * - 提供JWT token的生成和验证功能
  * - 支持用户身份认证和授权
  * 
- * @author Ahz, riki
- * @version 1.0
+ * @author Ahz
+ * @version 1.1
  */
 @Component
 public class JwtUtil {

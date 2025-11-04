@@ -45,6 +45,11 @@ public class Message {
     private String content;
     
     /**
+     * 是否已读 - 消息是否已被接收者阅读
+     */
+    private Boolean isRead;
+    
+    /**
      * 创建时间 - 发送时间
      */
     private LocalDateTime createdAt;

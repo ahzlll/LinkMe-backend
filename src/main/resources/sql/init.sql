@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS user (
     region VARCHAR(100) DEFAULT '' COMMENT '地区',
     avatar_url VARCHAR(255) DEFAULT '' COMMENT '头像URL',
     bio TEXT COMMENT '简介',
+    role ENUM('customer', 'admin', 'moderator') DEFAULT 'customer' COMMENT '用户角色',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_email (email),
@@ -24,8 +25,6 @@ CREATE TABLE IF NOT EXISTS user (
     INDEX `idx_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
-ALTER TABLE `user`
-    ADD COLUMN `role` ENUM('customer', 'admin', 'moderator') DEFAULT 'customer' COMMENT '用户角色';
 
 -- 2. 标签定义表（TagDef）
 CREATE TABLE IF NOT EXISTS tag_def (
@@ -204,12 +203,12 @@ CREATE TABLE IF NOT EXISTS conversation (
     INDEX `idx_user2_id` (`user2_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会话表';
 
--- 15. 消息表（Message）
+-- 15. 消息表（Message） 1.2.1更新了content_type字段，增加了voice和file类型
 CREATE TABLE IF NOT EXISTS message (
     message_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '消息ID',
     conversation_id INT NOT NULL COMMENT '会话ID',
     sender_id INT NOT NULL COMMENT '发送者ID',
-    content_type ENUM('text', 'image', 'video', 'file') DEFAULT 'text' COMMENT '内容类型',
+    content_type ENUM('text', 'image', 'video', 'voice', 'file') DEFAULT 'text' COMMENT '内容类型',
     content TEXT COMMENT '内容',
     is_read BOOLEAN DEFAULT FALSE COMMENT '是否已读',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
@@ -288,33 +287,200 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='内容审核日志表';
 
 
--- 插入一些初始数据
--- 插入系统标签
+-- LinkMe交友聊天社交软件初始数据
+USE linkme;
+
+-- 1. 插入用户数据
+INSERT INTO user (username, email, phone, password_hash, nickname, gender, birthday, region, avatar_url, bio, role) VALUES
+('admin1', 'admin@linkme.com', '13800000000', '$2b$10$examplehashedpassword123456789012', '系统管理员', 'male', '1990-01-01', '北京', '/avatars/admin.jpg', '系统管理员账号', 'admin'),
+('xiaoming', 'xiaoming@linkme.com', '13800000001', '$2b$10$examplehashedpassword123456789012', '小明', 'male', '1995-05-15', '上海', '/avatars/xiaoming.jpg', '喜欢旅游和摄影的程序员', 'customer'),
+('xiaohong', 'xiaohong@linkme.com', '13800000002', '$2b$10$examplehashedpassword123456789012', '小红', 'female', '1998-08-20', '广州', '/avatars/xiaohong.jpg', '热爱音乐和美食的设计师', 'customer'),
+('xiaoli', 'xiaoli@linkme.com', '13800000003', '$2b$10$examplehashedpassword123456789012', '小丽', 'female', '1996-03-10', '深圳', '/avatars/xiaoli.jpg', '健身达人和读书爱好者', 'customer'),
+('david', 'david@linkme.com', '13800000004', '$2b$10$examplehashedpassword123456789012', '大卫', 'male', '1993-11-25', '杭州', '/avatars/david.jpg', '创业者和投资人', 'customer'),
+('lily', 'lily@linkme.com', '13800000005', '$2b$10$examplehashedpassword123456789012', '莉莉', 'female', '1997-07-07', '成都', '/avatars/lily.jpg', '宠物医生和动物保护者', 'customer');
+
+-- 2. 插入标签定义
 INSERT INTO tag_def (name, created_by, tag_type) VALUES
-('运动', NULL, 'user'),
-('音乐', NULL, 'user'),
-('旅行', NULL, 'user'),
-('美食', NULL, 'user'),
-('电影', NULL, 'user'),
-('读书', NULL, 'user'),
-('游戏', NULL, 'user'),
-('摄影', NULL, 'user'),
-('时尚', NULL, 'user'),
-('科技', NULL, 'user'),
-('生活', NULL, 'post'),
-('心情', NULL, 'post'),
-('分享', NULL, 'post'),
-('求助', NULL, 'post'),
-('讨论', NULL, 'post');
+-- 用户标签
+('程序员', 1, 'user'),
+('设计师', 1, 'user'),
+('摄影师', 1, 'user'),
+('音乐爱好者', 1, 'user'),
+('美食家', 1, 'user'),
+('旅行达人', 1, 'user'),
+('健身爱好者', 1, 'user'),
+('读书人', 1, 'user'),
+('创业者', 1, 'user'),
+('投资人', 1, 'user'),
+('技术分享', 1, 'post'),
+('生活感悟', 1, 'post'),
+('美食推荐', 1, 'post'),
+('旅行见闻', 1, 'post'),
+('摄影作品', 1, 'post'),
+('音乐推荐', 1, 'post'),
+('健身心得', 1, 'post'),
+('读书笔记', 1, 'post');
 
--- 创建测试用户
-INSERT INTO user (username, email, phone, password_hash, nickname, gender, birthday, region, avatar_url, bio) VALUES
-('admin', 'admin@linkme.com', '13800138000', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '管理员', '男', '1990-01-01', '北京', '', '系统管理员'),
-('testuser1', 'test1@linkme.com', '13800138001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '测试用户1', '女', '1995-05-15', '上海', '', '测试用户1'),
-('testuser2', 'test2@linkme.com', '13800138002', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '测试用户2', '男', '1992-08-20', '广州', '', '测试用户2');
+-- 3. 插入用户标签关联
+INSERT INTO user_tag (user_id, tag_id) VALUES
+(2, 1), (2, 3), (2, 6),  -- 小明：程序员、摄影师、旅行达人
+(3, 2), (3, 4), (3, 5),  -- 小红：设计师、音乐爱好者、美食家
+(4, 7), (4, 8),          -- 小丽：健身爱好者、读书人
+(5, 9), (5, 10),         -- 大卫：创业者、投资人
+(6, 5), (6, 8);          -- 莉莉：美食家、读书人
 
--- 为测试用户设置隐私设置
+-- 4. 插入帖子数据
+INSERT INTO post (user_id, content, privacy_level) VALUES
+(2, '今天分享一个编程小技巧：使用Python处理数据时，pandas库真的超级好用！', 'public'),
+(3, '刚刚设计了一款新的UI界面，大家觉得怎么样？简约而不简单！', 'public'),
+(4, '坚持健身一个月了，感觉整个人都精神了很多！继续加油！', 'public'),
+(5, '创业路上的思考：产品定位和市场需求的匹配有多重要？', 'public'),
+(6, '推荐一家超棒的意大利餐厅，他们家的提拉米苏绝了！', 'public'),
+(2, '最近去西藏旅行，布达拉宫的景色真的太震撼了！', 'public'),
+(3, '发现了一首超好听的歌，单曲循环一整天都不腻！', 'public');
+
+-- 5. 插入帖子图片
+INSERT INTO post_image (post_id, image_url, image_order) VALUES
+(2, '/images/design1.jpg', 1),
+(2, '/images/design2.jpg', 2),
+(6, '/images/tibet1.jpg', 1),
+(6, '/images/tibet2.jpg', 2);
+
+-- 6. 插入帖子标签关联
+INSERT INTO post_tag (post_id, tag_id) VALUES
+(1, 11), -- 技术分享
+(2, 12), -- 生活感悟
+(3, 17), -- 健身心得
+(4, 12), -- 生活感悟
+(5, 13), -- 美食推荐
+(6, 14), -- 旅行见闻
+(7, 16); -- 音乐推荐
+
+-- 7. 插入评论数据
+INSERT INTO comment (post_id, user_id, content, parent_id) VALUES
+(1, 3, 'Python确实很好用，我最近也在学习！', NULL),
+(1, 4, '能推荐一些学习资源吗？', NULL),
+(1, 2, '@小丽 推荐你看《利用Python进行数据分析》这本书', 3),
+(2, 2, '设计得很棒！配色很舒服', NULL),
+(3, 3, '健身真的会让人上瘾，一起坚持！', NULL),
+(5, 4, '在哪家餐厅？求地址！', NULL),
+(5, 6, '@小丽 在春熙路的「意式风情」餐厅', 7);
+
+-- 8. 插入点赞数据
+INSERT INTO `like` (user_id, post_id) VALUES
+(3, 1), (4, 1), (5, 1),
+(2, 2), (4, 2),
+(2, 3), (3, 3), (5, 3),
+(2, 4), (6, 4),
+(2, 5), (3, 5), (4, 5);
+
+-- 9. 插入收藏夹
+INSERT INTO favorite_folder (user_id, name, is_public) VALUES
+(2, '技术收藏', true),
+(2, '旅行灵感', false),
+(3, '设计参考', true),
+(4, '健身计划', false),
+(5, '创业思考', true);
+
+-- 10. 插入收藏数据
+INSERT INTO favorite (user_id, post_id, folder_id) VALUES
+(2, 2, 1), -- 小明收藏小红的设计帖子到技术收藏
+(2, 6, 2), -- 小明收藏自己的旅行帖子到旅行灵感
+(3, 1, 3), -- 小红收藏小明的技术帖子到设计参考
+(4, 3, 4); -- 小丽收藏自己的健身帖子到健身计划
+
+-- 11. 插入关注数据
+INSERT INTO follow (follower_id, followee_id) VALUES
+(2, 3), (2, 4), -- 小明关注小红和小丽
+(3, 2), (3, 6), -- 小红关注小明和莉莉
+(4, 2), (4, 3), -- 小丽关注小明和小红
+(5, 2), (5, 3), (5, 4), -- 大卫关注小明、小红、小丽
+(6, 3), (6, 5); -- 莉莉关注小红和大卫
+
+-- 12. 插入红心数据
+INSERT INTO heart (from_user_id, to_user_id) VALUES
+(2, 3), (2, 4), -- 小明给小红和小丽发送红心
+(3, 2),         -- 小红给小明发送红心
+(4, 2),         -- 小丽给小明发送红心
+(5, 3), (5, 6), -- 大卫给小红和莉莉发送红心
+(6, 5);         -- 莉莉给大卫发送红心
+
+-- 13. 插入匹配数据
+INSERT INTO `match` (user1_id, user2_id, status) VALUES
+(2, 3, 1), -- 小明和小红匹配成功
+(2, 4, 0), -- 小明和小丽匹配中
+(5, 6, 1); -- 大卫和莉莉匹配成功
+
+-- 14. 插入会话数据
+INSERT INTO conversation (user1_id, user2_id) VALUES
+(2, 3), -- 小明和小红的会话
+(2, 4), -- 小明和小丽的会话
+(5, 6); -- 大卫和莉莉的会话
+
+-- 15. 插入消息数据
+INSERT INTO message (conversation_id, sender_id, content_type, content, is_read) VALUES
+(1, 2, 'text', '你好小红，你的设计作品很棒！', true), -- 小明和小红的对话
+(1, 3, 'text', '谢谢小明！你的编程分享也很有帮助', true),
+(1, 2, 'text', '有机会可以合作项目', false),
+(2, 2, 'text', '小丽，看到你坚持健身很有感触', true), -- 小明和小丽的对话
+(2, 4, 'text', '是啊，健身让我变得更自信了', true),
+(2, 4, 'image', '/images/gym1.jpg', false),
+(3, 5, 'text', '莉莉，你推荐的餐厅真的很不错', true), -- 大卫和莉莉的对话
+(3, 6, 'text', '很高兴你喜欢！我经常去那里', true),
+(3, 5, 'text', '下次可以一起去吗？', false);
+
+-- 16. 插入通知数据
+INSERT INTO notification (user_id, type, actor_id, related_id, related_type, title, content, is_read) VALUES
+(3, 'like', 2, 2, 'post', '新的点赞', '小明喜欢了你的设计作品', true),
+(2, 'follow', 3, 3, 'user', '新的关注', '小红关注了你', true),
+(4, 'comment', 2, 3, 'post', '新的评论', '小明评论了你的健身动态', true),
+(6, 'heart', 5, 5, 'user', '新的红心', '大卫给你发送了红心', false),
+(3, 'message', 2, 1, 'conversation', '新消息', '小明给你发送了新消息', false);
+
+-- 17. 插入验证码数据（示例，实际使用时应该用真实场景）
+INSERT INTO verification_code (user_id, code, type, purpose, expire_at, is_used) VALUES
+(2, '123456', 'email', 'register', DATE_ADD(NOW(), INTERVAL 10 MINUTE), false),
+(3, '654321', 'phone', 'login', DATE_ADD(NOW(), INTERVAL 10 MINUTE), true);
+
+-- 18. 插入隐私设置
 INSERT INTO privacy_setting (user_id, allow_match, allow_private_messages, allow_profile_view) VALUES
-(1, TRUE, TRUE, TRUE),
-(2, TRUE, TRUE, TRUE),
-(3, TRUE, TRUE, TRUE);
+(1, true, 'all', 'all'),
+(2, true, 'followed', 'all'),
+(3, true, 'followed', 'followed'),
+(4, true, 'all', 'all'),
+(5, false, 'followed', 'all'),  -- 大卫不允许匹配
+(6, true, 'all', 'followed');
+
+-- 19. 插入审核日志
+INSERT INTO audit_log (target_id, target_type, auditor_id, action, reason) VALUES
+(1, 0, 1, 'PASS', '内容符合社区规范'),
+(2, 0, 1, 'PASS', '设计作品很优秀'),
+(3, 1, 0, 'PASS', '自动审核通过'),
+(4, 2, 1, 'PASS', '用户资料完整真实');
+
+-- 输出初始化完成信息
+SELECT 'LinkMe数据库初始化完成！' AS '初始化状态';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DROP DATABASE IF EXISTS linkme;

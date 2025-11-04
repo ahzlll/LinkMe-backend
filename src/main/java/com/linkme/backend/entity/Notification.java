@@ -45,6 +45,21 @@ public class Notification {
     private Integer relatedId;
     
     /**
+     * 关联类型 - 关联实体类型（如message、post等）
+     */
+    private String relatedType;
+    
+    /**
+     * 通知标题
+     */
+    private String title;
+    
+    /**
+     * 通知内容
+     */
+    private String content;
+    
+    /**
      * 创建时间 - 通知时间
      */
     private LocalDateTime createdAt;
