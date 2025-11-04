@@ -1,6 +1,5 @@
 package com.linkme.backend.common;
 
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.stereotype.Component;
 

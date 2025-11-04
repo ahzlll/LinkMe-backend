@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.ConversationMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ConversationResultMap" type="com.linkme.backend.entity.Conversation">
+        <id column="conversation_id" property="conversationId"/>
+        <result column="user1_id" property="user1Id"/>
+        <result column="user2_id" property="user2Id"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 根据会话ID查询会话信息 -->
+    <select id="selectById" parameterType="int" resultMap="ConversationResultMap">
+        SELECT * FROM conversation WHERE conversation_id = #{conversationId}
+    </select>
+
+    <!-- 根据用户ID查询会话列表（用户可能是user1或user2） -->
+    <select id="selectByUserId" resultMap="ConversationResultMap">
+        SELECT * FROM conversation 
+        WHERE user1_id = #{userId} OR user2_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据两个用户ID查询会话（确保user1Id < user2Id的顺序） -->
+    <select id="selectByUserPair" resultMap="ConversationResultMap">
+        SELECT * FROM conversation 
+        WHERE user1_id = #{user1Id} AND user2_id = #{user2Id}
+    </select>
+
+    <!-- 插入新会话 -->
+    <insert id="insert" parameterType="com.linkme.backend.entity.Conversation" useGeneratedKeys="true" keyProperty="conversationId">
+        INSERT INTO conversation (user1_id, user2_id, created_at)
+        VALUES (#{user1Id}, #{user2Id}, #{createdAt})
+    </insert>
+
+    <!-- 根据会话ID删除会话 -->
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM conversation WHERE conversation_id = #{conversationId}
+    </delete>
+
+    <!-- 根据用户ID统计会话数量 -->
+    <select id="countByUserId" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM conversation 
+        WHERE user1_id = #{userId} OR user2_id = #{userId}
+    </select>
+
+</mapper>
+

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.MessageMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="MessageResultMap" type="com.linkme.backend.entity.Message">
+        <id column="message_id" property="messageId"/>
+        <result column="conversation_id" property="conversationId"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="content_type" property="contentType"/>
+        <result column="content" property="content"/>
+        <result column="is_read" property="isRead"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 根据消息ID查询消息信息 -->
+    <select id="selectById" parameterType="int" resultMap="MessageResultMap">
+        SELECT * FROM message WHERE message_id = #{messageId}
+    </select>
+
+    <!-- 根据会话ID查询消息列表（按时间正序，最旧的在前面，最新的在后面） -->
+    <select id="selectByConversationId" resultMap="MessageResultMap">
+        SELECT * FROM message 
+        WHERE conversation_id = #{conversationId}
+        ORDER BY created_at ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据发送者ID查询消息列表 -->
+    <select id="selectBySenderId" resultMap="MessageResultMap">
+        SELECT * FROM message 
+        WHERE sender_id = #{senderId}
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 插入新消息 -->
+    <insert id="insert" parameterType="com.linkme.backend.entity.Message" useGeneratedKeys="true" keyProperty="messageId">
+        INSERT INTO message (conversation_id, sender_id, content_type, content, is_read, created_at)
+        VALUES (#{conversationId}, #{senderId}, #{contentType}, #{content}, #{isRead}, #{createdAt})
+    </insert>
+
+    <!-- 根据消息ID删除消息 -->
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM message WHERE message_id = #{messageId}
+    </delete>
+
+    <!-- 根据会话ID统计消息数量 -->
+    <select id="countByConversationId" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM message WHERE conversation_id = #{conversationId}
+    </select>
+
+    <!-- 标记消息为已读（只标记接收者的未读消息） -->
+    <update id="markAsRead">
+        UPDATE message 
+        SET is_read = TRUE
+        WHERE conversation_id = #{conversationId}
+          AND sender_id != #{userId}
+          AND is_read = FALSE
+    </update>
+
+    <!-- 获取会话未读消息数量（只统计接收者的未读消息） -->
+    <select id="countUnreadByConversationId" resultType="int">
+        SELECT COUNT(*) FROM message 
+        WHERE conversation_id = #{conversationId}
+          AND sender_id != #{userId}
+          AND is_read = FALSE
+    </select>
+
+    <!-- 获取会话的最新一条消息 -->
+    <select id="selectLatestByConversationId" parameterType="int" resultMap="MessageResultMap">
+        SELECT * FROM message 
+        WHERE conversation_id = #{conversationId}
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+</mapper>
+

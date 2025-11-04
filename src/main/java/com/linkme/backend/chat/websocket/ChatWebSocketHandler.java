@@ -1,6 +1,7 @@
 package com.linkme.backend.chat.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 
@@ -31,7 +32,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         // 从session attributes中获取用户ID（由拦截器设置）
         String userId = (String) session.getAttributes().get("userId");
         if (userId != null) {
@@ -63,13 +64,14 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     }
     
     @Override
-    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
+    public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message) throws Exception {
         if (message instanceof TextMessage) {
             String payload = ((TextMessage) message).getPayload();
             System.out.println("收到WebSocket消息: " + payload);
             
             try {
                 // 解析消息
+                @SuppressWarnings("unchecked")
                 Map<String, Object> messageData = objectMapper.readValue(payload, Map.class);
                 String type = (String) messageData.get("type");
                 
@@ -94,14 +96,14 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     }
     
     @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+    public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
         String userId = sessionUsers.get(session);
         System.err.println("WebSocket传输错误: 用户ID=" + userId + ", 错误=" + exception.getMessage());
         removeSession(session);
     }
     
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus closeStatus) throws Exception {
         String userId = sessionUsers.get(session);
         System.out.println("WebSocket连接关闭: 用户ID=" + userId + ", 会话ID=" + session.getId());
         removeSession(session);

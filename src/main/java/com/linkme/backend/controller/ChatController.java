@@ -6,6 +6,7 @@ import com.linkme.backend.controller.dto.ConversationCreateRequest;
 import com.linkme.backend.controller.dto.ConversationResponse;
 import com.linkme.backend.controller.dto.MessageRequest;
 import com.linkme.backend.controller.dto.MessageResponse;
+import com.linkme.backend.entity.Conversation;
 import com.linkme.backend.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,7 +27,7 @@ import java.util.Map;
  * - 包括会话管理、消息发送等功能
  * 
  * @author Ahz
- * @version 1.2
+ * @version 1.2.1
  */
 @RestController
 @RequestMapping("/conversations")
@@ -106,10 +107,8 @@ public class ChatController {
         }
         
         try {
-            chatService.createOrGetConversation(currentUserId, requestBody.getUserId());
-            ConversationResponse response = chatService.getConversationById(
-                    chatService.createOrGetConversation(currentUserId, requestBody.getUserId()).getConversationId(),
-                    currentUserId);
+            Conversation conversation = chatService.createOrGetConversation(currentUserId, requestBody.getUserId());
+            ConversationResponse response = chatService.getConversationById(conversation.getConversationId(), currentUserId);
             return R.ok(response);
         } catch (Exception e) {
             return R.fail(500, "创建会话失败: " + e.getMessage());
@@ -290,6 +289,25 @@ public class ChatController {
         
         int count = chatService.getUnreadCount(conversationId, userId);
         return R.ok(Map.of("unreadCount", count));
+    }
+    
+    /**
+     * 获取用户总未读消息数量
+     * 
+     * @param request HTTP请求
+     * @return 总未读消息数量
+     */
+    @GetMapping("/unread-count/total")
+    @Operation(summary = "获取总未读消息数量", description = "获取当前用户所有会话的总未读消息数量", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<Map<String, Integer>> getTotalUnreadCount(HttpServletRequest request) {
+        Integer userId = getCurrentUserId(request);
+        if (userId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        int count = chatService.getTotalUnreadCount(userId);
+        return R.ok(Map.of("totalUnreadCount", count));
     }
 }
 

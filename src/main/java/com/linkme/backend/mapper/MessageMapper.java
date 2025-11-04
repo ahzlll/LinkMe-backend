@@ -88,4 +88,12 @@ public interface MessageMapper {
      * @return 未读消息数量
      */
     int countUnreadByConversationId(@Param("conversationId") Integer conversationId, @Param("userId") Integer userId);
+    
+    /**
+     * 获取会话的最新一条消息
+     * 
+     * @param conversationId 会话ID
+     * @return 最新消息
+     */
+    Message selectLatestByConversationId(@Param("conversationId") Integer conversationId);
 }
