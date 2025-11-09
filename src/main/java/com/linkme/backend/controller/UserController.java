@@ -2,6 +2,7 @@ package com.linkme.backend.controller;
 
 import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.common.R;
+import com.linkme.backend.controller.dto.LoginRequest;
 import com.linkme.backend.entity.User;
 import com.linkme.backend.service.UserService;
 import com.linkme.backend.service.VerificationCodeService;
@@ -216,10 +217,14 @@ public class UserController {
      * @return 登录结果（包含用户信息和token）
      */
     @PostMapping("/login")
-    @Operation(summary = "用户登录", description = "用户登录验证，支持邮箱、手机号或用户名登录")
-    public R<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
-        String loginName = loginRequest.get("loginName");
-        String password = loginRequest.get("password");
+    @Operation(summary = "用户登录", description = "用户登录验证，支持邮箱、手机号或用户名登录。\n" +
+               "登录名格式：\n" +
+               "- 邮箱：user@example.com\n" +
+               "- 手机号：13800138000\n" +
+               "- 用户名：testuser")
+    public R<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
+        String loginName = loginRequest.getLoginName();
+        String password = loginRequest.getPassword();
         
         // 参数验证
         if (loginName == null || loginName.trim().isEmpty()) {

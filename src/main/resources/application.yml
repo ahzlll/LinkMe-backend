@@ -40,6 +40,7 @@ mybatis:
 
 jwt:
   secret: change_this_secret_to_a_strong_one_change_this_secret
+  # LinkMeJWTSecretKey2024MustBeAtLeast32CharactersLongForSecurity
   expire-seconds: 86400
 
 # 阿里云短信服务配置
