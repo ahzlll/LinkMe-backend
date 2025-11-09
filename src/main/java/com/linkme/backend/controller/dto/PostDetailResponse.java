@@ -21,6 +21,7 @@ public class PostDetailResponse {
     private Integer postId;
     private Integer userId;
     private String content;
+    private String topic;
     private LocalDateTime createdAt;
     private List<String> images;
     private List<Integer> tags;

@@ -56,13 +56,15 @@ CREATE TABLE IF NOT EXISTS post (
     post_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '帖子ID',
     user_id INT NOT NULL COMMENT '用户ID',
     content TEXT NOT NULL COMMENT '内容',
+    topic VARCHAR(100) DEFAULT NULL COMMENT '主题',
     privacy_level ENUM('public', 'followers', 'intimate', 'private') DEFAULT 'public' COMMENT '隐私级别',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
     INDEX `idx_user_id` (`user_id`),
     INDEX `idx_created_at` (`created_at`),
-    INDEX `idx_privacy_level` (`privacy_level`)
+    INDEX `idx_privacy_level` (`privacy_level`),
+    INDEX `idx_topic` (`topic`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='帖子表';
 
 -- 5. 帖子图片表（PostImage）

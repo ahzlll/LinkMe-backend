@@ -97,5 +97,5 @@ public interface PostService {
     Map<String, Object> getPostAggregates(Integer postId);
 
     // 扩展创建：带图片与标签
-    boolean createPostWithMediaAndTags(Integer userId, String content, java.util.List<String> images, java.util.List<Integer> tagIds);
+    boolean createPostWithMediaAndTags(Integer userId, String content, String topic, java.util.List<String> images, java.util.List<Integer> tagIds);
 }

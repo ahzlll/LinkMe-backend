@@ -19,6 +19,7 @@ import java.util.List;
 public class PostCreateRequest {
     private Integer userId;
     private String content;
+    private String topic;
     private List<String> images;
     private List<Integer> tags;
 }
