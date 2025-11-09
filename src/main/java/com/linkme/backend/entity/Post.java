@@ -35,6 +35,11 @@ public class Post {
     private String content;
     
     /**
+     * 主题 - 帖子主题
+     */
+    private String topic;
+    
+    /**
      * 创建时间 - 帖子创建时间
      */
     private LocalDateTime createdAt;

@@ -81,7 +81,7 @@ public class PostController {
     @Operation(summary = "创建帖子", description = "发布新帖子",
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> createPost(@RequestBody PostCreateRequest req) {
-        boolean success = postService.createPostWithMediaAndTags(req.getUserId(), req.getContent(), req.getImages(), req.getTags());
+        boolean success = postService.createPostWithMediaAndTags(req.getUserId(), req.getContent(), req.getTopic(), req.getImages(), req.getTags());
         if (success) {
             return R.ok("帖子发布成功");
         } else {
@@ -107,6 +107,7 @@ public class PostController {
         resp.setPostId(post.getPostId());
         resp.setUserId(post.getUserId());
         resp.setContent(post.getContent());
+        resp.setTopic(post.getTopic());
         resp.setCreatedAt(post.getCreatedAt());
         var agg = postService.getPostAggregates(postId);
         @SuppressWarnings("unchecked")

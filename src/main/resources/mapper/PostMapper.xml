@@ -7,6 +7,7 @@
         <id column="post_id" property="postId"/>
         <result column="user_id" property="userId"/>
         <result column="content" property="content"/>
+        <result column="topic" property="topic"/>
         <result column="created_at" property="createdAt"/>
     </resultMap>
 
@@ -36,14 +37,15 @@
 
     <!-- 插入新帖子 -->
     <insert id="insert" parameterType="com.linkme.backend.entity.Post" useGeneratedKeys="true" keyProperty="postId">
-        INSERT INTO post (user_id, content, created_at)
-        VALUES (#{userId}, #{content}, #{createdAt})
+        INSERT INTO post (user_id, content, topic, created_at)
+        VALUES (#{userId}, #{content}, #{topic}, #{createdAt})
     </insert>
 
     <!-- 更新帖子信息 -->
     <update id="update" parameterType="com.linkme.backend.entity.Post">
         UPDATE post SET
-            content = #{content}
+            content = #{content},
+            topic = #{topic}
         WHERE post_id = #{postId}
     </update>
 

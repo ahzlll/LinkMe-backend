@@ -118,10 +118,11 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public boolean createPostWithMediaAndTags(Integer userId, String content, List<String> images, List<Integer> tagIds) {
+    public boolean createPostWithMediaAndTags(Integer userId, String content, String topic, List<String> images, List<Integer> tagIds) {
         Post post = new Post();
         post.setUserId(userId);
         post.setContent(content);
+        post.setTopic(topic);
         post.setCreatedAt(LocalDateTime.now());
         if (postMapper.insert(post) <= 0) {
             return false;
