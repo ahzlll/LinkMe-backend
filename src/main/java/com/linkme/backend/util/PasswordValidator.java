@@ -101,28 +101,8 @@ public class PasswordValidator {
         if (hasUnderscore) typeCount++;
         
         if (typeCount < 3) {
-            StringBuilder message = new StringBuilder("密码必须同时包含");
-            boolean needAnd = false;
-            if (hasUpperCase) {
-                message.append("大写字母");
-                needAnd = true;
-            }
-            if (hasLowerCase) {
-                if (needAnd) message.append("、");
-                message.append("小写字母");
-                needAnd = true;
-            }
-            if (hasDigit) {
-                if (needAnd) message.append("、");
-                message.append("数字");
-                needAnd = true;
-            }
-            if (hasUnderscore) {
-                if (needAnd) message.append("、");
-                message.append("下划线");
-            }
-            message.append("中的至少三种");
-            return message.toString();
+            // 无论密码包含哪些类型，统一提示需要包含的四种类型
+            return "密码必须同时包含大写字母、小写字母、数字、下划线中的至少三种";
         }
         
         return null; // 密码符合要求

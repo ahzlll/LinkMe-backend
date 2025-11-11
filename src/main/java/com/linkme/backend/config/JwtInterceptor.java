@@ -63,6 +63,12 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         }
         
+        // 允许GET请求的帖子接口未认证访问（查看帖子列表和详情）
+        String method = request.getMethod();
+        if ("GET".equalsIgnoreCase(method) && (path.equals("/posts") || path.startsWith("/posts/"))) {
+            return true;
+        }
+        
         // 获取请求头中的token
         String token = request.getHeader("Authorization");
         
@@ -70,7 +76,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":401,\"message\":\"未提供有效的认证token\"}");
+            response.getWriter().write("{\"code\":401,\"message\":\"请先登录账号\"}");
             return false;
         }
         
@@ -83,7 +89,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setCharacterEncoding("UTF-8");
                 response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"code\":401,\"message\":\"token已过期\"}");
+                response.getWriter().write("{\"code\":401,\"message\":\"登录已过期，请重新登录\"}");
                 return false;
             }
             
@@ -98,7 +104,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":401,\"message\":\"token无效\"}");
+            response.getWriter().write("{\"code\":401,\"message\":\"请先登录账号\"}");
             return false;
         }
     }
