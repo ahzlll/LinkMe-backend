@@ -26,6 +26,10 @@ public class PostDetailResponse {
     private List<String> images;
     private List<Integer> tags;
     private Integer likes;
+    // 用户信息
+    private String nickname;
+    private String username;
+    private String avatarUrl;
 }
 
 

@@ -109,6 +109,10 @@ public class PostController {
         resp.setContent(post.getContent());
         resp.setTopic(post.getTopic());
         resp.setCreatedAt(post.getCreatedAt());
+        // 设置用户信息
+        resp.setNickname(post.getNickname());
+        resp.setUsername(post.getUsername());
+        resp.setAvatarUrl(post.getAvatarUrl());
         var agg = postService.getPostAggregates(postId);
         @SuppressWarnings("unchecked")
         java.util.List<String> images = (java.util.List<String>) agg.get("images");

@@ -5,9 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1356ec96-0f6d-4866-8e90-80fe6b8a2756" name="Changes" comment="后端项目初始化">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/JwtInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/config/JwtInterceptor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/util/PasswordValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/util/PasswordValidator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/PostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/PostController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostDetailResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostDetailResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/Comment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/Comment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/Post.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/Post.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/CommentMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/CommentMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/PostMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/PostMapper.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -112,7 +115,7 @@
       <updated>1761188135308</updated>
       <workItem from="1761188138643" duration="5412000" />
       <workItem from="1761663499122" duration="1697000" />
-      <workItem from="1762828932830" duration="1237000" />
+      <workItem from="1762828932830" duration="2070000" />
     </task>
     <task id="LOCAL-00001" summary="后端项目初始化">
       <option name="closed" value="true" />

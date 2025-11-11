@@ -48,4 +48,19 @@ public class Comment {
      * 创建时间 - 评论创建时间
      */
     private LocalDateTime createdAt;
+    
+    /**
+     * 用户昵称 - 从user表关联查询
+     */
+    private String nickname;
+    
+    /**
+     * 用户名 - 从user表关联查询
+     */
+    private String username;
+    
+    /**
+     * 用户头像URL - 从user表关联查询
+     */
+    private String avatarUrl;
 }

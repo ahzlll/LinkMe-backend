@@ -9,27 +9,42 @@
         <result column="content" property="content"/>
         <result column="parent_id" property="parentId"/>
         <result column="created_at" property="createdAt"/>
+        <result column="nickname" property="nickname"/>
+        <result column="username" property="username"/>
+        <result column="avatarUrl" property="avatarUrl"/>
     </resultMap>
 
     <select id="selectById" parameterType="int" resultMap="CommentMap">
-        SELECT * FROM comment WHERE comment_id = #{commentId}
+        SELECT c.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.user_id
+        WHERE c.comment_id = #{commentId}
     </select>
 
     <select id="selectByPostId" resultMap="CommentMap">
-        SELECT * FROM comment WHERE post_id = #{postId}
-        ORDER BY created_at ASC
+        SELECT c.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.user_id
+        WHERE c.post_id = #{postId}
+        ORDER BY c.created_at ASC
         LIMIT #{offset}, #{limit}
     </select>
 
     <select id="selectByUserId" resultMap="CommentMap">
-        SELECT * FROM comment WHERE user_id = #{userId}
-        ORDER BY created_at DESC
+        SELECT c.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.user_id
+        WHERE c.user_id = #{userId}
+        ORDER BY c.created_at DESC
         LIMIT #{offset}, #{limit}
     </select>
 
     <select id="selectByParentId" resultMap="CommentMap">
-        SELECT * FROM comment WHERE parent_id = #{parentId}
-        ORDER BY created_at ASC
+        SELECT c.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.user_id
+        WHERE c.parent_id = #{parentId}
+        ORDER BY c.created_at ASC
         LIMIT #{offset}, #{limit}
     </select>
 

@@ -9,27 +9,44 @@
         <result column="content" property="content"/>
         <result column="topic" property="topic"/>
         <result column="created_at" property="createdAt"/>
+        <result column="nickname" property="nickname"/>
+        <result column="username" property="username"/>
+        <result column="avatarUrl" property="avatarUrl"/>
     </resultMap>
 
     <!-- 根据帖子ID查询帖子信息 -->
     <select id="selectById" resultMap="PostResultMap">
-        SELECT * FROM post WHERE post_id = #{postId}
+        SELECT p.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.user_id
+        WHERE p.post_id = #{postId}
     </select>
 
     <!-- 根据用户ID查询帖子列表 -->
     <select id="selectByUserId" resultMap="PostResultMap">
-        SELECT * FROM post WHERE user_id = #{userId} ORDER BY created_at DESC LIMIT #{offset}, #{limit}
+        SELECT p.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.user_id
+        WHERE p.user_id = #{userId} 
+        ORDER BY p.created_at DESC 
+        LIMIT #{offset}, #{limit}
     </select>
 
     <!-- 查询所有帖子（分页） -->
     <select id="selectAll" resultMap="PostResultMap">
-        SELECT * FROM post ORDER BY created_at DESC LIMIT #{offset}, #{limit}
+        SELECT p.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.user_id
+        ORDER BY p.created_at DESC 
+        LIMIT #{offset}, #{limit}
     </select>
 
     <!-- 根据标签查询帖子列表 -->
     <select id="selectByTag" resultMap="PostResultMap">
-        SELECT p.* FROM post p
+        SELECT p.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM post p
         INNER JOIN post_tag pt ON p.post_id = pt.post_id
+        LEFT JOIN user u ON p.user_id = u.user_id
         WHERE pt.tag_id = #{tagId}
         ORDER BY p.created_at DESC
         LIMIT #{offset}, #{limit}
