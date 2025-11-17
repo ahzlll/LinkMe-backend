@@ -19,11 +19,12 @@ import java.util.*;
  * 职责：
  * - 实现帖子服务接口定义的业务逻辑
  * - 创建帖子（含图片与标签批量写入）
+ * - 图片以Base64编码字符串形式存储到数据库
  * - 查询帖子列表与详情聚合（图片、标签、点赞数）
  * - 编辑与删除帖子
  *
  * author: riki
- * version: 1.1
+ * version: 1.2
  */
 @Service
 public class PostServiceImpl implements PostService {
@@ -117,6 +118,17 @@ public class PostServiceImpl implements PostService {
         return map;
     }
 
+    /**
+     * 创建帖子（带图片和标签）
+     * 图片以Base64编码字符串形式存储到数据库
+     * 
+     * @param userId 用户ID
+     * @param content 帖子内容
+     * @param topic 帖子主题
+     * @param images Base64编码的图片字符串列表
+     * @param tagIds 标签ID列表
+     * @return 创建结果
+     */
     @Override
     public boolean createPostWithMediaAndTags(Integer userId, String content, String topic, List<String> images, List<Integer> tagIds) {
         Post post = new Post();
@@ -128,6 +140,7 @@ public class PostServiceImpl implements PostService {
             return false;
         }
         Integer postId = post.getPostId();
+        // 存储Base64编码的图片字符串到数据库
         if (images != null && !images.isEmpty()) {
             postImageMapper.insertBatch(postId, images);
         }
