@@ -5,14 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1356ec96-0f6d-4866-8e90-80fe6b8a2756" name="Changes" comment="后端项目初始化">
-      <change afterPath="$PROJECT_DIR$/target/classes/com/linkme/backend/entity/Post.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/PostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/PostController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostCreateRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostCreateRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/PostImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/entity/PostImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/PostServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/PostServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/sql/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sql/init.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +116,7 @@
       <workItem from="1763099600906" duration="1816000" />
       <workItem from="1763118756969" duration="1968000" />
       <workItem from="1763137397109" duration="177000" />
-      <workItem from="1763353042771" duration="1615000" />
+      <workItem from="1763353042771" duration="3531000" />
     </task>
     <task id="LOCAL-00001" summary="后端项目初始化">
       <option name="closed" value="true" />

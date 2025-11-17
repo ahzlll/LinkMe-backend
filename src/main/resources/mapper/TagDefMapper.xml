@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.TagDefMapper">
+
+    <resultMap id="TagDefMap" type="com.linkme.backend.entity.TagDef">
+        <id column="tag_id" property="tagId"/>
+        <result column="name" property="name"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="tag_type" property="tagType"/>
+    </resultMap>
+
+    <!-- 按类型查询标签列表 -->
+    <select id="selectByType" parameterType="string" resultMap="TagDefMap">
+        SELECT tag_id, name, created_by, created_at, tag_type
+        FROM tag_def
+        WHERE tag_type = #{tagType}
+        ORDER BY tag_id ASC
+    </select>
+
+    <!-- 按名称+类型查询标签，用于避免重复创建 -->
+    <select id="selectByNameAndType" resultMap="TagDefMap">
+        SELECT tag_id, name, created_by, created_at, tag_type
+        FROM tag_def
+        WHERE name = #{name}
+          AND tag_type = #{tagType}
+        LIMIT 1
+    </select>
+
+    <!-- 新增标签 -->
+    <insert id="insert" parameterType="com.linkme.backend.entity.TagDef" useGeneratedKeys="true" keyProperty="tagId">
+        INSERT INTO tag_def (name, created_by, created_at, tag_type)
+        VALUES (#{name}, #{createdBy}, NOW(), #{tagType})
+    </insert>
+
+</mapper>
+
+
