@@ -14,8 +14,12 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.io.IOException;
 
 /**
  * 帖子控制器
@@ -28,7 +32,7 @@ import java.util.List;
  * 说明：严格遵循 API.md/README.md 约定，不修改接口路径与入参结构。
  *
  * author: riki
- * version: 1.1
+ * version: 1.2
  */
 @RestController
 @RequestMapping("/posts")
@@ -72,13 +76,14 @@ public class PostController {
     }
     
     /**
-     * 创建帖子
+     * 创建帖子（JSON格式）
+     * 注意：images字段应为Base64编码的字符串列表
      * 
-     * @param post 帖子信息
+     * @param req 帖子请求信息
      * @return 创建结果
      */
-    @PostMapping
-    @Operation(summary = "创建帖子", description = "发布新帖子",
+    @PostMapping(consumes = {"application/json"})
+    @Operation(summary = "创建帖子（JSON格式）", description = "发布新帖子，images字段应为Base64编码字符串列表",
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> createPost(@RequestBody PostCreateRequest req) {
         boolean success = postService.createPostWithMediaAndTags(req.getUserId(), req.getContent(), req.getTopic(), req.getImages(), req.getTags());
@@ -86,6 +91,69 @@ public class PostController {
             return R.ok("帖子发布成功");
         } else {
             return R.fail("帖子发布失败");
+        }
+    }
+    
+    /**
+     * 创建帖子（文件上传方式）
+     * 支持直接上传图片文件，系统会自动将文件转换为Base64编码存储
+     * 
+     * @param userId 用户ID
+     * @param content 帖子内容
+     * @param topic 帖子主题
+     * @param images 图片文件列表（可选）
+     * @param tags 标签ID列表（可选，JSON格式字符串，如 "[1,2,3]"）
+     * @return 创建结果
+     */
+    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    @Operation(summary = "创建帖子（文件上传）", description = "发布新帖子，支持直接上传图片文件，系统会自动转换为Base64编码",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> createPostWithFiles(
+            @RequestParam("userId") Integer userId,
+            @RequestParam("content") String content,
+            @RequestParam(required = false) String topic,
+            @RequestParam(required = false) List<MultipartFile> images,
+            @RequestParam(required = false) String tags) {
+        try {
+            // 将图片文件转换为Base64字符串列表
+            List<String> base64Images = null;
+            if (images != null && !images.isEmpty()) {
+                base64Images = new ArrayList<>();
+                for (MultipartFile file : images) {
+                    if (!file.isEmpty()) {
+                        byte[] imageBytes = file.getBytes();
+                        String base64String = Base64.getEncoder().encodeToString(imageBytes);
+                        base64Images.add(base64String);
+                    }
+                }
+            }
+            
+            // 解析标签ID列表
+            List<Integer> tagIds = null;
+            if (tags != null && !tags.trim().isEmpty()) {
+                // 简单解析JSON数组格式的字符串，如 "[1,2,3]"
+                tagIds = new ArrayList<>();
+                String cleanTags = tags.trim().replaceAll("[\\[\\]\\s]", "");
+                if (!cleanTags.isEmpty()) {
+                    String[] tagArray = cleanTags.split(",");
+                    for (String tag : tagArray) {
+                        try {
+                            tagIds.add(Integer.parseInt(tag.trim()));
+                        } catch (NumberFormatException e) {
+                            // 忽略无效的标签ID
+                        }
+                    }
+                }
+            }
+            
+            boolean success = postService.createPostWithMediaAndTags(userId, content, topic, base64Images, tagIds);
+            if (success) {
+                return R.ok("帖子发布成功");
+            } else {
+                return R.fail("帖子发布失败");
+            }
+        } catch (IOException e) {
+            return R.fail("图片处理失败: " + e.getMessage());
         }
     }
     
