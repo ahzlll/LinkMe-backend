@@ -1,7 +1,13 @@
 package com.linkme.backend.service.impl;
 
 import com.linkme.backend.entity.User;
+import com.linkme.backend.entity.Like;
+import com.linkme.backend.entity.Favorite;
+import com.linkme.backend.entity.FavoriteFolder;
 import com.linkme.backend.mapper.UserMapper;
+import com.linkme.backend.mapper.LikeMapper;
+import com.linkme.backend.mapper.FavoriteMapper;
+import com.linkme.backend.mapper.FavoriteFolderMapper;
 import com.linkme.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +31,15 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private LikeMapper likeMapper;
+    
+    @Autowired
+    private FavoriteMapper favoriteMapper;
+    
+    @Autowired
+    private FavoriteFolderMapper favoriteFolderMapper;
     
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
@@ -180,5 +195,74 @@ public class UserServiceImpl implements UserService {
     @Override
     public int getUserCount() {
         return userMapper.countAll();
+    }
+    
+    @Override
+    public List<Like> getUserLikes(Integer userId, Integer offset, Integer limit) {
+        try {
+            return likeMapper.selectByUserId(userId, offset, limit);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    @Override
+    public List<Favorite> getUserFavorites(Integer userId, Integer folderId, Integer offset, Integer limit) {
+        try {
+            return favoriteMapper.selectByUserId(userId, folderId, offset, limit);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    @Override
+    public List<FavoriteFolder> getFavoriteFolders(Integer userId) {
+        try {
+            return favoriteFolderMapper.selectByUserId(userId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    @Override
+    public FavoriteFolder createFavoriteFolder(Integer userId, String name) {
+        try {
+            // 检查是否已存在同名收藏夹
+            FavoriteFolder existing = favoriteFolderMapper.selectByUserIdAndName(userId, name);
+            if (existing != null) {
+                return null; // 名称已存在
+            }
+            
+            // 创建新收藏夹
+            FavoriteFolder folder = new FavoriteFolder();
+            folder.setUserId(userId);
+            folder.setName(name);
+            folder.setCreatedAt(LocalDateTime.now());
+            
+            int result = favoriteFolderMapper.insert(folder);
+            if (result > 0) {
+                return folder;
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    @Override
+    public boolean deleteFavoriteFolder(Integer userId, Integer folderId) {
+        try {
+            // 检查收藏夹是否存在且属于该用户
+            FavoriteFolder folder = favoriteFolderMapper.selectById(folderId);
+            if (folder == null || !folder.getUserId().equals(userId)) {
+                return false; // 收藏夹不存在或无权限
+            }
+            
+            // 删除收藏夹
+            int result = favoriteFolderMapper.deleteById(folderId);
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

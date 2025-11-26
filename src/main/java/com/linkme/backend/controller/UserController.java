@@ -440,4 +440,107 @@ public class UserController {
             return R.fail(400, "用户删除失败，用户可能不存在");
         }
     }
+    
+    /**
+     * 获取用户点赞的帖子列表
+     * 
+     * @param userId 用户ID
+     * @param page 页码
+     * @param limit 每页数量
+     * @return 点赞列表
+     */
+    @GetMapping("/{userId}/likes")
+    @Operation(summary = "获取用户点赞的帖子", description = "获取指定用户点赞的所有帖子", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<com.linkme.backend.entity.Like>> getUserLikes(
+            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "100") Integer limit) {
+        int offset = (page - 1) * limit;
+        List<com.linkme.backend.entity.Like> likes = userService.getUserLikes(userId, offset, limit);
+        return R.ok(likes);
+    }
+    
+    /**
+     * 获取用户收藏的帖子列表
+     * 
+     * @param userId 用户ID
+     * @param folderId 收藏夹ID（可选）
+     * @param page 页码
+     * @param limit 每页数量
+     * @return 收藏列表
+     */
+    @GetMapping("/{userId}/favorites")
+    @Operation(summary = "获取用户收藏的帖子", description = "获取指定用户收藏的所有帖子，可指定收藏夹", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<com.linkme.backend.entity.Favorite>> getUserFavorites(
+            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @RequestParam(required = false) Integer folderId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "100") Integer limit) {
+        int offset = (page - 1) * limit;
+        List<com.linkme.backend.entity.Favorite> favorites = userService.getUserFavorites(userId, folderId, offset, limit);
+        return R.ok(favorites);
+    }
+    
+    /**
+     * 获取用户的收藏夹列表
+     * 
+     * @param userId 用户ID
+     * @return 收藏夹列表
+     */
+    @GetMapping("/{userId}/favorite-folders")
+    @Operation(summary = "获取用户收藏夹列表", description = "获取指定用户的所有收藏夹", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<com.linkme.backend.entity.FavoriteFolder>> getFavoriteFolders(
+            @PathVariable @Parameter(description = "用户ID") Integer userId) {
+        List<com.linkme.backend.entity.FavoriteFolder> folders = userService.getFavoriteFolders(userId);
+        return R.ok(folders);
+    }
+    
+    /**
+     * 创建收藏夹
+     * 
+     * @param userId 用户ID
+     * @param request 请求体（包含 name）
+     * @return 创建结果
+     */
+    @PostMapping("/{userId}/favorite-folders")
+    @Operation(summary = "创建收藏夹", description = "为用户创建新的收藏夹", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<com.linkme.backend.entity.FavoriteFolder> createFavoriteFolder(
+            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @RequestBody Map<String, String> request) {
+        String name = request.get("name");
+        if (name == null || name.trim().isEmpty()) {
+            return R.fail(400, "收藏夹名称不能为空");
+        }
+        com.linkme.backend.entity.FavoriteFolder folder = userService.createFavoriteFolder(userId, name.trim());
+        if (folder != null) {
+            return R.ok(folder);
+        } else {
+            return R.fail(400, "创建收藏夹失败，可能名称已存在");
+        }
+    }
+    
+    /**
+     * 删除收藏夹
+     * 
+     * @param userId 用户ID
+     * @param folderId 收藏夹ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/{userId}/favorite-folders/{folderId}")
+    @Operation(summary = "删除收藏夹", description = "删除指定的收藏夹", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> deleteFavoriteFolder(
+            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @PathVariable @Parameter(description = "收藏夹ID") Integer folderId) {
+        boolean success = userService.deleteFavoriteFolder(userId, folderId);
+        if (success) {
+            return R.ok("收藏夹删除成功");
+        } else {
+            return R.fail(400, "收藏夹删除失败，可能不存在或无权限");
+        }
+    }
 }

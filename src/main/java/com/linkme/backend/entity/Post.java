@@ -58,4 +58,19 @@ public class Post {
      * 用户头像URL - 从user表关联查询
      */
     private String avatarUrl;
+    
+    /**
+     * 点赞数 - 统计该帖子的点赞数量
+     */
+    private Integer likeCount;
+    
+    /**
+     * 收藏数 - 统计该帖子的收藏数量
+     */
+    private Integer favoriteCount;
+    
+    /**
+     * 评论数 - 统计该帖子的评论数量
+     */
+    private Integer commentCount;
 }

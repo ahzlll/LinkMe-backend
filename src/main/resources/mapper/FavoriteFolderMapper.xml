@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.FavoriteFolderMapper">
+
+    <resultMap id="FavoriteFolderMap" type="com.linkme.backend.entity.FavoriteFolder">
+        <id column="folder_id" property="folderId"/>
+        <result column="user_id" property="userId"/>
+        <result column="name" property="name"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="FavoriteFolderMap">
+        SELECT * FROM favorite_folder WHERE folder_id = #{folderId}
+    </select>
+
+    <select id="selectByUserId" resultMap="FavoriteFolderMap">
+        SELECT * FROM favorite_folder 
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="selectByUserIdAndName" resultMap="FavoriteFolderMap">
+        SELECT * FROM favorite_folder 
+        WHERE user_id = #{userId} AND name = #{name}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.linkme.backend.entity.FavoriteFolder" useGeneratedKeys="true" keyProperty="folderId">
+        INSERT INTO favorite_folder (user_id, name, created_at)
+        VALUES (#{userId}, #{name}, #{createdAt})
+    </insert>
+
+    <update id="update" parameterType="com.linkme.backend.entity.FavoriteFolder">
+        UPDATE favorite_folder SET
+            name = #{name}
+        WHERE folder_id = #{folderId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM favorite_folder WHERE folder_id = #{folderId}
+    </delete>
+
+</mapper>
+

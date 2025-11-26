@@ -114,4 +114,51 @@ public interface UserService {
      * @return 用户总数
      */
     int getUserCount();
+    
+    /**
+     * 获取用户点赞列表
+     * 
+     * @param userId 用户ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 点赞列表
+     */
+    List<com.linkme.backend.entity.Like> getUserLikes(Integer userId, Integer offset, Integer limit);
+    
+    /**
+     * 获取用户收藏列表
+     * 
+     * @param userId 用户ID
+     * @param folderId 收藏夹ID（可选）
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 收藏列表
+     */
+    List<com.linkme.backend.entity.Favorite> getUserFavorites(Integer userId, Integer folderId, Integer offset, Integer limit);
+    
+    /**
+     * 获取用户的收藏夹列表
+     * 
+     * @param userId 用户ID
+     * @return 收藏夹列表
+     */
+    List<com.linkme.backend.entity.FavoriteFolder> getFavoriteFolders(Integer userId);
+    
+    /**
+     * 创建收藏夹
+     * 
+     * @param userId 用户ID
+     * @param name 收藏夹名称
+     * @return 创建的收藏夹信息
+     */
+    com.linkme.backend.entity.FavoriteFolder createFavoriteFolder(Integer userId, String name);
+    
+    /**
+     * 删除收藏夹
+     * 
+     * @param userId 用户ID
+     * @param folderId 收藏夹ID
+     * @return 删除结果
+     */
+    boolean deleteFavoriteFolder(Integer userId, Integer folderId);
 }
