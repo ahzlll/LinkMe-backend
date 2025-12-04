@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.BlockMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BlockResultMap" type="com.linkme.backend.entity.Block">
+        <result column="blocker_id" property="blockerId"/>
+        <result column="blocked_id" property="blockedId"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 根据屏蔽者ID和被屏蔽者ID查询屏蔽关系 -->
+    <select id="selectByBlockerAndBlocked" resultMap="BlockResultMap">
+        SELECT * FROM block 
+        WHERE blocker_id = #{blockerId} AND blocked_id = #{blockedId}
+    </select>
+
+    <!-- 根据屏蔽者ID查询屏蔽列表 -->
+    <select id="selectByBlockerId" resultMap="BlockResultMap">
+        SELECT * FROM block 
+        WHERE blocker_id = #{blockerId}
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 插入新屏蔽关系 -->
+    <insert id="insert" parameterType="com.linkme.backend.entity.Block">
+        INSERT INTO block (blocker_id, blocked_id, created_at)
+        VALUES (#{blockerId}, #{blockedId}, #{createdAt})
+    </insert>
+
+    <!-- 根据屏蔽者ID和被屏蔽者ID删除屏蔽关系 -->
+    <delete id="deleteByBlockerAndBlocked">
+        DELETE FROM block 
+        WHERE blocker_id = #{blockerId} AND blocked_id = #{blockedId}
+    </delete>
+
+    <!-- 根据屏蔽者ID统计屏蔽数量 -->
+    <select id="countByBlockerId" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM block WHERE blocker_id = #{blockerId}
+    </select>
+
+</mapper>
+
