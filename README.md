@@ -1,5 +1,10 @@
 # LinkMe 交友聊天社交软件后端
 
+## 📚 文档导航
+
+- **[启动指南](./启动指南.md)** - 详细的环境配置和启动步骤
+- **[API 文档](./API.md)** - 完整的 API 接口文档和使用说明
+
 ## 项目简介
 
 LinkMe 是一个现代化的交友聊天社交软件后端系统，基于 Spring Boot 3 开发，提供完整的社交功能包括用户管理、帖子发布、匹配交友、聊天通信等核心功能。
@@ -89,126 +94,45 @@ src/main/java/com/linkme/backend/
 3. **评论表 (comment)**: 存储评论信息
 4. **点赞表 (like)**: 存储点赞关系
 5. **关注表 (follow)**: 存储关注关系
-6. **红心表 (heart)**: 存储红心关系
-7. **匹配表 (match)**: 存储匹配关系
-8. **会话表 (conversation)**: 存储聊天会话
-9. **消息表 (message)**: 存储聊天消息
-10. **通知表 (notification)**: 存储通知信息
+6. **屏蔽表 (block)**: 存储用户屏蔽关系
+7. **红心表 (heart)**: 存储红心关系
+8. **匹配表 (match)**: 存储匹配关系
+9. **会话表 (conversation)**: 存储聊天会话（支持免打扰和置顶）
+10. **消息表 (message)**: 存储聊天消息
+11. **通知表 (notification)**: 存储通知信息
 
-## API 接口设计
-
-### 用户管理接口
-
-- `GET /user/{user_id}/info` - 获取用户信息
-- `PUT /user/{user_id}/info` - 更新用户信息
-- `POST /user/register` - 用户注册
-- `POST /user/login` - 用户登录
-
-### 帖子管理接口
-
-- `GET /posts` - 获取帖子列表
-- `POST /posts` - 创建帖子
-- `GET /posts/{post_id}` - 获取帖子详情
-- `PUT /posts/{post_id}` - 编辑帖子
-- `DELETE /posts/{post_id}` - 删除帖子
-
-### 评论与互动接口
-
-- `POST /posts/{post_id}/comments` - 发表评论
-- `GET /posts/{post_id}/comments` - 获取评论列表
-- `POST /posts/{post_id}/like` - 点赞帖子
-- `DELETE /posts/{post_id}/like` - 取消点赞
-
-### 关注与红心接口
-
-- `POST /follow/{user_id}` - 关注用户
-- `DELETE /follow/{user_id}` - 取消关注
-- `POST /heart/{user_id}` - 给用户点红心
-- `DELETE /heart/{user_id}` - 取消红心
-
-### 匹配与推荐接口
-
-- `GET /matches` - 获取匹配列表
-- `GET /recommended_users` - 获取推荐用户
-
-### 聊天与通知接口
-
-- `GET /conversations` - 获取会话列表
-- `POST /conversations` - 创建会话
-- `GET /conversations/{conversation_id}/messages` - 获取消息记录
-- `POST /conversations/{conversation_id}/messages` - 发送消息
-- `GET /notifications` - 获取通知列表
+详细的数据库设计请参考数据库初始化脚本 `src/main/resources/sql/init.sql`。
 
 ## 快速开始
 
-### 环境要求
+详细的启动步骤请参考 [启动指南](./启动指南.md)。
 
-- JDK 17+
-- MySQL 8.0+
-- Redis 6.0+
-- Maven 3.6+
-
-### 安装步骤
-
-1. **克隆项目**
+**快速命令：**
 
 ```bash
-git clone <repository-url>
+# 进入项目目录
 cd LinkMe-backend
-```
 
-2. **配置数据库**
-
-```bash
-# 创建数据库
-mysql -u root -p < src/main/resources/sql/init.sql
-```
-
-3. **修改配置文件**
-
-```yaml
-# src/main/resources/application.yml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/linkme?useSSL=false&serverTimezone=Asia/Shanghai
-    username: your_username
-    password: your_password
-  redis:
-    host: localhost
-    port: 6379
-
-jwt:
-  secret: your_jwt_secret_key
-  expire-seconds: 86400
-```
-
-4. **运行项目**
-
-```bash
-mvn clean install
+# 启动服务
 mvn spring-boot:run
 ```
 
-5. **访问 API 文档**
+**访问 API 文档：**
 
-```
-# Swagger UI (推荐)
-http://localhost:8080/swagger-ui/index.html
+- Swagger UI: <http://localhost:8080/swagger-ui/index.html>
+- OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
-# 或直接访问（如果配置了路径）
-http://localhost:8080/swagger-ui.html
-
-# OpenAPI JSON文档
-http://localhost:8080/v3/api-docs
-```
+完整的 API 接口文档请参考 [API 文档](./API.md)。
 
 ### 在 Swagger UI 中使用 Token 认证
 
 1. **获取 Token**
+
    - 首先调用 `/user/register`（注册）或 `/user/login`（登录）接口
    - 从响应的 `data.token` 字段中复制 token
 
 2. **设置 Token**
+
    - 在 Swagger UI 页面右上角找到 🔒 **Authorize** 按钮并点击
    - 在弹出的对话框中：
      - 找到 `bearerAuth` 输入框
@@ -221,6 +145,7 @@ http://localhost:8080/v3/api-docs
    - token 会被持久化保存，刷新页面后仍然有效
 
 **注意事项：**
+
 - 注册和登录接口不需要 token（它们是公开接口）
 - 其他接口（如获取用户信息、更新用户信息等）都需要 token
 - token 有效期由配置文件中的 `jwt.expire-seconds` 设置（默认 24 小时）
@@ -244,9 +169,9 @@ http://localhost:8080/v3/api-docs
 ### 3. API 规范
 
 - 遵循 RESTful API 设计
-- 统一响应格式
+- 统一响应格式 `{code, message, data}`
 - 完善的错误处理
-- 详细的 API 文档
+- 详细的 API 文档（见 [API 文档](./API.md)）
 
 ## 部署说明
 
@@ -257,7 +182,6 @@ http://localhost:8080/v3/api-docs
 3. 设置 JWT 密钥
 4. 配置日志级别
 5. 设置服务器端口
-
 
 ## 贡献指南
 
@@ -272,7 +196,7 @@ MIT License
 
 ## 联系方式
 
-- 项目地址: https://github.com/linkme/
+- 项目地址: <https://github.com/linkme/>
 - 问题反馈:
 - 邮箱:
 
@@ -285,10 +209,10 @@ MIT License
 - 完善 API 文档
 - 功能初始搭建
 
-
 ### v1.1.0 (2025.10.31)
 
 **用户管理功能**
+
 - 新增密码修改和忘记密码功能
 - 新增密码、邮箱、手机号验证器
 - 新增验证码服务
@@ -297,23 +221,34 @@ MIT License
 - 优化参数验证和异常处理
 
 **帖子管理功能**
+
 - 新增完整的帖子 CRUD 功能（创建、查询、编辑、删除）
 - 新增支持图片和标签的帖子创建功能
 - 新增帖子详情聚合功能（图片、标签、点赞数）
 - 新增评论功能（发表评论、获取评论列表）
 - 新增点赞功能（点赞、取消点赞）
-- 新增帖子列表查询功能（支持分页、按用户ID、按标签筛选）
+- 新增帖子列表查询功能（支持分页、按用户 ID、按标签筛选）
 - 新增 PostCreateRequest 和 PostDetailResponse DTO 类
 
 ### v1.2.0 (2025-11-02)
 
-**实时聊天功能**
 - 新增 WebSocket 实时通信支持
 - 新增初步会话管理和消息发送功能
 - 新增初步消息已读/未读状态管理
 
 ### v1.2.1 (2025-11-04)
 
-  - 完善聊天模块会话管理
-  - 完善消息管理，支持未读消息数量统计
-  - 实现 JWT 认证和实时消息推送
+- 完善聊天模块会话管理
+- 完善消息管理，支持未读消息数量统计
+- 实现 JWT 认证和实时消息推送
+
+### v1.2.2 (2025-12-04)
+
+- 新增关注、屏蔽用户接口
+- 新增取消、检查关注状态接口
+- 新增 Block 实体类和 BlockMapper 数据访问层
+- 新增消息免打扰、置顶聊天、清空聊天记录功能
+- 完善会话管理，支持用户级别的免打扰和置顶设置
+- 创建 block 表用于存储用户屏蔽关系
+- 为 conversation 表添加免打扰和置顶字段
+- 完善 API 文档

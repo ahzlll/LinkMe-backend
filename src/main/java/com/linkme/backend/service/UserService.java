@@ -11,7 +11,7 @@ import java.util.List;
  * - 包括用户注册、登录、信息管理等功能
  * 
  * @author Ahz
- * @version 1.1
+ * @version 1.2.2
  */
 public interface UserService {
     
@@ -161,4 +161,40 @@ public interface UserService {
      * @return 删除结果
      */
     boolean deleteFavoriteFolder(Integer userId, Integer folderId);
+    
+    /**
+     * 关注用户
+     * 
+     * @param followerId 关注者ID
+     * @param followeeId 被关注者ID
+     * @return 关注结果
+     */
+    boolean followUser(Integer followerId, Integer followeeId);
+    
+    /**
+     * 取消关注用户
+     * 
+     * @param followerId 关注者ID
+     * @param followeeId 被关注者ID
+     * @return 取消关注结果
+     */
+    boolean unfollowUser(Integer followerId, Integer followeeId);
+    
+    /**
+     * 检查是否关注某用户
+     * 
+     * @param followerId 关注者ID
+     * @param followeeId 被关注者ID
+     * @return 是否关注
+     */
+    boolean isFollowing(Integer followerId, Integer followeeId);
+    
+    /**
+     * 屏蔽用户
+     * 
+     * @param blockerId 屏蔽者ID
+     * @param blockedId 被屏蔽者ID
+     * @return 屏蔽结果
+     */
+    boolean blockUser(Integer blockerId, Integer blockedId);
 }

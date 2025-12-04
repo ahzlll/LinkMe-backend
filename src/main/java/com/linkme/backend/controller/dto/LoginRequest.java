@@ -11,7 +11,7 @@ import lombok.Data;
  * - 支持邮箱、手机号或用户名登录
  * 
  * @author Ahz
- * @version 1.0
+ * @version 1.2.2
  */
 @Data
 @Schema(description = "用户登录请求")

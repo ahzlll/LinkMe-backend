@@ -28,7 +28,7 @@ import java.util.Map;
  * - 包括用户注册、登录、信息管理等功能
  * 
  * @author Ahz
- * @version 1.1
+ * @version 1.2.2
  */
 @RestController
 @RequestMapping("/user")
@@ -542,5 +542,129 @@ public class UserController {
         } else {
             return R.fail(400, "收藏夹删除失败，可能不存在或无权限");
         }
+    }
+    
+    /**
+     * 关注用户
+     * 
+     * @param userId 被关注者ID
+     * @param request HTTP请求
+     * @return 关注结果
+     */
+    @PostMapping("/follow/{userId}")
+    @Operation(summary = "关注用户", description = "关注指定用户", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> followUser(
+            @PathVariable @Parameter(description = "被关注者ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        if (currentUserId.equals(userId)) {
+            return R.fail(400, "不能关注自己");
+        }
+        
+        boolean success = userService.followUser(currentUserId, userId);
+        if (success) {
+            return R.ok("关注成功");
+        } else {
+            return R.fail(400, "关注失败，可能已经关注过或用户不存在");
+        }
+    }
+    
+    /**
+     * 取消关注用户
+     * 
+     * @param userId 被关注者ID
+     * @param request HTTP请求
+     * @return 取消关注结果
+     */
+    @DeleteMapping("/unfollow/{userId}")
+    @Operation(summary = "取消关注用户", description = "取消关注指定用户", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> unfollowUser(
+            @PathVariable @Parameter(description = "被关注者ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        boolean success = userService.unfollowUser(currentUserId, userId);
+        if (success) {
+            return R.ok("取消关注成功");
+        } else {
+            return R.fail(400, "取消关注失败，可能未关注该用户");
+        }
+    }
+    
+    /**
+     * 检查关注状态
+     * 
+     * @param userId 被检查的用户ID
+     * @param request HTTP请求
+     * @return 关注状态
+     */
+    @GetMapping("/follow/{userId}/check")
+    @Operation(summary = "检查关注状态", description = "检查当前用户是否关注了指定用户", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<Map<String, Boolean>> checkFollowing(
+            @PathVariable @Parameter(description = "被检查的用户ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        boolean isFollowing = userService.isFollowing(currentUserId, userId);
+        return R.ok(Map.of("isFollowing", isFollowing));
+    }
+    
+    /**
+     * 屏蔽用户
+     * 
+     * @param userId 被屏蔽者ID
+     * @param request HTTP请求
+     * @return 屏蔽结果
+     */
+    @PostMapping("/block/{userId}")
+    @Operation(summary = "屏蔽用户", description = "屏蔽指定用户", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> blockUser(
+            @PathVariable @Parameter(description = "被屏蔽者ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        if (currentUserId.equals(userId)) {
+            return R.fail(400, "不能屏蔽自己");
+        }
+        
+        boolean success = userService.blockUser(currentUserId, userId);
+        if (success) {
+            return R.ok("屏蔽成功");
+        } else {
+            return R.fail(400, "屏蔽失败，可能已经屏蔽过或用户不存在");
+        }
+    }
+    
+    /**
+     * 从请求头中获取当前用户ID
+     */
+    private Integer getCurrentUserId(jakarta.servlet.http.HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                return jwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
     }
 }

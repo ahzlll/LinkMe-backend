@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * - 管理用户连接状态
  * 
  * @author Ahz
- * @version 1.2
+ * @version 1.2.2
  */
 @Component
 public class ChatWebSocketHandler implements WebSocketHandler {

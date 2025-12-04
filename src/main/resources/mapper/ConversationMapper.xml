@@ -8,6 +8,10 @@
         <result column="user1_id" property="user1Id"/>
         <result column="user2_id" property="user2Id"/>
         <result column="created_at" property="createdAt"/>
+        <result column="user1_muted" property="user1Muted"/>
+        <result column="user2_muted" property="user2Muted"/>
+        <result column="user1_pinned" property="user1Pinned"/>
+        <result column="user2_pinned" property="user2Pinned"/>
     </resultMap>
 
     <!-- 根据会话ID查询会话信息 -->
@@ -45,6 +49,16 @@
         SELECT COUNT(*) FROM conversation 
         WHERE user1_id = #{userId} OR user2_id = #{userId}
     </select>
+
+    <!-- 更新会话信息 -->
+    <update id="update" parameterType="com.linkme.backend.entity.Conversation">
+        UPDATE conversation 
+        SET user1_muted = #{user1Muted},
+            user2_muted = #{user2Muted},
+            user1_pinned = #{user1Pinned},
+            user2_pinned = #{user2Pinned}
+        WHERE conversation_id = #{conversationId}
+    </update>
 
 </mapper>
 

@@ -4,10 +4,14 @@ import com.linkme.backend.entity.User;
 import com.linkme.backend.entity.Like;
 import com.linkme.backend.entity.Favorite;
 import com.linkme.backend.entity.FavoriteFolder;
+import com.linkme.backend.entity.Follow;
+import com.linkme.backend.entity.Block;
 import com.linkme.backend.mapper.UserMapper;
 import com.linkme.backend.mapper.LikeMapper;
 import com.linkme.backend.mapper.FavoriteMapper;
 import com.linkme.backend.mapper.FavoriteFolderMapper;
+import com.linkme.backend.mapper.FollowMapper;
+import com.linkme.backend.mapper.BlockMapper;
 import com.linkme.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,7 +28,7 @@ import java.util.List;
  * - 包括用户注册、登录、信息管理等功能
  * 
  * @author Ahz
- * @version 1.1
+ * @version 1.2.2
  */
 @Service
 public class UserServiceImpl implements UserService {
@@ -40,6 +44,12 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private FavoriteFolderMapper favoriteFolderMapper;
+    
+    @Autowired
+    private FollowMapper followMapper;
+    
+    @Autowired
+    private BlockMapper blockMapper;
     
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
@@ -260,6 +270,92 @@ public class UserServiceImpl implements UserService {
             
             // 删除收藏夹
             int result = favoriteFolderMapper.deleteById(folderId);
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean followUser(Integer followerId, Integer followeeId) {
+        try {
+            // 不能关注自己
+            if (followerId.equals(followeeId)) {
+                return false;
+            }
+            
+            // 检查是否已经关注
+            Follow existing = followMapper.selectByFollowerAndFollowee(followerId, followeeId);
+            if (existing != null) {
+                return false; // 已经关注
+            }
+            
+            // 检查被关注者是否存在
+            User followee = userMapper.selectById(followeeId);
+            if (followee == null) {
+                return false; // 被关注者不存在
+            }
+            
+            // 创建关注关系
+            Follow follow = new Follow();
+            follow.setFollowerId(followerId);
+            follow.setFolloweeId(followeeId);
+            follow.setCreatedAt(LocalDateTime.now());
+            
+            int result = followMapper.insert(follow);
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean unfollowUser(Integer followerId, Integer followeeId) {
+        try {
+            int result = followMapper.deleteByFollowerAndFollowee(followerId, followeeId);
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean isFollowing(Integer followerId, Integer followeeId) {
+        try {
+            Follow follow = followMapper.selectByFollowerAndFollowee(followerId, followeeId);
+            return follow != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean blockUser(Integer blockerId, Integer blockedId) {
+        try {
+            // 不能屏蔽自己
+            if (blockerId.equals(blockedId)) {
+                return false;
+            }
+            
+            // 检查是否已经屏蔽
+            Block existing = blockMapper.selectByBlockerAndBlocked(blockerId, blockedId);
+            if (existing != null) {
+                return false; // 已经屏蔽
+            }
+            
+            // 检查被屏蔽者是否存在
+            User blocked = userMapper.selectById(blockedId);
+            if (blocked == null) {
+                return false; // 被屏蔽者不存在
+            }
+            
+            // 创建屏蔽关系
+            Block block = new Block();
+            block.setBlockerId(blockerId);
+            block.setBlockedId(blockedId);
+            block.setCreatedAt(LocalDateTime.now());
+            
+            int result = blockMapper.insert(block);
             return result > 0;
         } catch (Exception e) {
             return false;

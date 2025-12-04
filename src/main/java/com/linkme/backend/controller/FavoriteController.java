@@ -24,7 +24,7 @@ import java.util.Map;
  * - 包括收藏夹管理、收藏帖子等功能
  * 
  * @author Ahz
- * @version 1.0
+ * @version 1.2.2
  */
 @RestController
 @RequestMapping("/favorite_folders")

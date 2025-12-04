@@ -75,5 +75,10 @@
         LIMIT 1
     </select>
 
+    <!-- 根据会话ID删除所有消息 -->
+    <delete id="deleteByConversationId" parameterType="int">
+        DELETE FROM message WHERE conversation_id = #{conversationId}
+    </delete>
+
 </mapper>
 

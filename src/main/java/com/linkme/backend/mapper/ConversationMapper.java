@@ -14,7 +14,7 @@ import java.util.List;
  * - 支持私聊会话管理
  * 
  * @author Ahz, riki
- * @version 1.0
+ * @version 1.2.2
  */
 @Mapper
 public interface ConversationMapper {
@@ -69,4 +69,12 @@ public interface ConversationMapper {
      * @return 会话数量
      */
     int countByUserId(@Param("userId") Integer userId);
+    
+    /**
+     * 更新会话信息
+     * 
+     * @param conversation 会话信息
+     * @return 影响行数
+     */
+    int update(Conversation conversation);
 }

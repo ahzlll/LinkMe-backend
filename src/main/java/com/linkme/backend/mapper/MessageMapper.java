@@ -14,7 +14,7 @@ import java.util.List;
  * - 支持消息发送、查询、删除等功能
  * 
  * @author Ahz
- * @version 1.0
+ * @version 1.2.2
  */
 @Mapper
 public interface MessageMapper {
@@ -96,4 +96,12 @@ public interface MessageMapper {
      * @return 最新消息
      */
     Message selectLatestByConversationId(@Param("conversationId") Integer conversationId);
+    
+    /**
+     * 根据会话ID删除所有消息
+     * 
+     * @param conversationId 会话ID
+     * @return 影响行数
+     */
+    int deleteByConversationId(@Param("conversationId") Integer conversationId);
 }

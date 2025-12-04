@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * - 注册拦截器和跨域配置
  * 
  * @author Ahz, riki
- * @version 1.1
+ * @version 1.2.2
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {

@@ -10,16 +10,47 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# IDE
+# IDE - IntelliJ IDEA
 .idea/
 *.iws
 *.iml
 *.ipr
+out/
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+bin/
+.metadata
+
+# IDE - VS Code
 .vscode/
+*.code-workspace
+
+# IDE - NetBeans
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Editor
 *.swp
 *.swo
 *~
+*.bak
+*.tmp
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
 # Compiled class files
 *.class
@@ -27,9 +58,11 @@ buildNumber.properties
 # Log files
 *.log
 logs/
+*.log.*
 
 # Package Files
 *.jar
+!**/src/main/**/*.jar
 *.war
 *.nar
 *.ear
@@ -39,11 +72,53 @@ logs/
 
 # Virtual Machine crash logs
 hs_err_pid*
+replay_pid*
 
 # Spring Boot
 application-local.yml
 application-dev.yml
+application-prod.yml
+application-*.yml
+!application.yml
+*.pid
+*.log.*
 
-# OS
-Thumbs.db
+# Test coverage
+.nyc_output/
+coverage/
+*.lcov
+.idea/coverage/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Build artifacts
+build/
+dist/
+out/
+
+# MyBatis Generator
+generated/
+
+# Lombok
+lombok.config
+
+# JUnit
+.junit/
+test-results/
 

@@ -22,7 +22,7 @@ import java.util.Map;
  * - 将用户ID存储到session attributes中供后续使用
  * 
  * @author Ahz
- * @version 1.2
+ * @version 1.2.2
  */
 @Component
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {

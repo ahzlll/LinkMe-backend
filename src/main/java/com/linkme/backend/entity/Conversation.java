@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * - 输出：会话信息
  * 
  * @author Ahz, riki
- * @version 1.0
+ * @version 1.2.2
  */
 @Data
 public class Conversation {
@@ -38,4 +38,24 @@ public class Conversation {
      * 创建时间 - 会话创建时间
      */
     private LocalDateTime createdAt;
+    
+    /**
+     * 用户1是否免打扰
+     */
+    private Boolean user1Muted;
+    
+    /**
+     * 用户2是否免打扰
+     */
+    private Boolean user2Muted;
+    
+    /**
+     * 用户1是否置顶
+     */
+    private Boolean user1Pinned;
+    
+    /**
+     * 用户2是否置顶
+     */
+    private Boolean user2Pinned;
 }

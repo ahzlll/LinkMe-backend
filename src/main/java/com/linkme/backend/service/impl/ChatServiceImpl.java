@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * - 包括会话管理、消息发送、未读消息管理等功能
  * 
  * @author Ahz
- * @version 1.2.1
+ * @version 1.2.2
  */
 @Service
 public class ChatServiceImpl implements ChatService {
@@ -292,6 +292,84 @@ public class ChatServiceImpl implements ChatService {
             totalUnread += messageMapper.countUnreadByConversationId(conversation.getConversationId(), userId);
         }
         return totalUnread;
+    }
+    
+    @Override
+    public boolean setMuteStatus(Integer conversationId, Integer userId, Boolean muted) {
+        try {
+            Conversation conversation = conversationMapper.selectById(conversationId);
+            if (conversation == null) {
+                return false;
+            }
+            
+            // 验证用户是否有权限
+            if (!conversation.getUser1Id().equals(userId) && !conversation.getUser2Id().equals(userId)) {
+                return false;
+            }
+            
+            // 确定是user1还是user2
+            boolean isUser1 = conversation.getUser1Id().equals(userId);
+            if (isUser1) {
+                conversation.setUser1Muted(muted);
+            } else {
+                conversation.setUser2Muted(muted);
+            }
+            
+            int result = conversationMapper.update(conversation);
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean setPinStatus(Integer conversationId, Integer userId, Boolean pinned) {
+        try {
+            Conversation conversation = conversationMapper.selectById(conversationId);
+            if (conversation == null) {
+                return false;
+            }
+            
+            // 验证用户是否有权限
+            if (!conversation.getUser1Id().equals(userId) && !conversation.getUser2Id().equals(userId)) {
+                return false;
+            }
+            
+            // 确定是user1还是user2
+            boolean isUser1 = conversation.getUser1Id().equals(userId);
+            if (isUser1) {
+                conversation.setUser1Pinned(pinned);
+            } else {
+                conversation.setUser2Pinned(pinned);
+            }
+            
+            int result = conversationMapper.update(conversation);
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    @Transactional
+    public boolean clearMessages(Integer conversationId, Integer userId) {
+        try {
+            Conversation conversation = conversationMapper.selectById(conversationId);
+            if (conversation == null) {
+                return false;
+            }
+            
+            // 验证用户是否有权限
+            if (!conversation.getUser1Id().equals(userId) && !conversation.getUser2Id().equals(userId)) {
+                return false;
+            }
+            
+            // 删除该会话的所有消息
+            int result = messageMapper.deleteByConversationId(conversationId);
+            return result >= 0; // >= 0 表示操作成功（即使没有消息可删除也返回true）
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
 

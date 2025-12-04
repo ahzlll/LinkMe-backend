@@ -14,7 +14,7 @@ import java.util.List;
  * - 包括会话管理、消息发送、未读消息管理等功能
  * 
  * @author Ahz
- * @version 1.2
+ * @version 1.2.2
  */
 public interface ChatService {
     
@@ -96,5 +96,34 @@ public interface ChatService {
      * @return 总未读消息数量
      */
     int getTotalUnreadCount(Integer userId);
+    
+    /**
+     * 设置会话免打扰状态
+     * 
+     * @param conversationId 会话ID
+     * @param userId 用户ID
+     * @param muted 是否免打扰
+     * @return 是否成功
+     */
+    boolean setMuteStatus(Integer conversationId, Integer userId, Boolean muted);
+    
+    /**
+     * 设置会话置顶状态
+     * 
+     * @param conversationId 会话ID
+     * @param userId 用户ID
+     * @param pinned 是否置顶
+     * @return 是否成功
+     */
+    boolean setPinStatus(Integer conversationId, Integer userId, Boolean pinned);
+    
+    /**
+     * 清空会话消息
+     * 
+     * @param conversationId 会话ID
+     * @param userId 用户ID
+     * @return 是否成功
+     */
+    boolean clearMessages(Integer conversationId, Integer userId);
 }
 

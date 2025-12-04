@@ -27,7 +27,7 @@ import java.util.Map;
  * - 包括会话管理、消息发送等功能
  * 
  * @author Ahz
- * @version 1.2.1
+ * @version 1.2.2
  */
 @RestController
 @RequestMapping("/conversations")
@@ -308,6 +308,98 @@ public class ChatController {
         
         int count = chatService.getTotalUnreadCount(userId);
         return R.ok(Map.of("totalUnreadCount", count));
+    }
+    
+    /**
+     * 设置消息免打扰
+     * 
+     * @param id 会话ID
+     * @param requestBody 请求体（包含muted字段）
+     * @param httpRequest HTTP请求
+     * @return 操作结果
+     */
+    @PutMapping("/{id}/mute")
+    @Operation(summary = "设置消息免打扰", description = "设置或取消会话的消息免打扰状态", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> setMuteStatus(
+            @PathVariable @Parameter(description = "会话ID") Integer id,
+            @RequestBody Map<String, Boolean> requestBody,
+            HttpServletRequest httpRequest) {
+        Integer userId = getCurrentUserId(httpRequest);
+        if (userId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        Boolean muted = requestBody.get("muted");
+        if (muted == null) {
+            return R.fail(400, "muted参数不能为空");
+        }
+        
+        boolean success = chatService.setMuteStatus(id, userId, muted);
+        if (success) {
+            return R.ok(muted ? "已开启消息免打扰" : "已关闭消息免打扰");
+        } else {
+            return R.fail(400, "操作失败，会话可能不存在或无权限访问");
+        }
+    }
+    
+    /**
+     * 设置置顶聊天
+     * 
+     * @param id 会话ID
+     * @param requestBody 请求体（包含pinned字段）
+     * @param httpRequest HTTP请求
+     * @return 操作结果
+     */
+    @PutMapping("/{id}/pin")
+    @Operation(summary = "设置置顶聊天", description = "设置或取消会话的置顶状态", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> setPinStatus(
+            @PathVariable @Parameter(description = "会话ID") Integer id,
+            @RequestBody Map<String, Boolean> requestBody,
+            HttpServletRequest httpRequest) {
+        Integer userId = getCurrentUserId(httpRequest);
+        if (userId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        Boolean pinned = requestBody.get("pinned");
+        if (pinned == null) {
+            return R.fail(400, "pinned参数不能为空");
+        }
+        
+        boolean success = chatService.setPinStatus(id, userId, pinned);
+        if (success) {
+            return R.ok(pinned ? "已置顶聊天" : "已取消置顶");
+        } else {
+            return R.fail(400, "操作失败，会话可能不存在或无权限访问");
+        }
+    }
+    
+    /**
+     * 清空聊天记录
+     * 
+     * @param id 会话ID
+     * @param httpRequest HTTP请求
+     * @return 操作结果
+     */
+    @DeleteMapping("/{id}/messages")
+    @Operation(summary = "清空聊天记录", description = "清空指定会话的所有消息", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> clearMessages(
+            @PathVariable @Parameter(description = "会话ID") Integer id,
+            HttpServletRequest httpRequest) {
+        Integer userId = getCurrentUserId(httpRequest);
+        if (userId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        boolean success = chatService.clearMessages(id, userId);
+        if (success) {
+            return R.ok("聊天记录已清空");
+        } else {
+            return R.fail(400, "清空失败，会话可能不存在或无权限访问");
+        }
     }
 }
 
