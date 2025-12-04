@@ -197,4 +197,22 @@ public interface UserService {
      * @return 屏蔽结果
      */
     boolean blockUser(Integer blockerId, Integer blockedId);
+    
+    /**
+     * 取消屏蔽用户
+     * 
+     * @param blockerId 屏蔽者ID
+     * @param blockedId 被屏蔽者ID
+     * @return 取消屏蔽结果
+     */
+    boolean unblockUser(Integer blockerId, Integer blockedId);
+    
+    /**
+     * 检查是否屏蔽某用户
+     * 
+     * @param blockerId 屏蔽者ID
+     * @param blockedId 被屏蔽者ID
+     * @return 是否屏蔽
+     */
+    boolean isBlocking(Integer blockerId, Integer blockedId);
 }

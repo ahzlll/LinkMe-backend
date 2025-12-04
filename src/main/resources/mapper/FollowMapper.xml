@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.FollowMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="FollowResultMap" type="com.linkme.backend.entity.Follow">
+        <result column="follower_id" property="followerId"/>
+        <result column="followee_id" property="followeeId"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 根据关注者ID和被关注者ID查询关注关系 -->
+    <select id="selectByFollowerAndFollowee" resultMap="FollowResultMap">
+        SELECT * FROM follow 
+        WHERE follower_id = #{followerId} AND followee_id = #{followeeId}
+    </select>
+
+    <!-- 根据关注者ID查询关注列表 -->
+    <select id="selectByFollowerId" resultMap="FollowResultMap">
+        SELECT * FROM follow 
+        WHERE follower_id = #{followerId}
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据被关注者ID查询粉丝列表 -->
+    <select id="selectByFolloweeId" resultMap="FollowResultMap">
+        SELECT * FROM follow 
+        WHERE followee_id = #{followeeId}
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 插入新关注关系 -->
+    <insert id="insert" parameterType="com.linkme.backend.entity.Follow">
+        INSERT INTO follow (follower_id, followee_id, created_at)
+        VALUES (#{followerId}, #{followeeId}, #{createdAt})
+    </insert>
+
+    <!-- 根据关注者ID和被关注者ID删除关注关系 -->
+    <delete id="deleteByFollowerAndFollowee">
+        DELETE FROM follow 
+        WHERE follower_id = #{followerId} AND followee_id = #{followeeId}
+    </delete>
+
+    <!-- 根据关注者ID统计关注数量 -->
+    <select id="countByFollowerId" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM follow WHERE follower_id = #{followerId}
+    </select>
+
+    <!-- 根据被关注者ID统计粉丝数量 -->
+    <select id="countByFolloweeId" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM follow WHERE followee_id = #{followeeId}
+    </select>
+
+</mapper>

@@ -653,6 +653,54 @@ public class UserController {
     }
     
     /**
+     * 取消屏蔽用户
+     * 
+     * @param userId 被屏蔽者ID
+     * @param request HTTP请求
+     * @return 取消屏蔽结果
+     */
+    @DeleteMapping("/unblock/{userId}")
+    @Operation(summary = "取消屏蔽用户", description = "取消屏蔽指定用户", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> unblockUser(
+            @PathVariable @Parameter(description = "被屏蔽者ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        boolean success = userService.unblockUser(currentUserId, userId);
+        if (success) {
+            return R.ok("取消屏蔽成功");
+        } else {
+            return R.fail(400, "取消屏蔽失败，可能未屏蔽该用户");
+        }
+    }
+    
+    /**
+     * 检查屏蔽状态
+     * 
+     * @param userId 被检查的用户ID
+     * @param request HTTP请求
+     * @return 屏蔽状态
+     */
+    @GetMapping("/block/{userId}/check")
+    @Operation(summary = "检查屏蔽状态", description = "检查当前用户是否屏蔽了指定用户", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<Map<String, Boolean>> checkBlocking(
+            @PathVariable @Parameter(description = "被检查的用户ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        boolean isBlocking = userService.isBlocking(currentUserId, userId);
+        return R.ok(Map.of("isBlocking", isBlocking));
+    }
+    
+    /**
      * 从请求头中获取当前用户ID
      */
     private Integer getCurrentUserId(jakarta.servlet.http.HttpServletRequest request) {

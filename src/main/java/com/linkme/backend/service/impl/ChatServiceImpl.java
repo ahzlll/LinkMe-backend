@@ -7,9 +7,11 @@ import com.linkme.backend.controller.dto.MessageResponse;
 import com.linkme.backend.entity.Conversation;
 import com.linkme.backend.entity.Message;
 import com.linkme.backend.entity.User;
+import com.linkme.backend.entity.Block;
 import com.linkme.backend.mapper.ConversationMapper;
 import com.linkme.backend.mapper.MessageMapper;
 import com.linkme.backend.mapper.UserMapper;
+import com.linkme.backend.mapper.BlockMapper;
 import com.linkme.backend.service.ChatService;
 import com.linkme.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,9 @@ public class ChatServiceImpl implements ChatService {
     
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private BlockMapper blockMapper;
     
     @Autowired
     private ChatWebSocketHandler webSocketHandler;
@@ -116,6 +121,11 @@ public class ChatServiceImpl implements ChatService {
         
         response.setCreatedAt(conversation.getCreatedAt());
         
+        // 设置当前用户的免打扰和置顶状态
+        boolean isUser1 = conversation.getUser1Id().equals(userId);
+        response.setIsMuted(isUser1 ? conversation.getUser1Muted() : conversation.getUser2Muted());
+        response.setIsPinned(isUser1 ? conversation.getUser1Pinned() : conversation.getUser2Pinned());
+        
         return response;
     }
     
@@ -153,6 +163,11 @@ public class ChatServiceImpl implements ChatService {
             response.setUnreadCount(unreadCount);
             
             response.setCreatedAt(conversation.getCreatedAt());
+            
+            // 设置当前用户的免打扰和置顶状态
+            boolean isUser1 = conversation.getUser1Id().equals(userId);
+            response.setIsMuted(isUser1 ? conversation.getUser1Muted() : conversation.getUser2Muted());
+            response.setIsPinned(isUser1 ? conversation.getUser1Pinned() : conversation.getUser2Pinned());
             
             return response;
         }).collect(Collectors.toList());
@@ -242,7 +257,19 @@ public class ChatServiceImpl implements ChatService {
         int offset = (page - 1) * size;
         List<Message> messages = messageMapper.selectByConversationId(conversationId, offset, size);
         
-        return messages.stream().map(message -> {
+        // 过滤被屏蔽用户的消息
+        return messages.stream()
+                .filter(message -> {
+                    // 如果消息不是当前用户发送的，检查是否屏蔽了发送者
+                    if (!message.getSenderId().equals(userId)) {
+                        Block block = blockMapper.selectByBlockerAndBlocked(userId, message.getSenderId());
+                        if (block != null) {
+                            return false; // 已屏蔽，过滤掉该消息
+                        }
+                    }
+                    return true; // 不过滤
+                })
+                .map(message -> {
             MessageResponse response = new MessageResponse();
             response.setMessageId(message.getMessageId());
             response.setConversationId(message.getConversationId());

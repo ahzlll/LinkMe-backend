@@ -305,6 +305,8 @@ public class UserServiceImpl implements UserService {
             int result = followMapper.insert(follow);
             return result > 0;
         } catch (Exception e) {
+            System.err.println("关注用户失败: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -357,6 +359,26 @@ public class UserServiceImpl implements UserService {
             
             int result = blockMapper.insert(block);
             return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean unblockUser(Integer blockerId, Integer blockedId) {
+        try {
+            int result = blockMapper.deleteByBlockerAndBlocked(blockerId, blockedId);
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean isBlocking(Integer blockerId, Integer blockedId) {
+        try {
+            Block block = blockMapper.selectByBlockerAndBlocked(blockerId, blockedId);
+            return block != null;
         } catch (Exception e) {
             return false;
         }

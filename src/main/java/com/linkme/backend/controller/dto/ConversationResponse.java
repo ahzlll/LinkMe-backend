@@ -59,5 +59,15 @@ public class ConversationResponse {
      * 创建时间
      */
     private LocalDateTime createdAt;
+    
+    /**
+     * 当前用户是否对此会话设置了免打扰
+     */
+    private Boolean isMuted;
+    
+    /**
+     * 当前用户是否对此会话设置了置顶
+     */
+    private Boolean isPinned;
 }
 
