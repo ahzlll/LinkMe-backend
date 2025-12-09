@@ -32,14 +32,16 @@
     </select>
 
     <!-- 根据用户ID查询帖子列表 -->
-    <select id="selectByUserId" resultMap="PostResultMap">
+    <select id="selectByUserId" parameterType="map" resultMap="PostResultMap">
         SELECT p.*, 
                u.nickname, 
                u.username, 
                u.avatar_url as avatarUrl,
                COALESCE((SELECT COUNT(*) FROM `like` WHERE post_id = p.post_id), 0) as likeCount,
                COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
-               COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount
+               COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount,
+               (SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM follow 
+                WHERE follower_id = #{currentUserId} AND followee_id = p.user_id) as isFollowed
         FROM post p
         LEFT JOIN user u ON p.user_id = u.user_id
         WHERE p.user_id = #{userId} 
@@ -55,7 +57,9 @@
                u.avatar_url as avatarUrl,
                COALESCE((SELECT COUNT(*) FROM `like` WHERE post_id = p.post_id), 0) as likeCount,
                COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
-               COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount
+               COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount,
+               (SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM follow 
+                WHERE follower_id = #{currentUserId} AND followee_id = p.user_id) as isFollowed
         FROM post p
         LEFT JOIN user u ON p.user_id = u.user_id
         ORDER BY p.created_at DESC 
@@ -63,14 +67,16 @@
     </select>
 
     <!-- 根据标签查询帖子列表 -->
-    <select id="selectByTag" resultMap="PostResultMap">
+    <select id="selectByTag" parameterType="map" resultMap="PostResultMap">
         SELECT p.*, 
                u.nickname, 
                u.username, 
                u.avatar_url as avatarUrl,
                COALESCE((SELECT COUNT(*) FROM `like` WHERE post_id = p.post_id), 0) as likeCount,
                COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
-               COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount
+               COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount,
+               (SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM follow 
+                WHERE follower_id = #{currentUserId} AND followee_id = p.user_id) as isFollowed
         FROM post p
         INNER JOIN post_tag pt ON p.post_id = pt.post_id
         LEFT JOIN user u ON p.user_id = u.user_id

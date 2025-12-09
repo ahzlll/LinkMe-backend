@@ -33,18 +33,20 @@ public interface PostMapper {
      * @param userId 用户ID
      * @param offset 偏移量
      * @param limit 限制数量
+     * @param currentUserId 当前用户ID
      * @return 帖子列表
      */
-    List<Post> selectByUserId(@Param("userId") Integer userId, @Param("offset") Integer offset, @Param("limit") Integer limit);
+    List<Post> selectByUserId(@Param("userId") Integer userId, @Param("offset") Integer offset, @Param("limit") Integer limit, @Param("currentUserId") Integer currentUserId);
     
     /**
      * 查询所有帖子（分页）
      * 
      * @param offset 偏移量
      * @param limit 限制数量
+     * @param currentUserId 当前用户ID
      * @return 帖子列表
      */
-    List<Post> selectAll(@Param("offset") Integer offset, @Param("limit") Integer limit);
+    List<Post> selectAll(@Param("offset") Integer offset, @Param("limit") Integer limit, @Param("currentUserId") Integer currentUserId);
     
     /**
      * 根据标签查询帖子列表
@@ -52,9 +54,10 @@ public interface PostMapper {
      * @param tagId 标签ID
      * @param offset 偏移量
      * @param limit 限制数量
+     * @param currentUserId 当前用户ID
      * @return 帖子列表
      */
-    List<Post> selectByTag(@Param("tagId") Integer tagId, @Param("offset") Integer offset, @Param("limit") Integer limit);
+    List<Post> selectByTag(@Param("tagId") Integer tagId, @Param("offset") Integer offset, @Param("limit") Integer limit, @Param("currentUserId") Integer currentUserId);
     
     /**
      * 插入新帖子

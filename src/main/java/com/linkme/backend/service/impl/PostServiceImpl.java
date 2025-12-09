@@ -44,21 +44,21 @@ public class PostServiceImpl implements PostService {
     }
     
     @Override
-    public List<Post> getPostsByUserId(Integer userId, Integer page, Integer size) {
+    public List<Post> getPostsByUserId(Integer userId, Integer page, Integer size, Integer currentUserId) {
         int offset = (page - 1) * size;
-        return postMapper.selectByUserId(userId, offset, size);
+        return postMapper.selectByUserId(userId, offset, size, currentUserId);
     }
     
     @Override
-    public List<Post> getAllPosts(Integer page, Integer size) {
+    public List<Post> getAllPosts(Integer page, Integer size, Integer currentUserId) {
         int offset = (page - 1) * size;
-        return postMapper.selectAll(offset, size);
+        return postMapper.selectAll(offset, size, currentUserId);
     }
     
     @Override
-    public List<Post> getPostsByTag(Integer tagId, Integer page, Integer size) {
+    public List<Post> getPostsByTag(Integer tagId, Integer page, Integer size, Integer currentUserId) {
         int offset = (page - 1) * size;
-        return postMapper.selectByTag(tagId, offset, size);
+        return postMapper.selectByTag(tagId, offset, size, currentUserId);
     }
     
     @Override

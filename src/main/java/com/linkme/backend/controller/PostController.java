@@ -1,6 +1,7 @@
 package com.linkme.backend.controller;
 
 import com.linkme.backend.common.R;
+import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.entity.Post;
 import com.linkme.backend.entity.Comment;
 import com.linkme.backend.service.PostService;
@@ -8,6 +9,7 @@ import com.linkme.backend.mapper.CommentMapper;
 import com.linkme.backend.mapper.LikeMapper;
 import com.linkme.backend.controller.dto.PostCreateRequest;
 import com.linkme.backend.controller.dto.PostDetailResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -45,6 +47,24 @@ public class PostController {
     private CommentMapper commentMapper;
     @Autowired
     private LikeMapper likeMapper;
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    /**
+     * 从请求头中获取当前用户ID
+     */
+    private Integer getCurrentUserId(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                return jwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
+    }
     
     /**
      * 获取帖子列表
@@ -61,15 +81,17 @@ public class PostController {
     public R<List<Post>> getPosts(@RequestParam(defaultValue = "1") Integer page,
                                  @RequestParam(defaultValue = "10") Integer limit,
                                  @RequestParam(required = false) Integer tag,
-                                 @RequestParam(required = false) Integer userId) {
+                                 @RequestParam(required = false) Integer userId,
+                                 HttpServletRequest request) {
         List<Post> posts;
+        Integer currentUserId = getCurrentUserId(request);
         
         if (userId != null) {
-            posts = postService.getPostsByUserId(userId, page, limit);
+            posts = postService.getPostsByUserId(userId, page, limit, currentUserId);
         } else if (tag != null) {
-            posts = postService.getPostsByTag(tag, page, limit);
+            posts = postService.getPostsByTag(tag, page, limit, currentUserId);
         } else {
-            posts = postService.getAllPosts(page, limit);
+            posts = postService.getAllPosts(page, limit, currentUserId);
         }
         
         return R.ok(posts);

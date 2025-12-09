@@ -262,9 +262,13 @@ public class ChatServiceImpl implements ChatService {
                 .filter(message -> {
                     // 如果消息不是当前用户发送的，检查是否屏蔽了发送者
                     if (!message.getSenderId().equals(userId)) {
-                        Block block = blockMapper.selectByBlockerAndBlocked(userId, message.getSenderId());
-                        if (block != null) {
-                            return false; // 已屏蔽，过滤掉该消息
+                        try {
+                            Block block = blockMapper.selectByBlockerAndBlocked(userId, message.getSenderId());
+                            if (block != null) {
+                                return false; // 已屏蔽，过滤掉该消息
+                            }
+                        } catch (Exception e) {
+                            // 忽略数据库错误，继续返回消息
                         }
                     }
                     return true; // 不过滤

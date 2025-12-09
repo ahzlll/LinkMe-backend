@@ -31,18 +31,20 @@ public interface PostService {
      * @param userId 用户ID
      * @param page 页码
      * @param size 每页数量
+     * @param currentUserId 当前登录用户ID
      * @return 帖子列表
      */
-    List<Post> getPostsByUserId(Integer userId, Integer page, Integer size);
+    List<Post> getPostsByUserId(Integer userId, Integer page, Integer size, Integer currentUserId);
     
     /**
      * 获取所有帖子列表（分页）
      * 
      * @param page 页码
      * @param size 每页数量
+     * @param currentUserId 当前用户ID（用于判断关注状态）
      * @return 帖子列表
      */
-    List<Post> getAllPosts(Integer page, Integer size);
+    List<Post> getAllPosts(Integer page, Integer size, Integer currentUserId);
     
     /**
      * 根据标签获取帖子列表
@@ -50,9 +52,10 @@ public interface PostService {
      * @param tagId 标签ID
      * @param page 页码
      * @param size 每页数量
+     * @param currentUserId 当前登录用户ID
      * @return 帖子列表
      */
-    List<Post> getPostsByTag(Integer tagId, Integer page, Integer size);
+    List<Post> getPostsByTag(Integer tagId, Integer page, Integer size, Integer currentUserId);
     
     /**
      * 创建新帖子

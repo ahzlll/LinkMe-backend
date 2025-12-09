@@ -73,4 +73,9 @@ public class Post {
      * 评论数 - 统计该帖子的评论数量
      */
     private Integer commentCount;
-}
+    
+    /**
+     * 是否关注 - 当前用户是否关注了帖子作者
+     */
+    private Boolean isFollowed;
+ }
