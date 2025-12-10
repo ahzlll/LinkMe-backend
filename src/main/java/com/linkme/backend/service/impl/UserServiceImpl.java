@@ -12,13 +12,15 @@ import com.linkme.backend.mapper.FavoriteMapper;
 import com.linkme.backend.mapper.FavoriteFolderMapper;
 import com.linkme.backend.mapper.FollowMapper;
 import com.linkme.backend.mapper.BlockMapper;
+import com.linkme.backend.mapper.PostMapper;
 import com.linkme.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现类
@@ -50,6 +52,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private BlockMapper blockMapper;
+    
+    @Autowired
+    private PostMapper postMapper;
     
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
@@ -382,5 +387,138 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    @Override
+    public List<Map<String, Object>> getFollowings(Integer userId, Integer currentUserId, Integer offset, Integer limit) {
+        try {
+            // 获取关注关系列表
+            List<Follow> follows = followMapper.selectByFollowerId(userId, offset, limit);
+            if (follows.isEmpty()) {
+                return java.util.Collections.emptyList();
+            }
+            
+            // 提取被关注者ID列表
+            List<Integer> followeeIds = follows.stream()
+                .map(Follow::getFolloweeId)
+                .collect(java.util.stream.Collectors.toList());
+            
+            // 获取用户信息
+            List<User> users = userMapper.selectBatchIds(followeeIds);
+            
+            // 按照关注时间排序
+            Map<Integer, Follow> followMap = follows.stream()
+                .collect(Collectors.toMap(Follow::getFolloweeId, follow -> follow));
+            
+            users.sort(Comparator.comparing(user -> followMap.get(user.getUserId()).getCreatedAt(), Comparator.reverseOrder()));
+            
+            // 转换为包含isFollowing字段的Map列表
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (User user : users) {
+                Map<String, Object> userMap = new HashMap<>();
+                // 将User对象转换为Map
+                userMap.put("userId", user.getUserId());
+                userMap.put("username", user.getUsername());
+                userMap.put("nickname", user.getNickname());
+                userMap.put("avatarUrl", user.getAvatarUrl());
+                userMap.put("bio", user.getBio());
+                userMap.put("region", user.getRegion());
+                userMap.put("gender", user.getGender());
+                userMap.put("createdAt", user.getCreatedAt());
+                
+                // 检查当前登录用户与该用户是否互相关注
+                // 对于关注列表（following），isFollowing表示对方是否关注了我（即是否互相关注）
+                if (currentUserId != null) {
+                    userMap.put("isFollowing", isFollowing(user.getUserId(), currentUserId));
+                } else {
+                    userMap.put("isFollowing", false);
+                }
+                
+                result.add(userMap);
+            }
+            
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return java.util.Collections.emptyList();
+        }
+    }
+    
+    @Override
+    public List<Map<String, Object>> getFollowers(Integer userId, Integer currentUserId, Integer offset, Integer limit) {
+        try {
+            // 获取粉丝关系列表
+            List<Follow> follows = followMapper.selectByFolloweeId(userId, offset, limit);
+            if (follows.isEmpty()) {
+                return Collections.emptyList();
+            }
+            
+            // 提取关注者ID列表
+            List<Integer> followerIds = follows.stream()
+                .map(Follow::getFollowerId)
+                .collect(Collectors.toList());
+            
+            // 获取用户信息
+            List<User> users = userMapper.selectBatchIds(followerIds);
+            
+            // 按照关注时间排序
+            Map<Integer, Follow> followMap = follows.stream()
+                .collect(Collectors.toMap(Follow::getFollowerId, follow -> follow));
+            
+            users.sort(Comparator.comparing(user -> followMap.get(user.getUserId()).getCreatedAt(), Comparator.reverseOrder()));
+            
+            // 转换为包含isFollowing字段的Map列表
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (User user : users) {
+                Map<String, Object> userMap = new HashMap<>();
+                // 将User对象转换为Map
+                userMap.put("userId", user.getUserId());
+                userMap.put("username", user.getUsername());
+                userMap.put("nickname", user.getNickname());
+                userMap.put("avatarUrl", user.getAvatarUrl());
+                userMap.put("bio", user.getBio());
+                userMap.put("region", user.getRegion());
+                userMap.put("gender", user.getGender());
+                userMap.put("createdAt", user.getCreatedAt());
+                
+                // 检查当前登录用户是否关注了该用户
+                if (currentUserId != null) {
+                    userMap.put("isFollowing", isFollowing(currentUserId, user.getUserId()));
+                } else {
+                    userMap.put("isFollowing", false);
+                }
+                
+                result.add(userMap);
+            }
+            
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+    
+    @Override
+    public Map<String, Integer> getUserStats(Integer userId) {
+        Map<String, Integer> stats = new HashMap<>();
+        
+        // 获取帖子数量
+        int postCount = postMapper.countByUserId(userId);
+        
+        // 获取获赞数量
+        int likeCount = likeMapper.countByUserId(userId);
+        
+        // 获取粉丝数量
+        int followerCount = followMapper.countByFolloweeId(userId);
+        
+        // 获取关注数量
+        int followingCount = followMapper.countByFollowerId(userId);
+        
+        stats.put("posts", postCount);
+        stats.put("likes", likeCount);
+        stats.put("followers", followerCount);
+        stats.put("following", followingCount);
+        
+        return stats;
     }
 }

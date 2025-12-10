@@ -462,6 +462,20 @@ public class UserController {
     }
     
     /**
+     * 获取用户统计数据
+     * 
+     * @param userId 用户ID
+     * @return 用户统计数据
+     */
+    @GetMapping("/{userId}/stats")
+    @Operation(summary = "获取用户统计数据", description = "获取指定用户的统计数据，包括帖子数、获赞数、粉丝数、关注数", 
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<Map<String, Integer>> getUserStats(@PathVariable @Parameter(description = "用户ID") Integer userId) {
+        java.util.Map<String, Integer> stats = userService.getUserStats(userId);
+        return R.ok(stats);
+    }
+    
+    /**
      * 获取用户收藏的帖子列表
      * 
      * @param userId 用户ID
@@ -620,6 +634,46 @@ public class UserController {
         
         boolean isFollowing = userService.isFollowing(currentUserId, userId);
         return R.ok(Map.of("isFollowing", isFollowing));
+    }
+    
+    /**
+     * 获取用户关注列表
+     * 
+     * @param userId 用户ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 关注列表
+     */
+    @GetMapping("/{userId}/followings")
+    @Operation(summary = "获取用户关注列表", description = "获取指定用户的关注列表",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<Map<String, Object>>> getFollowings(@PathVariable @Parameter(description = "用户ID") Integer userId,
+                                      @RequestParam(defaultValue = "0") Integer offset,
+                                      @RequestParam(defaultValue = "10") Integer limit,
+                                      jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        List<Map<String, Object>> followings = userService.getFollowings(userId, currentUserId, offset, limit);
+        return R.ok(followings);
+    }
+    
+    /**
+     * 获取用户粉丝列表
+     * 
+     * @param userId 用户ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 粉丝列表
+     */
+    @GetMapping("/{userId}/followers")
+    @Operation(summary = "获取用户粉丝列表", description = "获取指定用户的粉丝列表",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<Map<String, Object>>> getFollowers(@PathVariable @Parameter(description = "用户ID") Integer userId,
+                                     @RequestParam(defaultValue = "0") Integer offset,
+                                     @RequestParam(defaultValue = "10") Integer limit,
+                                     jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        List<Map<String, Object>> followers = userService.getFollowers(userId, currentUserId, offset, limit);
+        return R.ok(followers);
     }
     
     /**

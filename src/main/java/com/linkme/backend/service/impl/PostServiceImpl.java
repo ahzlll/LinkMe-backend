@@ -114,7 +114,7 @@ public class PostServiceImpl implements PostService {
         }
         map.put("images", imageUrls);
         map.put("tags", tagIds);
-        map.put("likes", likeCount);
+        map.put("likeCount", likeCount);
         return map;
     }
 

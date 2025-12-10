@@ -99,4 +99,12 @@ public interface UserMapper {
      * @return 用户总数
      */
     int countAll();
+    
+    /**
+     * 根据用户ID列表批量查询用户信息
+     * 
+     * @param userIds 用户ID列表
+     * @return 用户信息列表
+     */
+    List<User> selectBatchIds(@Param("userIds") List<Integer> userIds);
 }

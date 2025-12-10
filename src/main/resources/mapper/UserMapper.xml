@@ -82,5 +82,13 @@
     <select id="countAll" resultType="int">
         SELECT COUNT(*) FROM user
     </select>
+    
+    <!-- 根据用户ID列表批量查询用户信息 -->
+    <select id="selectBatchIds" resultMap="UserResultMap">
+        SELECT * FROM user WHERE user_id IN
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </select>
 
 </mapper>

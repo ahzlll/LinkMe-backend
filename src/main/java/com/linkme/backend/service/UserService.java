@@ -2,6 +2,7 @@ package com.linkme.backend.service;
 
 import com.linkme.backend.entity.User;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户服务接口
@@ -215,4 +216,35 @@ public interface UserService {
      * @return 是否屏蔽
      */
     boolean isBlocking(Integer blockerId, Integer blockedId);
+    
+    /**
+     * 获取用户关注列表
+     * 
+     * @param userId 用户ID
+     * @param currentUserId 当前登录用户ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 关注用户列表，每个用户包含isFollowing字段
+     */
+    List<Map<String, Object>> getFollowings(Integer userId, Integer currentUserId, Integer offset, Integer limit);
+    
+    /**
+     * 获取用户粉丝列表
+     * 
+     * @param userId 用户ID
+     * @param currentUserId 当前登录用户ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 粉丝用户列表，每个用户包含isFollowing字段
+     */
+    List<Map<String, Object>> getFollowers(Integer userId, Integer currentUserId, Integer offset, Integer limit);
+    
+    /**
+     * 获取用户统计数据
+     * 
+     * @param userId 用户ID
+     * @return 用户统计数据Map，包含posts、likes、followers、following
+     */
+    Map<String, Integer> getUserStats(Integer userId);
 }
+

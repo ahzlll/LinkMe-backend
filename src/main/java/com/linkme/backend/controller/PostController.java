@@ -210,7 +210,7 @@ public class PostController {
         @SuppressWarnings("unchecked")
         java.util.List<Integer> tags = (java.util.List<Integer>) agg.get("tags");
         resp.setTags(tags);
-        resp.setLikes((Integer) agg.get("likes"));
+        resp.setLikeCount((Integer) agg.get("likeCount"));
         return R.ok(resp);
     }
     

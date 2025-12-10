@@ -25,7 +25,7 @@ public class PostDetailResponse {
     private LocalDateTime createdAt;
     private List<String> images;
     private List<Integer> tags;
-    private Integer likes;
+    private Integer likeCount;
     // 用户信息
     private String nickname;
     private String username;
