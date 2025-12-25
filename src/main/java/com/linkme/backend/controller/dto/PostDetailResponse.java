@@ -26,6 +26,11 @@ public class PostDetailResponse {
     private List<String> images;
     private List<Integer> tags;
     private Integer likeCount;
+    private Integer commentCount;
+    private Integer favoriteCount;
+    private Boolean isLiked; // 当前用户是否已点赞
+    private Boolean isFavorited; // 当前用户是否已收藏
+    private Integer favoriteId; // 收藏ID（如果已收藏）
     // 用户信息
     private String nickname;
     private String username;

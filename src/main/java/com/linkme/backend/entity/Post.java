@@ -2,6 +2,7 @@ package com.linkme.backend.entity;
 
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 帖子实体类
@@ -78,4 +79,14 @@ public class Post {
      * 是否关注 - 当前用户是否关注了帖子作者
      */
     private Boolean isFollowed;
- }
+    
+    /**
+     * 图片列表 - 用于API响应，不持久化到数据库
+     */
+    private List<String> images;
+    
+    /**
+     * 标签列表 - 用于API响应，不持久化到数据库
+     */
+    private List<Integer> tags;
+}

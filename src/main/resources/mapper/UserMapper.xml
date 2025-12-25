@@ -47,18 +47,38 @@
     <!-- 更新用户信息 -->
     <update id="update" parameterType="com.linkme.backend.entity.User">
         UPDATE user SET
-            username = #{username},
-            email = #{email},
-            phone = #{phone},
-            <if test="passwordHash != null">
-            password_hash = #{passwordHash},
-            </if>
-            nickname = #{nickname},
-            gender = #{gender},
-            birthday = #{birthday},
-            region = #{region},
-            avatar_url = #{avatarUrl},
-            bio = #{bio}
+            <trim suffixOverrides=",">
+                <if test="username != null">
+                username = #{username},
+                </if>
+                <if test="email != null">
+                email = #{email},
+                </if>
+                <if test="phone != null">
+                phone = #{phone},
+                </if>
+                <if test="passwordHash != null">
+                password_hash = #{passwordHash},
+                </if>
+                <if test="nickname != null">
+                nickname = #{nickname},
+                </if>
+                <if test="gender != null">
+                gender = #{gender},
+                </if>
+                <if test="birthday != null">
+                birthday = #{birthday},
+                </if>
+                <if test="region != null">
+                region = #{region},
+                </if>
+                <if test="avatarUrl != null">
+                avatar_url = #{avatarUrl},
+                </if>
+                <if test="bio != null">
+                bio = #{bio},
+                </if>
+            </trim>
         WHERE user_id = #{userId}
     </update>
     

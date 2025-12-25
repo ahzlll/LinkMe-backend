@@ -6,6 +6,8 @@ import com.linkme.backend.mapper.PostMapper;
 import com.linkme.backend.mapper.PostImageMapper;
 import com.linkme.backend.mapper.PostTagMapper;
 import com.linkme.backend.mapper.LikeMapper;
+import com.linkme.backend.mapper.CommentMapper;
+import com.linkme.backend.mapper.FavoriteMapper;
 import com.linkme.backend.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,10 @@ public class PostServiceImpl implements PostService {
     private PostTagMapper postTagMapper;
     @Autowired
     private LikeMapper likeMapper;
+    @Autowired
+    private CommentMapper commentMapper;
+    @Autowired
+    private FavoriteMapper favoriteMapper;
     
     @Override
     public Post getPostById(Integer postId) {
@@ -105,16 +111,67 @@ public class PostServiceImpl implements PostService {
     @Override
     public Map<String, Object> getPostAggregates(Integer postId) {
         Map<String, Object> map = new HashMap<>();
-        List<PostImage> images = postImageMapper.selectByPostId(postId);
-        List<Integer> tagIds = postTagMapper.selectTagIdsByPostId(postId);
-        int likeCount = likeMapper.countByPostId(postId);
+        
+        // 安全地获取图片列表
         List<String> imageUrls = new ArrayList<>();
-        for (PostImage img : images) {
-            imageUrls.add(img.getImageUrl());
+        try {
+            List<PostImage> images = postImageMapper.selectByPostId(postId);
+            if (images != null) {
+                for (PostImage img : images) {
+                    if (img != null && img.getImageUrl() != null) {
+                        imageUrls.add(img.getImageUrl());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("获取帖子图片失败, postId=" + postId + ", error=" + e.getMessage());
+            e.printStackTrace();
         }
+        
+        // 安全地获取标签列表
+        List<Integer> tagIds = new ArrayList<>();
+        try {
+            List<Integer> tags = postTagMapper.selectTagIdsByPostId(postId);
+            if (tags != null) {
+                tagIds = tags;
+            }
+        } catch (Exception e) {
+            System.err.println("获取帖子标签失败, postId=" + postId + ", error=" + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // 安全地获取点赞数
+        int likeCount = 0;
+        try {
+            likeCount = likeMapper.countByPostId(postId);
+        } catch (Exception e) {
+            System.err.println("获取帖子点赞数失败, postId=" + postId + ", error=" + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // 安全地获取评论数
+        int commentCount = 0;
+        try {
+            commentCount = commentMapper.countByPostId(postId);
+        } catch (Exception e) {
+            System.err.println("获取帖子评论数失败, postId=" + postId + ", error=" + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // 安全地获取收藏数
+        int favoriteCount = 0;
+        try {
+            favoriteCount = favoriteMapper.countByPostId(postId);
+        } catch (Exception e) {
+            System.err.println("获取帖子收藏数失败, postId=" + postId + ", error=" + e.getMessage());
+            e.printStackTrace();
+        }
+        
         map.put("images", imageUrls);
         map.put("tags", tagIds);
         map.put("likeCount", likeCount);
+        map.put("commentCount", commentCount);
+        map.put("favoriteCount", favoriteCount);
         return map;
     }
 

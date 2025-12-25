@@ -7,6 +7,7 @@ import com.linkme.backend.entity.Comment;
 import com.linkme.backend.service.PostService;
 import com.linkme.backend.mapper.CommentMapper;
 import com.linkme.backend.mapper.LikeMapper;
+import com.linkme.backend.mapper.FavoriteMapper;
 import com.linkme.backend.controller.dto.PostCreateRequest;
 import com.linkme.backend.controller.dto.PostDetailResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Base64;
 import java.io.IOException;
 
@@ -47,6 +49,8 @@ public class PostController {
     private CommentMapper commentMapper;
     @Autowired
     private LikeMapper likeMapper;
+    @Autowired
+    private FavoriteMapper favoriteMapper;
     @Autowired
     private JwtUtil jwtUtil;
     
@@ -83,18 +87,58 @@ public class PostController {
                                  @RequestParam(required = false) Integer tag,
                                  @RequestParam(required = false) Integer userId,
                                  HttpServletRequest request) {
-        List<Post> posts;
-        Integer currentUserId = getCurrentUserId(request);
-        
-        if (userId != null) {
-            posts = postService.getPostsByUserId(userId, page, limit, currentUserId);
-        } else if (tag != null) {
-            posts = postService.getPostsByTag(tag, page, limit, currentUserId);
-        } else {
-            posts = postService.getAllPosts(page, limit, currentUserId);
+        try {
+            List<Post> posts;
+            Integer currentUserId = getCurrentUserId(request);
+            
+            if (userId != null) {
+                posts = postService.getPostsByUserId(userId, page, limit, currentUserId);
+            } else if (tag != null) {
+                posts = postService.getPostsByTag(tag, page, limit, currentUserId);
+            } else {
+                posts = postService.getAllPosts(page, limit, currentUserId);
+            }
+            
+            // 确保posts不为null
+            if (posts == null) {
+                posts = new ArrayList<>();
+            }
+            
+            // 为每个帖子填充images和tags字段
+            for (Post post : posts) {
+                if (post == null || post.getPostId() == null) {
+                    continue; // 跳过无效的帖子
+                }
+                try {
+                    Map<String, Object> agg = postService.getPostAggregates(post.getPostId());
+                    if (agg != null) {
+                        @SuppressWarnings("unchecked")
+                        List<String> images = (List<String>) agg.get("images");
+                        post.setImages(images != null ? images : new ArrayList<>());
+                        @SuppressWarnings("unchecked")
+                        List<Integer> tags = (List<Integer>) agg.get("tags");
+                        post.setTags(tags != null ? tags : new ArrayList<>());
+                    } else {
+                        post.setImages(new ArrayList<>());
+                        post.setTags(new ArrayList<>());
+                    }
+                } catch (Exception e) {
+                    // 如果获取聚合数据失败，设置空列表，避免影响其他帖子
+                    // 记录错误但不中断整个请求
+                    System.err.println("获取帖子聚合数据失败, postId=" + post.getPostId() + ", error=" + e.getMessage());
+                    e.printStackTrace();
+                    post.setImages(new ArrayList<>());
+                    post.setTags(new ArrayList<>());
+                }
+            }
+            
+            return R.ok(posts);
+        } catch (Exception e) {
+            // 记录完整的错误堆栈
+            System.err.println("获取帖子列表失败: " + e.getMessage());
+            e.printStackTrace();
+            return R.fail("获取帖子列表失败: " + e.getMessage());
         }
-        
-        return R.ok(posts);
     }
     
     /**
@@ -188,7 +232,8 @@ public class PostController {
     @GetMapping("/{postId}")
     @Operation(summary = "获取帖子详情", description = "根据帖子ID获取帖子详细信息",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public R<PostDetailResponse> getPostById(@PathVariable @Parameter(description = "帖子ID") Integer postId) {
+    public R<PostDetailResponse> getPostById(@PathVariable @Parameter(description = "帖子ID") Integer postId,
+                                             HttpServletRequest request) {
         Post post = postService.getPostById(postId);
         if (post == null) {
             return R.fail(404, "帖子不存在");
@@ -211,6 +256,32 @@ public class PostController {
         java.util.List<Integer> tags = (java.util.List<Integer>) agg.get("tags");
         resp.setTags(tags);
         resp.setLikeCount((Integer) agg.get("likeCount"));
+        resp.setCommentCount((Integer) agg.get("commentCount"));
+        resp.setFavoriteCount((Integer) agg.get("favoriteCount"));
+        
+        // 检查当前用户是否已点赞和收藏
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId != null) {
+            // 检查是否已点赞
+            com.linkme.backend.entity.Like like = likeMapper.selectByUserAndPost(currentUserId, postId);
+            resp.setIsLiked(like != null);
+            
+            // 检查是否已收藏（尝试查找收藏记录，folderId 可以为 null）
+            com.linkme.backend.entity.Favorite favorite = favoriteMapper.selectByUserAndPost(currentUserId, postId, null);
+            if (favorite == null) {
+                // 如果 folderId 为 null 没找到，尝试查找所有收藏夹中的收藏
+                // 这里简化处理，只检查默认收藏夹（folderId = null）
+                resp.setIsFavorited(false);
+                resp.setFavoriteId(null);
+            } else {
+                resp.setIsFavorited(true);
+                resp.setFavoriteId(favorite.getFavoriteId());
+            }
+        } else {
+            resp.setIsLiked(false);
+            resp.setIsFavorited(false);
+        }
+        
         return R.ok(resp);
     }
     
@@ -259,6 +330,18 @@ public class PostController {
     public R<String> addComment(@PathVariable Integer postId, @RequestBody Comment comment) {
         comment.setPostId(postId);
         comment.setCreatedAt(java.time.LocalDateTime.now());
+        
+        // 调试日志：打印接收到的评论数据
+        System.out.println("收到评论请求 - postId: " + postId + 
+                         ", userId: " + comment.getUserId() + 
+                         ", content: " + comment.getContent() + 
+                         ", parentId: " + comment.getParentId());
+        
+        // 如果 parentId 为 0 或负数，设置为 null（表示顶级评论）
+        if (comment.getParentId() != null && comment.getParentId() <= 0) {
+            comment.setParentId(null);
+        }
+        
         int rows = commentMapper.insert(comment);
         return rows > 0 ? R.ok("评论成功") : R.fail("评论失败");
     }
@@ -274,13 +357,65 @@ public class PostController {
         return R.ok(list);
     }
 
+    // 删除评论
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    @Operation(summary = "删除评论", description = "删除指定评论，只能删除自己的评论",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> deleteComment(@PathVariable @Parameter(description = "帖子ID") Integer postId,
+                                   @PathVariable @Parameter(description = "评论ID") Integer commentId,
+                                   HttpServletRequest request) {
+        try {
+            Integer currentUserId = getCurrentUserId(request);
+            if (currentUserId == null) {
+                return R.fail(401, "未登录");
+            }
+            
+            // 查询评论信息
+            Comment comment = commentMapper.selectById(commentId);
+            if (comment == null) {
+                return R.fail(404, "评论不存在");
+            }
+            
+            // 检查评论是否属于当前用户
+            if (!comment.getUserId().equals(currentUserId)) {
+                return R.fail(403, "只能删除自己的评论");
+            }
+            
+            // 检查评论是否属于指定帖子
+            if (!comment.getPostId().equals(postId)) {
+                return R.fail(400, "评论不属于该帖子");
+            }
+            
+            // 删除评论
+            int rows = commentMapper.deleteById(commentId);
+            if (rows > 0) {
+                return R.ok("评论删除成功");
+            } else {
+                return R.fail("评论删除失败");
+            }
+        } catch (Exception e) {
+            System.err.println("删除评论失败: " + e.getMessage());
+            e.printStackTrace();
+            return R.fail("删除评论失败: " + e.getMessage());
+        }
+    }
+
     // 点赞帖子
     @PostMapping("/{postId}/like")
     @Operation(summary = "点赞帖子", security = @SecurityRequirement(name = "bearerAuth"))
-    public R<String> likePost(@PathVariable Integer postId, @RequestBody com.linkme.backend.entity.Like body) {
+    public R<String> likePost(@PathVariable Integer postId, @RequestBody com.linkme.backend.entity.Like body, HttpServletRequest request) {
+        // 检查是否已经点赞
         if (likeMapper.selectByUserAndPost(body.getUserId(), postId) != null) {
             return R.ok("已点赞");
         }
+        
+        // 获取帖子信息
+        Post post = postService.getPostById(postId);
+        if (post == null) {
+            return R.fail("帖子不存在");
+        }
+        
+        // 允许给自己的帖子点赞（移除限制）
         body.setPostId(postId);
         body.setCreatedAt(java.time.LocalDateTime.now());
         int rows = likeMapper.insert(body);

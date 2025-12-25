@@ -149,8 +149,30 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean updateUser(User user) {
         try {
-            return userMapper.update(user) > 0;
+            // 打印详细的用户信息用于调试
+            System.out.println("=== updateUser 调用 ===");
+            System.out.println("用户ID: " + user.getUserId());
+            System.out.println("nickname: " + user.getNickname());
+            System.out.println("bio: " + user.getBio());
+            System.out.println("avatarUrl: " + (user.getAvatarUrl() != null ? "有值(长度:" + user.getAvatarUrl().length() + ")" : "null"));
+            System.out.println("gender: " + user.getGender());
+            System.out.println("birthday: " + user.getBirthday());
+            System.out.println("region: " + user.getRegion());
+            
+            int result = userMapper.update(user);
+            System.out.println("SQL 执行结果，影响行数: " + result);
+            
+            if (result > 0) {
+                System.out.println("更新成功");
+                return true;
+            } else {
+                System.err.println("更新用户信息失败：影响行数为 0，用户ID: " + user.getUserId());
+                System.err.println("可能原因：1. 用户不存在 2. 所有字段都是 null 导致 SQL SET 子句为空");
+                return false;
+            }
         } catch (Exception e) {
+            System.err.println("更新用户信息异常，用户ID: " + user.getUserId() + ", 错误: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

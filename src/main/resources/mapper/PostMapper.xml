@@ -23,7 +23,7 @@
                u.nickname, 
                u.username, 
                u.avatar_url as avatarUrl,
-               COALESCE((SELECT COUNT(*) FROM `like` WHERE post_id = p.post_id), 0) as likeCount,
+               COALESCE((SELECT COUNT(*) FROM like_post WHERE post_id = p.post_id), 0) as likeCount,
                COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
                COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount
         FROM post p
@@ -37,7 +37,7 @@
                u.nickname, 
                u.username, 
                u.avatar_url as avatarUrl,
-               COALESCE((SELECT COUNT(*) FROM `like` WHERE post_id = p.post_id), 0) as likeCount,
+               COALESCE((SELECT COUNT(*) FROM like_post WHERE post_id = p.post_id), 0) as likeCount,
                COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
                COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount,
                (SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM follow 
@@ -55,7 +55,7 @@
                u.nickname, 
                u.username, 
                u.avatar_url as avatarUrl,
-               COALESCE((SELECT COUNT(*) FROM `like` WHERE post_id = p.post_id), 0) as likeCount,
+               COALESCE((SELECT COUNT(*) FROM like_post WHERE post_id = p.post_id), 0) as likeCount,
                COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
                COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount,
                (SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM follow 
@@ -72,7 +72,7 @@
                u.nickname, 
                u.username, 
                u.avatar_url as avatarUrl,
-               COALESCE((SELECT COUNT(*) FROM `like` WHERE post_id = p.post_id), 0) as likeCount,
+               COALESCE((SELECT COUNT(*) FROM like_post WHERE post_id = p.post_id), 0) as likeCount,
                COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
                COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount,
                (SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM follow 

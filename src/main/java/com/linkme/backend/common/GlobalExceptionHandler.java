@@ -27,8 +27,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<R<String>> handleException(Exception e) {
+        // 打印完整的错误堆栈，便于调试
+        System.err.println("服务器内部错误: " + e.getMessage());
+        e.printStackTrace();
+        
+        // 返回错误信息（开发环境可以返回详细错误，生产环境应该返回通用错误）
+        String errorMessage = "服务器内部错误";
+        if (e.getMessage() != null) {
+            errorMessage += ": " + e.getMessage();
+        }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(R.fail("服务器内部错误: " + e.getMessage()));
+                .body(R.fail(errorMessage));
     }
     
     /**

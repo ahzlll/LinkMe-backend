@@ -10,36 +10,36 @@
     </resultMap>
 
     <select id="selectByUserAndPost" resultMap="LikeMap">
-        SELECT * FROM `like` WHERE user_id = #{userId} AND post_id = #{postId}
+        SELECT * FROM like_post WHERE user_id = #{userId} AND post_id = #{postId}
     </select>
 
     <select id="selectByPostId" resultMap="LikeMap">
-        SELECT * FROM `like` WHERE post_id = #{postId}
+        SELECT * FROM like_post WHERE post_id = #{postId}
         ORDER BY created_at DESC
         LIMIT #{offset}, #{limit}
     </select>
 
     <select id="selectByUserId" resultMap="LikeMap">
-        SELECT * FROM `like` WHERE user_id = #{userId}
+        SELECT * FROM like_post WHERE user_id = #{userId}
         ORDER BY created_at DESC
         LIMIT #{offset}, #{limit}
     </select>
 
     <insert id="insert" parameterType="com.linkme.backend.entity.Like" useGeneratedKeys="true" keyProperty="likeId">
-        INSERT INTO `like` (user_id, post_id, created_at)
+        INSERT INTO like_post (user_id, post_id, created_at)
         VALUES (#{userId}, #{postId}, #{createdAt})
     </insert>
 
     <delete id="deleteByUserAndPost">
-        DELETE FROM `like` WHERE user_id = #{userId} AND post_id = #{postId}
+        DELETE FROM like_post WHERE user_id = #{userId} AND post_id = #{postId}
     </delete>
 
     <select id="countByPostId" parameterType="int" resultType="int">
-        SELECT COUNT(*) FROM `like` WHERE post_id = #{postId}
+        SELECT COUNT(*) FROM like_post WHERE post_id = #{postId}
     </select>
 
     <select id="countByUserId" parameterType="int" resultType="int">
-        SELECT COUNT(*) FROM `like` WHERE user_id = #{userId}
+        SELECT COUNT(*) FROM like_post WHERE user_id = #{userId}
     </select>
 
 </mapper>

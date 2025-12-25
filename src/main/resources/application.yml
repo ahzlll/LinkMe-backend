@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
@@ -7,9 +7,9 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
-    redis:
-      host: localhost
-      port: 6379
+  redis:
+    host: localhost
+    port: 6379
   #    timeout: 2000ms
   #    lettuce:
   #      pool:
@@ -48,8 +48,9 @@ aliyun:
   sms:
     access-key-id: your-access-key-id # 请修改为您的阿里云AccessKey ID
     access-key-secret: your-access-key-secret # 请修改为您的阿里云AccessKey Secret
-    sign-name: LinkMe # 短信签名名称（需要在阿里云控制台申请）
-    template-code: SMS_123456789 # 短信模板代码（需要在阿里云控制台申请）
+    sign-name: your-sign-name # 请修改为您的短信签名名称
+    template-code: your-template-code # 请修改为您的短信模板CODE
+
     endpoint: dysmsapi.aliyuncs.com # 短信服务端点（默认即可）
 
 logging:

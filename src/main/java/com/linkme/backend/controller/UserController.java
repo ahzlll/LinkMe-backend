@@ -100,12 +100,47 @@ public class UserController {
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> updateUserInfo(@PathVariable @Parameter(description = "用户ID") Integer userId,
                                    @RequestBody User user) {
-        user.setUserId(userId);
-        boolean success = userService.updateUser(user);
-        if (success) {
-            return R.ok("用户信息更新成功");
-        } else {
-            return R.fail(400, "用户信息更新失败");
+        try {
+            user.setUserId(userId);
+            
+            // 打印接收到的原始数据
+            System.out.println("=== Controller 接收到的数据 ===");
+            System.out.println("用户ID: " + userId);
+            System.out.println("nickname: " + user.getNickname());
+            System.out.println("bio: " + user.getBio());
+            System.out.println("avatarUrl: " + (user.getAvatarUrl() != null ? "有值(长度:" + user.getAvatarUrl().length() + ")" : "null"));
+            System.out.println("gender: " + user.getGender());
+            System.out.println("birthday: " + user.getBirthday());
+            System.out.println("region: " + user.getRegion());
+            
+            // 检查是否有字段需要更新
+            boolean hasFieldToUpdate = user.getNickname() != null || 
+                                      user.getBio() != null || 
+                                      user.getAvatarUrl() != null ||
+                                      user.getGender() != null ||
+                                      user.getBirthday() != null ||
+                                      user.getRegion() != null;
+            
+            System.out.println("是否有字段需要更新: " + hasFieldToUpdate);
+            
+            if (!hasFieldToUpdate) {
+                System.err.println("错误：没有需要更新的字段");
+                return R.fail(400, "没有需要更新的字段");
+            }
+            
+            boolean success = userService.updateUser(user);
+            System.out.println("Service 返回结果: " + success);
+            
+            if (success) {
+                return R.ok("用户信息更新成功");
+            } else {
+                System.err.println("错误：Service 返回 false，可能原因：1. 用户不存在 2. SQL 执行失败");
+                return R.fail(400, "用户信息更新失败，可能是数据格式错误或用户不存在。请查看后端日志获取详细信息。");
+            }
+        } catch (Exception e) {
+            System.err.println("更新用户信息控制器异常: " + e.getMessage());
+            e.printStackTrace();
+            return R.fail(500, "更新用户信息时发生错误: " + e.getMessage());
         }
     }
     
@@ -447,6 +482,7 @@ public class UserController {
      * @param userId 用户ID
      * @param page 页码
      * @param limit 每页数量
+     * @param request HTTP请求
      * @return 点赞列表
      */
     @GetMapping("/{userId}/likes")
@@ -455,7 +491,18 @@ public class UserController {
     public R<List<com.linkme.backend.entity.Like>> getUserLikes(
             @PathVariable @Parameter(description = "用户ID") Integer userId,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "100") Integer limit) {
+            @RequestParam(defaultValue = "100") Integer limit,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 验证当前用户是否有权限访问该用户的点赞
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限访问其他用户的点赞");
+        }
+        
         int offset = (page - 1) * limit;
         List<com.linkme.backend.entity.Like> likes = userService.getUserLikes(userId, offset, limit);
         return R.ok(likes);
@@ -465,12 +512,20 @@ public class UserController {
      * 获取用户统计数据
      * 
      * @param userId 用户ID
+     * @param request HTTP请求
      * @return 用户统计数据
      */
     @GetMapping("/{userId}/stats")
     @Operation(summary = "获取用户统计数据", description = "获取指定用户的统计数据，包括帖子数、获赞数、粉丝数、关注数", 
                security = @SecurityRequirement(name = "bearerAuth"))
-    public R<Map<String, Integer>> getUserStats(@PathVariable @Parameter(description = "用户ID") Integer userId) {
+    public R<Map<String, Integer>> getUserStats(@PathVariable @Parameter(description = "用户ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 允许查看任何用户的统计数据（公开信息）
         java.util.Map<String, Integer> stats = userService.getUserStats(userId);
         return R.ok(stats);
     }
@@ -482,6 +537,7 @@ public class UserController {
      * @param folderId 收藏夹ID（可选）
      * @param page 页码
      * @param limit 每页数量
+     * @param request HTTP请求
      * @return 收藏列表
      */
     @GetMapping("/{userId}/favorites")
@@ -491,7 +547,18 @@ public class UserController {
             @PathVariable @Parameter(description = "用户ID") Integer userId,
             @RequestParam(required = false) Integer folderId,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "100") Integer limit) {
+            @RequestParam(defaultValue = "100") Integer limit,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 验证当前用户是否有权限访问该用户的收藏
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限访问其他用户的收藏");
+        }
+        
         int offset = (page - 1) * limit;
         List<com.linkme.backend.entity.Favorite> favorites = userService.getUserFavorites(userId, folderId, offset, limit);
         return R.ok(favorites);
@@ -501,13 +568,25 @@ public class UserController {
      * 获取用户的收藏夹列表
      * 
      * @param userId 用户ID
+     * @param request HTTP请求
      * @return 收藏夹列表
      */
     @GetMapping("/{userId}/favorite-folders")
     @Operation(summary = "获取用户收藏夹列表", description = "获取指定用户的所有收藏夹", 
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<List<com.linkme.backend.entity.FavoriteFolder>> getFavoriteFolders(
-            @PathVariable @Parameter(description = "用户ID") Integer userId) {
+            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 验证当前用户是否有权限访问该用户的收藏夹
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限访问其他用户的收藏夹");
+        }
+        
         List<com.linkme.backend.entity.FavoriteFolder> folders = userService.getFavoriteFolders(userId);
         return R.ok(folders);
     }
@@ -516,7 +595,7 @@ public class UserController {
      * 创建收藏夹
      * 
      * @param userId 用户ID
-     * @param request 请求体（包含 name）
+     * @param request HTTP请求
      * @return 创建结果
      */
     @PostMapping("/{userId}/favorite-folders")
@@ -524,7 +603,18 @@ public class UserController {
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<com.linkme.backend.entity.FavoriteFolder> createFavoriteFolder(
             @PathVariable @Parameter(description = "用户ID") Integer userId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        Integer currentUserId = getCurrentUserId(httpRequest);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 验证当前用户是否有权限为该用户创建收藏夹
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限为其他用户创建收藏夹");
+        }
+        
         String name = request.get("name");
         if (name == null || name.trim().isEmpty()) {
             return R.fail(400, "收藏夹名称不能为空");
@@ -549,7 +639,18 @@ public class UserController {
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> deleteFavoriteFolder(
             @PathVariable @Parameter(description = "用户ID") Integer userId,
-            @PathVariable @Parameter(description = "收藏夹ID") Integer folderId) {
+            @PathVariable @Parameter(description = "收藏夹ID") Integer folderId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 验证当前用户是否有权限删除该用户的收藏夹
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限删除其他用户的收藏夹");
+        }
+        
         boolean success = userService.deleteFavoriteFolder(userId, folderId);
         if (success) {
             return R.ok("收藏夹删除成功");
@@ -642,6 +743,7 @@ public class UserController {
      * @param userId 用户ID
      * @param offset 偏移量
      * @param limit 限制数量
+     * @param request HTTP请求
      * @return 关注列表
      */
     @GetMapping("/{userId}/followings")
@@ -652,6 +754,15 @@ public class UserController {
                                       @RequestParam(defaultValue = "10") Integer limit,
                                       jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 验证当前用户是否有权限访问该用户的关注列表
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限访问其他用户的关注列表");
+        }
+        
         List<Map<String, Object>> followings = userService.getFollowings(userId, currentUserId, offset, limit);
         return R.ok(followings);
     }
@@ -662,6 +773,7 @@ public class UserController {
      * @param userId 用户ID
      * @param offset 偏移量
      * @param limit 限制数量
+     * @param request HTTP请求
      * @return 粉丝列表
      */
     @GetMapping("/{userId}/followers")
@@ -672,6 +784,15 @@ public class UserController {
                                      @RequestParam(defaultValue = "10") Integer limit,
                                      jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        // 验证当前用户是否有权限访问该用户的粉丝列表
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限访问其他用户的粉丝列表");
+        }
+        
         List<Map<String, Object>> followers = userService.getFollowers(userId, currentUserId, offset, limit);
         return R.ok(followers);
     }
