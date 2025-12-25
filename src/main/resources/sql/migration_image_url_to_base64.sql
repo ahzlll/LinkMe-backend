@@ -21,3 +21,6 @@ WHERE
     AND TABLE_NAME = 'post_image' 
     AND COLUMN_NAME = 'image_url';
 
+-- 修改 avatar_url 字段类型为 LONGTEXT
+ALTER TABLE user
+MODIFY COLUMN avatar_url LONGTEXT  COMMENT '图片Base64编码字符串';
