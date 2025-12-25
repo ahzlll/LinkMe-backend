@@ -229,10 +229,26 @@ public class ChatServiceImpl implements ChatService {
         
         // 通过WebSocket推送消息给接收者（如果在线）
         try {
-            String messageJson = objectMapper.writeValueAsString(response);
+            // 构建WebSocket消息对象，添加type字段便于前端识别
+            java.util.Map<String, Object> wsMessage = new java.util.HashMap<>();
+            wsMessage.put("type", "chat");
+            wsMessage.put("messageId", response.getMessageId());
+            wsMessage.put("conversationId", conversationId);
+            wsMessage.put("senderId", senderId);
+            wsMessage.put("senderNickname", response.getSenderNickname());
+            wsMessage.put("senderAvatar", response.getSenderAvatar());
+            wsMessage.put("contentType", response.getContentType());
+            wsMessage.put("content", content);
+            wsMessage.put("isRead", false);
+            // 将LocalDateTime转换为ISO 8601字符串格式
+            wsMessage.put("createdAt", response.getCreatedAt().toString());
+            
+            String messageJson = objectMapper.writeValueAsString(wsMessage);
             webSocketHandler.sendMessageToUser(receiverId.toString(), messageJson);
+            System.out.println("WebSocket消息已推送给用户: " + receiverId);
         } catch (Exception e) {
             System.err.println("WebSocket推送消息失败: " + e.getMessage());
+            e.printStackTrace();
         }
         
         // 创建通知

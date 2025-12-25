@@ -31,30 +31,30 @@ import java.util.stream.Collectors;
  */
 @Service
 public class NotificationServiceImpl implements NotificationService {
-    
+
     @Autowired
     private NotificationMapper notificationMapper;
-    
+
     @Autowired
     private UserMapper userMapper;
-    
+
     @Autowired
     private ChatWebSocketHandler webSocketHandler;
-    
+
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
+
     @Override
     @Transactional
-    public Notification createMessageNotification(Integer userId, Integer actorId, Integer messageId, 
-                                                  String contentType, String content) {
+    public Notification createMessageNotification(Integer userId, Integer actorId, Integer messageId,
+            String contentType, String content) {
         // 获取发送者信息
         User actor = userMapper.selectById(actorId);
         String actorName = actor != null ? actor.getNickname() : "用户";
-        
+
         // 根据内容类型生成标题和内容
         String title = actorName + " 发来了一条消息";
         String notificationContent = content;
-        
+
         // 根据内容类型截取预览
         if ("image".equals(contentType)) {
             notificationContent = "[图片]";
@@ -67,14 +67,14 @@ public class NotificationServiceImpl implements NotificationService {
         } else if (content != null && content.length() > 50) {
             notificationContent = content.substring(0, 50) + "...";
         }
-        
+
         return createNotification(userId, "message", actorId, messageId, "message", title, notificationContent);
     }
-    
+
     @Override
     @Transactional
-    public Notification createNotification(Integer userId, String type, Integer actorId, 
-                                          Integer relatedId, String relatedType, String title, String content) {
+    public Notification createNotification(Integer userId, String type, Integer actorId,
+            Integer relatedId, String relatedType, String title, String content) {
         Notification notification = new Notification();
         notification.setUserId(userId);
         notification.setType(type);
@@ -85,38 +85,55 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setContent(content);
         notification.setIsRead(false);
         notification.setCreatedAt(LocalDateTime.now());
-        
+
         notificationMapper.insert(notification);
-        
+
         // 通过WebSocket实时推送通知
         try {
             NotificationResponse response = convertToResponse(notification);
-            
-            // 构建推送消息
+
+            // 手动构建推送消息，将LocalDateTime转换为字符串
             Map<String, Object> pushMessage = new HashMap<>();
             pushMessage.put("type", "notification");
-            pushMessage.put("data", response);
+
+            // 构建通知数据，避免LocalDateTime序列化问题
+            Map<String, Object> notificationData = new HashMap<>();
+            notificationData.put("notificationId", response.getNotificationId());
+            notificationData.put("userId", response.getUserId());
+            notificationData.put("type", response.getType());
+            notificationData.put("actorId", response.getActorId());
+            notificationData.put("actorNickname", response.getActorNickname());
+            notificationData.put("actorAvatar", response.getActorAvatar());
+            notificationData.put("relatedId", response.getRelatedId());
+            notificationData.put("relatedType", response.getRelatedType());
+            notificationData.put("title", response.getTitle());
+            notificationData.put("content", response.getContent());
+            notificationData.put("isRead", response.getIsRead());
+            // 将LocalDateTime转换为ISO 8601字符串格式
+            notificationData.put("createdAt", response.getCreatedAt().toString());
+
+            pushMessage.put("data", notificationData);
             String pushJson = objectMapper.writeValueAsString(pushMessage);
-            
+
             webSocketHandler.sendMessageToUser(userId.toString(), pushJson);
         } catch (Exception e) {
             System.err.println("WebSocket推送通知失败: " + e.getMessage());
         }
-        
+
         return notification;
     }
-    
+
     @Override
-    public List<NotificationResponse> getNotificationsByUserId(Integer userId, Boolean isRead, 
-                                                               Integer page, Integer size) {
+    public List<NotificationResponse> getNotificationsByUserId(Integer userId, Boolean isRead,
+            Integer page, Integer size) {
         int offset = (page - 1) * size;
         List<Notification> notifications = notificationMapper.selectByUserId(userId, isRead, offset, size);
-        
+
         return notifications.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     @Transactional
     public boolean markAsRead(Integer notificationId, Integer userId) {
@@ -124,11 +141,11 @@ public class NotificationServiceImpl implements NotificationService {
         if (notification == null || !notification.getUserId().equals(userId)) {
             return false;
         }
-        
+
         notification.setIsRead(true);
         return notificationMapper.update(notification) > 0;
     }
-    
+
     @Override
     @Transactional
     public int markAllAsRead(Integer userId) {
@@ -142,12 +159,12 @@ public class NotificationServiceImpl implements NotificationService {
         }
         return count;
     }
-    
+
     @Override
     public int getUnreadCount(Integer userId) {
         return notificationMapper.countUnreadByUserId(userId);
     }
-    
+
     @Override
     @Transactional
     public boolean deleteNotification(Integer notificationId, Integer userId) {
@@ -155,10 +172,10 @@ public class NotificationServiceImpl implements NotificationService {
         if (notification == null || !notification.getUserId().equals(userId)) {
             return false;
         }
-        
+
         return notificationMapper.deleteById(notificationId) > 0;
     }
-    
+
     /**
      * 将Notification实体转换为NotificationResponse DTO
      */
@@ -174,7 +191,7 @@ public class NotificationServiceImpl implements NotificationService {
         response.setContent(notification.getContent());
         response.setIsRead(notification.getIsRead());
         response.setCreatedAt(notification.getCreatedAt());
-        
+
         // 获取操作者信息
         if (notification.getActorId() != null) {
             User actor = userMapper.selectById(notification.getActorId());
@@ -183,8 +200,7 @@ public class NotificationServiceImpl implements NotificationService {
                 response.setActorAvatar(actor.getAvatarUrl());
             }
         }
-        
+
         return response;
     }
 }
-
