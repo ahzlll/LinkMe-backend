@@ -53,4 +53,9 @@ public class Message {
      * 创建时间 - 发送时间
      */
     private LocalDateTime createdAt;
+    
+    /**
+     * 对哪个用户隐藏 - 用于屏蔽功能，当接收者屏蔽了发送者时，该消息对接收者永久隐藏
+     */
+    private Integer hiddenForUserId;
 }

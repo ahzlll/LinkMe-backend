@@ -11,6 +11,7 @@
         <result column="content" property="content"/>
         <result column="is_read" property="isRead"/>
         <result column="created_at" property="createdAt"/>
+        <result column="hidden_for_user_id" property="hiddenForUserId"/>
     </resultMap>
 
     <!-- 根据消息ID查询消息信息 -->
@@ -18,12 +19,15 @@
         SELECT * FROM message WHERE message_id = #{messageId}
     </select>
 
-    <!-- 根据会话ID查询消息列表（按时间正序，最旧的在前面，最新的在后面） -->
+    <!-- 根据会话ID查询消息列表（获取最新的N条消息，按时间正序显示） -->
     <select id="selectByConversationId" resultMap="MessageResultMap">
-        SELECT * FROM message 
-        WHERE conversation_id = #{conversationId}
+        SELECT * FROM (
+            SELECT * FROM message 
+            WHERE conversation_id = #{conversationId}
+            ORDER BY created_at DESC
+            LIMIT #{offset}, #{limit}
+        ) AS recent_messages
         ORDER BY created_at ASC
-        LIMIT #{offset}, #{limit}
     </select>
 
     <!-- 根据发送者ID查询消息列表 -->
@@ -36,8 +40,8 @@
 
     <!-- 插入新消息 -->
     <insert id="insert" parameterType="com.linkme.backend.entity.Message" useGeneratedKeys="true" keyProperty="messageId">
-        INSERT INTO message (conversation_id, sender_id, content_type, content, is_read, created_at)
-        VALUES (#{conversationId}, #{senderId}, #{contentType}, #{content}, #{isRead}, #{createdAt})
+        INSERT INTO message (conversation_id, sender_id, content_type, content, is_read, created_at, hidden_for_user_id)
+        VALUES (#{conversationId}, #{senderId}, #{contentType}, #{content}, #{isRead}, #{createdAt}, #{hiddenForUserId})
     </insert>
 
     <!-- 根据消息ID删除消息 -->
