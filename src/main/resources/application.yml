@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/linkme?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: MYsql@2024fcq
+    password: Hx61533156
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
     host: localhost

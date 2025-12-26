@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * - 输入：用户ID、通知类型、操作者ID、关联ID
  * - 输出：通知详细信息
  * 
- * @author Ahz, rik
+ * @author Ahz, riki
  * @version 1.0
  */
 @Data

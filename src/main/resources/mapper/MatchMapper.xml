@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.MatchMapper">
+
+    <!--
+      匹配关系（互相红心）Mapper
+      对应表：match_user
+      @author riki
+    -->
+
+    <resultMap id="MatchResultMap" type="com.linkme.backend.entity.Match">
+        <id column="match_id" property="matchId"/>
+        <result column="user1_id" property="user1Id"/>
+        <result column="user2_id" property="user2Id"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="MatchResultMap">
+        SELECT match_id, user1_id, user2_id, created_at, status
+        FROM match_user
+        WHERE match_id = #{matchId}
+    </select>
+
+    <select id="selectByUserId" resultMap="MatchResultMap">
+        SELECT match_id, user1_id, user2_id, created_at, status
+        FROM match_user
+        WHERE user1_id = #{userId} OR user2_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectByUserPair" resultMap="MatchResultMap">
+        SELECT match_id, user1_id, user2_id, created_at, status
+        FROM match_user
+        WHERE user1_id = LEAST(#{user1Id}, #{user2Id})
+          AND user2_id = GREATEST(#{user1Id}, #{user2Id})
+    </select>
+
+    <insert id="insert" parameterType="com.linkme.backend.entity.Match" useGeneratedKeys="true" keyProperty="matchId">
+        INSERT INTO match_user (user1_id, user2_id, created_at, status)
+        VALUES (LEAST(#{user1Id}, #{user2Id}), GREATEST(#{user1Id}, #{user2Id}), #{createdAt}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.linkme.backend.entity.Match">
+        UPDATE match_user
+        SET
+            <trim suffixOverrides=",">
+                <if test="status != null">status = #{status},</if>
+            </trim>
+        WHERE match_id = #{matchId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM match_user WHERE match_id = #{matchId}
+    </delete>
+
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM match_user
+        WHERE user1_id = #{userId} OR user2_id = #{userId}
+    </select>
+
+</mapper>

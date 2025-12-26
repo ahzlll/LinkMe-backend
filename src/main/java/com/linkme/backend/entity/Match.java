@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
  * - 输入：用户1ID、用户2ID
  * - 输出：匹配关系信息
  * 
- * @author Ahz
- * @version 1.0
+ * @author Ahz，riki
+ * @version 1.1
  */
 @Data
 public class Match {

@@ -13,8 +13,8 @@ import lombok.Data;
  * - 输入：帖子ID、标签ID
  * - 输出：帖子标签关联信息
  * 
- * @author Ahz
- * @version 1.0
+ * @author Ahz，riki
+ * @version 1.1
  */
 @Data
 public class PostTag {

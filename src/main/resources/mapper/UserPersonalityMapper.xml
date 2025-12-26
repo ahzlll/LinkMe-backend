@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.UserPersonalityMapper">
+
+    <!--
+      用户性格特质 Mapper
+      @author riki
+    -->
+
+    <resultMap id="UserPersonalitySelectionMap" type="com.linkme.backend.entity.UserPersonalitySelection">
+        <result column="user_id" property="userId"/>
+        <result column="option_id" property="optionId"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="trait_type" property="traitType"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="option_name" property="optionName"/>
+    </resultMap>
+
+    <select id="selectSelectionsByUserIds" resultMap="UserPersonalitySelectionMap">
+        SELECT up.user_id,
+               pto.option_id,
+               pto.category_id,
+               ptc.trait_type,
+               ptc.name AS category_name,
+               pto.name AS option_name
+        FROM user_personality up
+        INNER JOIN personality_trait_option pto ON pto.option_id = up.option_id
+        INNER JOIN personality_trait_category ptc ON ptc.category_id = pto.category_id
+        WHERE up.user_id IN
+        <foreach item="id" collection="userIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

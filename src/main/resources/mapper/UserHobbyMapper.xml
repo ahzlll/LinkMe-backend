@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.UserHobbyMapper">
+
+    <!--
+      用户爱好查询 Mapper
+      
+    -->
+
+    <resultMap id="HobbyResultMap" type="com.linkme.backend.entity.Hobby">
+        <id column="hobby_id" property="hobbyId"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="name" property="name"/>
+        <result column="display_order" property="displayOrder"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="selectHobbiesByUserId" resultMap="HobbyResultMap">
+        SELECT h.hobby_id, h.category_id, h.name, h.display_order, h.created_at
+        FROM user_hobby uh
+        INNER JOIN hobby h ON h.hobby_id = uh.hobby_id
+        WHERE uh.user_id = #{userId}
+        ORDER BY h.category_id ASC, h.display_order ASC
+    </select>
+
+</mapper>

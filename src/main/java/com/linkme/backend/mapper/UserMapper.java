@@ -13,8 +13,8 @@ import java.util.List;
  * - 提供用户数据的增删改查操作
  * - 支持用户注册、登录、信息更新等功能
  * 
- * @author Ahz
- * @version 1.1
+ * @author Ahz，riki
+ * @version 1.2
  */
 @Mapper
 public interface UserMapper {
@@ -107,4 +107,17 @@ public interface UserMapper {
      * @return 用户信息列表
      */
     List<User> selectBatchIds(@Param("userIds") List<Integer> userIds);
+    
+    /**
+     * 匹配推荐的候选用户查询
+     * 
+     * @param currentUserId 当前用户ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 用户信息列表
+     * 
+     */
+    List<User> selectMatchCandidates(@Param("currentUserId") Integer currentUserId,
+                                     @Param("offset") Integer offset,
+                                     @Param("limit") Integer limit);
 }

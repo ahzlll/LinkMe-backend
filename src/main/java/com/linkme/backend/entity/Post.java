@@ -15,7 +15,7 @@ import java.util.List;
  * - 输入：帖子内容、标签、图片链接
  * - 输出：帖子详细信息（包含评论、点赞数等）
  * 
- * @author Ahz
+ * @author Ahz，riki
  * @version 1.0
  */
 @Data

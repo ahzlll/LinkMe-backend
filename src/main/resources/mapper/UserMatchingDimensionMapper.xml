@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.UserMatchingDimensionMapper">
+
+    <!--
+      用户匹配维度（must/priority）Mapper
+      @author riki
+    -->
+
+    <resultMap id="DimensionPrioritySelectionMap" type="com.linkme.backend.entity.DimensionPrioritySelection">
+        <result column="code" property="code"/>
+        <result column="priority_order" property="priorityOrder"/>
+    </resultMap>
+
+    <select id="selectMustDimensionCodesByUserId" resultType="string">
+        SELECT md.code
+        FROM user_matching_must_dimension um
+        INNER JOIN matching_dimension md ON md.dimension_id = um.dimension_id
+        WHERE um.user_id = #{userId}
+        ORDER BY md.display_order ASC
+    </select>
+
+    <select id="selectPriorityDimensionsByUserId" resultMap="DimensionPrioritySelectionMap">
+        SELECT md.code,
+               up.priority_order
+        FROM user_matching_priority_dimension up
+        INNER JOIN matching_dimension md ON md.dimension_id = up.dimension_id
+        WHERE up.user_id = #{userId}
+        ORDER BY up.priority_order ASC
+    </select>
+
+</mapper>

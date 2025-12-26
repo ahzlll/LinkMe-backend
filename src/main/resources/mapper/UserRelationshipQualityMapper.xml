@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.UserRelationshipQualityMapper">
+
+    <!--
+      用户关系品质 Mapper
+      @author riki
+    -->
+
+    <resultMap id="UserRelationshipQualitySelectionMap" type="com.linkme.backend.entity.UserRelationshipQualitySelection">
+        <result column="user_id" property="userId"/>
+        <result column="quality_id" property="qualityId"/>
+    </resultMap>
+
+    <select id="selectByUserIds" resultMap="UserRelationshipQualitySelectionMap">
+        SELECT user_id, quality_id
+        FROM user_relationship_quality
+        WHERE user_id IN
+        <foreach item="id" collection="userIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>
