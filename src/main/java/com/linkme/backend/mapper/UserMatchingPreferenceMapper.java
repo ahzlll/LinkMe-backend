@@ -29,4 +29,20 @@ public interface UserMatchingPreferenceMapper {
      * @return 匹配偏好列表
      */
     List<UserMatchingPreference> selectByUserIds(@Param("userIds") List<Integer> userIds);
+
+    /**
+     * 插入用户匹配偏好
+     *
+     * @param preference 匹配偏好
+     * @return 影响行数
+     */
+    int insert(UserMatchingPreference preference);
+
+    /**
+     * 更新用户匹配偏好
+     *
+     * @param preference 匹配偏好
+     * @return 影响行数
+     */
+    int update(UserMatchingPreference preference);
 }

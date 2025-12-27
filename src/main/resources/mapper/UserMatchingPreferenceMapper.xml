@@ -40,4 +40,26 @@
         </foreach>
     </select>
 
+    <insert id="insert" useGeneratedKeys="true" keyProperty="preferenceId">
+        INSERT INTO user_matching_preference (user_id, age_min, age_max, age_unlimited, distance_preference,
+                                               relationship_mode_id, communication_expectation_id, additional_requirements,
+                                               created_at, updated_at)
+        VALUES (#{userId}, #{ageMin}, #{ageMax}, #{ageUnlimited}, #{distancePreference},
+                #{relationshipModeId}, #{communicationExpectationId}, #{additionalRequirements},
+                NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE user_matching_preference
+        SET age_min = #{ageMin},
+            age_max = #{ageMax},
+            age_unlimited = #{ageUnlimited},
+            distance_preference = #{distancePreference},
+            relationship_mode_id = #{relationshipModeId},
+            communication_expectation_id = #{communicationExpectationId},
+            additional_requirements = #{additionalRequirements},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>

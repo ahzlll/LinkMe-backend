@@ -32,4 +32,27 @@
         </foreach>
     </select>
 
+    <select id="selectSelectionsByUserId" resultMap="UserPersonalitySelectionMap">
+        SELECT up.user_id,
+               pto.option_id,
+               pto.category_id,
+               ptc.trait_type,
+               ptc.name AS category_name,
+               pto.name AS option_name
+        FROM user_personality up
+        INNER JOIN personality_trait_option pto ON pto.option_id = up.option_id
+        INNER JOIN personality_trait_category ptc ON ptc.category_id = pto.category_id
+        WHERE up.user_id = #{userId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO user_personality (user_id, option_id, created_at, updated_at)
+        VALUES (#{userId}, #{optionId}, NOW(), NOW())
+    </insert>
+
+    <delete id="deleteByUserId">
+        DELETE FROM user_personality
+        WHERE user_id = #{userId}
+    </delete>
+
 </mapper>

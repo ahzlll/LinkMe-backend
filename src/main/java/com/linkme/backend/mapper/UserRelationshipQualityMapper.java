@@ -22,4 +22,29 @@ public interface UserRelationshipQualityMapper {
      * @return 选择列表
      */
     List<UserRelationshipQualitySelection> selectByUserIds(@Param("userIds") List<Integer> userIds);
+
+    /**
+     * 查询单个用户选择的关系品质
+     *
+     * @param userId 用户ID
+     * @return 选择列表
+     */
+    List<UserRelationshipQualitySelection> selectByUserId(@Param("userId") Integer userId);
+
+    /**
+     * 插入用户关系品质
+     *
+     * @param userId 用户ID
+     * @param qualityId 品质ID
+     * @return 影响行数
+     */
+    int insert(@Param("userId") Integer userId, @Param("qualityId") Integer qualityId);
+
+    /**
+     * 删除用户的所有关系品质
+     *
+     * @param userId 用户ID
+     * @return 影响行数
+     */
+    int deleteByUserId(@Param("userId") Integer userId);
 }

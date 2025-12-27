@@ -128,4 +128,12 @@
         LIMIT #{offset}, #{limit}
     </select>
 
+    <!-- 更新用户问卷完成状态 -->
+    <update id="updateQuestionnaireCompleted">
+        UPDATE user
+        SET matching_questionnaire_completed = #{completed},
+            matching_questionnaire_completed_at = CASE WHEN #{completed} = TRUE THEN NOW() ELSE NULL END
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>

@@ -35,8 +35,8 @@ import java.io.IOException;
  *
  * 说明：严格遵循 API.md/README.md 约定，不修改接口路径与入参结构。
  *
- * author: riki
- * version: 1.2
+ * @author riki
+ * @version 1.2
  */
 @RestController
 @RequestMapping("/posts")

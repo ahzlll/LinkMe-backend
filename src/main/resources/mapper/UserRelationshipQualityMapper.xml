@@ -4,7 +4,7 @@
 
     <!--
       用户关系品质 Mapper
-      @author riki
+      
     -->
 
     <resultMap id="UserRelationshipQualitySelectionMap" type="com.linkme.backend.entity.UserRelationshipQualitySelection">
@@ -20,5 +20,21 @@
             #{id}
         </foreach>
     </select>
+
+    <select id="selectByUserId" resultMap="UserRelationshipQualitySelectionMap">
+        SELECT user_id, quality_id
+        FROM user_relationship_quality
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO user_relationship_quality (user_id, quality_id, created_at)
+        VALUES (#{userId}, #{qualityId}, NOW())
+    </insert>
+
+    <delete id="deleteByUserId">
+        DELETE FROM user_relationship_quality
+        WHERE user_id = #{userId}
+    </delete>
 
 </mapper>

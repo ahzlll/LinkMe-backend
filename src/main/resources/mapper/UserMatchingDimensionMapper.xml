@@ -4,7 +4,7 @@
 
     <!--
       用户匹配维度（must/priority）Mapper
-      @author riki
+      
     -->
 
     <resultMap id="DimensionPrioritySelectionMap" type="com.linkme.backend.entity.DimensionPrioritySelection">
@@ -28,5 +28,39 @@
         WHERE up.user_id = #{userId}
         ORDER BY up.priority_order ASC
     </select>
+
+    <select id="selectMustDimensionIdsByUserId" resultType="int">
+        SELECT dimension_id
+        FROM user_matching_must_dimension
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectPriorityDimensionIdsByUserId" resultType="java.util.Map">
+        SELECT dimension_id AS dimensionId,
+               priority_order AS priorityOrder
+        FROM user_matching_priority_dimension
+        WHERE user_id = #{userId}
+        ORDER BY priority_order ASC
+    </select>
+
+    <insert id="insertMustDimension">
+        INSERT INTO user_matching_must_dimension (user_id, dimension_id, created_at)
+        VALUES (#{userId}, #{dimensionId}, NOW())
+    </insert>
+
+    <delete id="deleteMustDimensionsByUserId">
+        DELETE FROM user_matching_must_dimension
+        WHERE user_id = #{userId}
+    </delete>
+
+    <insert id="insertPriorityDimension">
+        INSERT INTO user_matching_priority_dimension (user_id, dimension_id, priority_order, created_at)
+        VALUES (#{userId}, #{dimensionId}, #{priorityOrder}, NOW())
+    </insert>
+
+    <delete id="deletePriorityDimensionsByUserId">
+        DELETE FROM user_matching_priority_dimension
+        WHERE user_id = #{userId}
+    </delete>
 
 </mapper>
