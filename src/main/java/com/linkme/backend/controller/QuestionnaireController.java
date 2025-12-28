@@ -33,7 +33,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * @version 1.0
  */
 @RestController
-@RequestMapping("/api/questionnaire")
+@RequestMapping({"/api/questionnaire", "/questionnaire"})
 @Tag(name = "问卷管理", description = "问卷提交与查询相关API")
 public class QuestionnaireController {
 
@@ -106,6 +106,18 @@ public class QuestionnaireController {
     @Operation(summary = "创建/提交问卷", description = "提交或更新当前登录用户的问卷数据，需要Bearer Token认证",
             security = @SecurityRequirement(name = "bearerAuth"))
     public R<Void> submitQuestionnaire(@RequestBody PostCreateRequest.QuestionnaireRequest request, HttpServletRequest httpRequest) {
+        Integer currentUserId = getCurrentUserId(httpRequest);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        questionnaireService.saveOrUpdateQuestionnaire(currentUserId, request);
+        return R.ok();
+    }
+
+    @PutMapping
+    @Operation(summary = "更新问卷", description = "保存或更新当前登录用户的问卷数据",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<Void> updateQuestionnaire(@RequestBody PostCreateRequest.QuestionnaireRequest request, HttpServletRequest httpRequest) {
         Integer currentUserId = getCurrentUserId(httpRequest);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");

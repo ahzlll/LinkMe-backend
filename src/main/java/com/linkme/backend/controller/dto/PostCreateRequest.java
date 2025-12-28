@@ -1,5 +1,6 @@
 package com.linkme.backend.controller.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.util.List;
@@ -75,6 +76,20 @@ public class PostCreateRequest {
         public static class RelationshipQualityRequest {
             @Schema(description = "关系品质ID")
             private Integer qualityId;
+            @Schema(description = "关系品质名称")
+            private String qualityName;
+
+            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+            public RelationshipQualityRequest(Object value) {
+                if (value instanceof Number) {
+                    this.qualityId = ((Number) value).intValue();
+                } else if (value instanceof String) {
+                    this.qualityName = (String) value;
+                }
+            }
+
+            public RelationshipQualityRequest() {
+            }
         }
 
         @Data

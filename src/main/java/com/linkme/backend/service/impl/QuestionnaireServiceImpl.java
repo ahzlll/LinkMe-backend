@@ -43,6 +43,9 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
 
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private RelationshipQualityDefMapper relationshipQualityDefMapper;
 
     /**
      * 保存或更新问卷
@@ -100,8 +103,12 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         userRelationshipQualityMapper.deleteByUserId(userId);
         if (request.getRelationshipQualities() != null && !request.getRelationshipQualities().isEmpty()) {
             for (PostCreateRequest.QuestionnaireRequest.RelationshipQualityRequest quality : request.getRelationshipQualities()) {
-                if (quality.getQualityId() != null) {
-                    userRelationshipQualityMapper.insert(userId, quality.getQualityId());
+                Integer qid = quality.getQualityId();
+                if (qid == null && quality.getQualityName() != null) {
+                    qid = relationshipQualityDefMapper.selectIdByName(quality.getQualityName());
+                }
+                if (qid != null) {
+                    userRelationshipQualityMapper.insert(userId, qid);
                 }
             }
         }
@@ -184,7 +191,8 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
             for (UserRelationshipQualitySelection selection : qualitySelections) {
                 PostCreateRequest.QuestionnaireResponse.RelationshipQualityResponse quality = new PostCreateRequest.QuestionnaireResponse.RelationshipQualityResponse();
                 quality.setQualityId(selection.getQualityId());
-                // qualityName需要通过额外的查询获取，这里暂时留空
+                String name = relationshipQualityDefMapper.selectNameById(selection.getQualityId());
+                quality.setQualityName(name);
                 qualities.add(quality);
             }
             response.setRelationshipQualities(qualities);

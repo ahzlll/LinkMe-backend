@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.RelationshipQualityDefMapper">
+    <select id="selectIdByName" parameterType="string" resultType="int">
+        SELECT quality_id
+        FROM relationship_quality
+        WHERE name = #{name}
+        LIMIT 1
+    </select>
+    <select id="selectNameById" parameterType="int" resultType="string">
+        SELECT name
+        FROM relationship_quality
+        WHERE quality_id = #{qualityId}
+        LIMIT 1
+    </select>
+</mapper>
