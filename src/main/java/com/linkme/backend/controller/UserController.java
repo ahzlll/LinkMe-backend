@@ -26,9 +26,10 @@ import java.util.Map;
  * 功能描述：
  * - 处理用户相关的HTTP请求
  * - 包括用户注册、登录、信息管理等功能
+ * -用户问卷
  * 
- * @author Ahz
- * @version 1.2.2
+ * @author Ahz，riki
+ * @version 1.2.3
  */
 @RestController
 @RequestMapping("/user")
@@ -66,6 +67,8 @@ public class UserController {
         userInfo.setAvatarUrl(user.getAvatarUrl());
         userInfo.setBio(user.getBio());
         userInfo.setCreatedAt(user.getCreatedAt());
+        userInfo.setMatchingQuestionnaireCompleted(user.getMatchingQuestionnaireCompleted());
+        userInfo.setMatchingQuestionnaireCompletedAt(user.getMatchingQuestionnaireCompletedAt());
         // 不包含passwordHash
         return userInfo;
     }

@@ -11,13 +11,14 @@ import java.time.LocalDateTime;
  * 功能描述：
  * - 存储用户基本信息，包括个人资料、联系方式等
  * - 支持用户注册、登录、个人信息管理
+ * -用户是否填了问卷
  * 
  * 输入输出示例：
  * - 输入：用户注册信息（邮箱、密码、昵称等）
  * - 输出：用户详细信息（包含头像、简介、标签等）
  * 
- * @author Ahz
- * @version 1.0
+ * @author Ahz，riki
+ * @version 1.1
  */
 @Data
 public class User {
@@ -81,4 +82,16 @@ public class User {
      * 创建时间 - 注册时间
      */
     private LocalDateTime createdAt;
+
+    /**
+     * 是否完成匹配问卷
+     */
+    @JsonAlias({"matching_questionnaire_completed", "matchingQuestionnaireCompleted"})
+    private Boolean matchingQuestionnaireCompleted;
+
+    /**
+     * 问卷完成时间
+     */
+    @JsonAlias({"matching_questionnaire_completed_at", "matchingQuestionnaireCompletedAt"})
+    private LocalDateTime matchingQuestionnaireCompletedAt;
 }

@@ -16,6 +16,8 @@
         <result column="avatar_url" property="avatarUrl"/>
         <result column="bio" property="bio"/>
         <result column="created_at" property="createdAt"/>
+        <result column="matching_questionnaire_completed" property="matchingQuestionnaireCompleted"/>
+        <result column="matching_questionnaire_completed_at" property="matchingQuestionnaireCompletedAt"/>
     </resultMap>
 
     <!-- 根据用户ID查询用户信息 -->

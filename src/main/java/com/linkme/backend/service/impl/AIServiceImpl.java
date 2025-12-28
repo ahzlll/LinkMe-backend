@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linkme.backend.controller.dto.AIAnalysisRequest;
 import com.linkme.backend.controller.dto.AIAnalysisResponse;
 import com.linkme.backend.service.AIService;
+import com.linkme.backend.service.AISettingsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +19,17 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+/**
+ * AI情感聊天助手服务实现
+ *
+ * 职责：
+ * - 根据对话历史构造提示词，调用外部AI接口生成情感提示与回复建议
+ * - 支持失败重试与降级方案
+ * - 受全局开关控制（关闭时直接返回降级提示，不调用外部服务）
+ *
+ * @author riki
+ * @version 1.0
+ */
 public class AIServiceImpl implements AIService {
 
     @Value("${ai.api-url}")
@@ -31,9 +43,23 @@ public class AIServiceImpl implements AIService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final AISettingsService settingsService;
+
+    public AIServiceImpl(AISettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
 
     @Override
     public AIAnalysisResponse analyzeChat(AIAnalysisRequest request) {
+        /**
+         * 开关判断：关闭时直接返回降级提示
+         */
+        if (!settingsService.isEnabled()) {
+            AIAnalysisResponse r = new AIAnalysisResponse();
+            r.setTip("AI助手已关闭。");
+            r.setSuggestion("AI已关闭。");
+            return r;
+        }
         int maxRetries = 3;
         int retryCount = 0;
         Exception lastException = null;
