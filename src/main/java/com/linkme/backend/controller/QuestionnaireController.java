@@ -33,7 +33,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * @version 1.0
  */
 @RestController
-@RequestMapping({"/api/questionnaire", "/questionnaire"})
+@RequestMapping("/questionnaire")
 @Tag(name = "问卷管理", description = "问卷提交与查询相关API")
 public class QuestionnaireController {
 
