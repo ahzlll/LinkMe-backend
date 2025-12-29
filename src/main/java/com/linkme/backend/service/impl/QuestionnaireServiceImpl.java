@@ -377,6 +377,14 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         return response;
     }
 
+    @Override
+    public List<Map<String, Object>> listCompletedUsers(Integer page, Integer size) {
+        int p = (page == null || page < 1) ? 1 : page;
+        int s = (size == null || size < 1) ? 10 : size;
+        int offset = (p - 1) * s;
+        return userQuestionnaireCompletionMapper.selectCompletedUsers(offset, s);
+    }
+    
     /**
      * 将优先级字符串转换为数字顺序
      * high -> 1, medium -> 2, low -> 3

@@ -1,6 +1,8 @@
 package com.linkme.backend.service;
 
 import com.linkme.backend.controller.dto.PostCreateRequest;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 问卷服务接口
@@ -61,4 +63,6 @@ public interface QuestionnaireService {
      *         - 包含优先匹配维度列表（带优先级）
      */
     PostCreateRequest.QuestionnaireResponse getQuestionnaireByUserId(Integer userId);
+    
+    List<Map<String, Object>> listCompletedUsers(Integer page, Integer size);
 }

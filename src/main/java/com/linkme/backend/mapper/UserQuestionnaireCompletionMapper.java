@@ -1,5 +1,7 @@
 package com.linkme.backend.mapper;
 
+import java.util.List;
+import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -14,5 +16,6 @@ public interface UserQuestionnaireCompletionMapper {
      *  *@version 1.0
      */
     int upsertOnSubmit(@Param("userId") Integer userId);
+    
+    List<Map<String, Object>> selectCompletedUsers(@Param("offset") Integer offset, @Param("limit") Integer limit);
 }
-

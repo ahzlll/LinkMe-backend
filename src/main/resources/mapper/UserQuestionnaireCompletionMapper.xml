@@ -10,4 +10,23 @@
       submission_count = 1
   </insert>
   
+  <select id="selectCompletedUsers" resultType="java.util.Map">
+    SELECT 
+      u.user_id AS userId,
+      u.username AS username,
+      u.nickname AS nickname,
+      u.avatar_url AS avatarUrl,
+      u.gender AS gender,
+      u.region AS region,
+      u.created_at AS createdAt,
+      u.matching_questionnaire_completed_at AS completedAt,
+      c.last_submitted_at AS lastSubmittedAt,
+      c.submission_count AS submissionCount
+    FROM user u
+    INNER JOIN user_questionnaire_completion c ON c.user_id = u.user_id
+    WHERE COALESCE(u.matching_questionnaire_completed, FALSE) = TRUE
+    ORDER BY c.last_submitted_at DESC
+    LIMIT #{offset}, #{limit}
+  </select>
+  
 </mapper>

@@ -211,4 +211,18 @@ public class QuestionnaireController {
         }
         return R.ok(response);
     }
+    
+    @GetMapping("/completed-users")
+    @Operation(summary = "获取已填写问卷的用户列表", description = "按分页返回已完成问卷的用户基本信息及提交元数据",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<java.util.List<java.util.Map<String, Object>>> listCompletedUsers(
+            @RequestParam(name = "page", defaultValue = "1") Integer page,
+            @RequestParam(name = "size", defaultValue = "10") Integer size,
+            HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        return R.ok(questionnaireService.listCompletedUsers(page, size));
+    }
 }
