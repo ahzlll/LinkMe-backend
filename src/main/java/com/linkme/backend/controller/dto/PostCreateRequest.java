@@ -154,6 +154,30 @@ public class PostCreateRequest {
 
         @Schema(description = "其他交友要求")
         private String additionalRequirements;
+        
+        @Schema(description = "兴趣代码列表")
+        private java.util.List<String> interests;
+        
+        @Schema(description = "社交能量代码")
+        private String socialEnergy;
+        
+        @Schema(description = "决策方式代码")
+        private String decisionMaking;
+        
+        @Schema(description = "生活节奏代码")
+        private String lifeRhythm;
+        
+        @Schema(description = "沟通风格代码")
+        private String communicationStyle;
+        
+        @Schema(description = "理想社交风格代码")
+        private String preferredSocialStyle;
+        
+        @Schema(description = "理想处事风格代码")
+        private String preferredLifestyle;
+        
+        @Schema(description = "理想情绪特质代码")
+        private String preferredInterests;
 
         @Schema(description = "性格特质选择列表")
         private List<PersonalitySelectionResponse> personalities;
