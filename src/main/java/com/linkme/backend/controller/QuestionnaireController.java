@@ -110,7 +110,7 @@ public class QuestionnaireController {
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        questionnaireService.saveOrUpdateQuestionnaire(currentUserId, request);
+        questionnaireService.saveOrUpdateQuestionnaire(currentUserId, request, true);
         return R.ok();
     }
 
@@ -122,7 +122,7 @@ public class QuestionnaireController {
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        questionnaireService.saveOrUpdateQuestionnaire(currentUserId, request);
+        questionnaireService.saveOrUpdateQuestionnaire(currentUserId, request, false);
         return R.ok();
     }
 

@@ -49,6 +49,12 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
     
     @Autowired
     private UserQuestionnaireCompletionMapper userQuestionnaireCompletionMapper;
+    
+    @Autowired
+    private UserHobbyMapper userHobbyMapper;
+    
+    @Autowired
+    private PersonalityTraitOptionMapper personalityTraitOptionMapper;
 
     /**
      * 保存或更新问卷
@@ -58,7 +64,7 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
      */
     @Override
     @Transactional
-    public void saveOrUpdateQuestionnaire(Integer userId, PostCreateRequest.QuestionnaireRequest request) {
+    public void saveOrUpdateQuestionnaire(Integer userId, PostCreateRequest.QuestionnaireRequest request, boolean finalSubmission) {
         if (userId == null || request == null) {
             throw new IllegalArgumentException("用户ID和问卷数据不能为空");
         }
@@ -92,12 +98,135 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
             userMatchingPreferenceMapper.update(preference);
         }
 
+        // 1.1 保存用户爱好（先删除旧的，再插入新的；前端传的是代码，需映射到中文名再查ID）
+        userHobbyMapper.deleteByUserId(userId);
+        if (request.getInterests() != null && !request.getInterests().isEmpty()) {
+            Map<String, String> hobbyCodeToName = Map.ofEntries(
+                Map.entry("art", "绘画"),
+                Map.entry("photography", "摄影"),
+                Map.entry("calligraphy", "书法"),
+                Map.entry("writing", "写作"),
+                Map.entry("singing", "歌唱"),
+                Map.entry("dance", "舞蹈"),
+                Map.entry("theater", "戏剧"),
+                Map.entry("instrument", "乐器演奏"),
+                Map.entry("graphic_design", "平面设计"),
+                Map.entry("video_editing", "视频剪辑"),
+                Map.entry("reading", "阅读"),
+                Map.entry("programming", "编程"),
+                Map.entry("teaching", "教学"),
+                Map.entry("psychology", "心理学"),
+                Map.entry("language_learning", "语言学习"),
+                Map.entry("philosophy", "哲学思考"),
+                Map.entry("history_research", "历史研究"),
+                Map.entry("investment", "投资理财"),
+                Map.entry("public_speaking", "公开演讲"),
+                Map.entry("entrepreneurship", "创业项目"),
+                Map.entry("running", "跑步"),
+                Map.entry("fitness", "健身"),
+                Map.entry("swimming", "游泳"),
+                Map.entry("cycling", "骑行"),
+                Map.entry("fishing", "钓鱼"),
+                Map.entry("yoga", "瑜伽"),
+                Map.entry("camping", "露营"),
+                Map.entry("martial_arts", "武术"),
+                Map.entry("mountaineering", "登山"),
+                Map.entry("climbing", "攀岩"),
+                Map.entry("frisbee", "飞盘"),
+                Map.entry("team_sports", "球类运动"),
+                Map.entry("board_games", "桌游"),
+                Map.entry("card_games", "棋牌"),
+                Map.entry("magic", "魔术"),
+                Map.entry("collecting", "收藏"),
+                Map.entry("tv_shows", "追剧"),
+                Map.entry("movies", "看电影"),
+                Map.entry("music", "听音乐"),
+                Map.entry("script_killing", "剧本杀"),
+                Map.entry("escape_room", "密室逃脱"),
+                Map.entry("gaming", "电子游戏"),
+                Map.entry("cooking_baking", "烹饪/烘焙"),
+                Map.entry("coffee_tea_mixology", "咖啡/茶艺/调酒"),
+                Map.entry("handicraft_diy", "手工 DIY"),
+                Map.entry("sewing", "缝纫"),
+                Map.entry("home_decoration", "家居装饰"),
+                Map.entry("organizing", "收纳整理"),
+                Map.entry("floristry_gardening", "花艺绿植"),
+                Map.entry("travel", "旅行"),
+                Map.entry("bird_watching", "观鸟"),
+                Map.entry("music_festival", "音乐节"),
+                Map.entry("concert", "演唱会"),
+                Map.entry("restaurant_hopping", "探店打卡"),
+                Map.entry("exhibition", "展览打卡"),
+                Map.entry("astronomy", "天文观测"),
+                Map.entry("volunteering", "公益志愿"),
+                Map.entry("petting", "撸宠"),
+                Map.entry("city_walk", "城市漫步")
+            );
+            for (String code : request.getInterests()) {
+                String name = hobbyCodeToName.get(code);
+                if (name == null) {
+                    continue;
+                }
+                Integer hobbyId = userHobbyMapper.selectHobbyIdByName(name);
+                if (hobbyId != null) {
+                    userHobbyMapper.insert(userId, hobbyId);
+                }
+            }
+        }
+
         // 2. 保存用户性格特质（先删除旧的，再插入新的）
         userPersonalityMapper.deleteByUserId(userId);
         if (request.getPersonalities() != null && !request.getPersonalities().isEmpty()) {
             for (PostCreateRequest.QuestionnaireRequest.PersonalitySelectionRequest personality : request.getPersonalities()) {
                 if (personality.getTraitOptionId() != null) {
                     userPersonalityMapper.insert(userId, personality.getTraitOptionId());
+                }
+            }
+        }
+        // 2.1 当 personalities 未提供时，根据代码字段进行映射插入
+        else {
+            Map<String, String> personalityCodeToName = Map.ofEntries(
+                Map.entry("extroverted", "外向型（社交充电）"),
+                Map.entry("introverted", "内向型（独处充电）"),
+                Map.entry("ambivert", "中间型（看情况）"),
+                Map.entry("rational", "理性型（逻辑优先）"),
+                Map.entry("emotional", "感性型（感受优先）"),
+                Map.entry("balanced", "平衡型"),
+                Map.entry("planned", "计划型（凡事按规划）"),
+                Map.entry("casual", "随性型（走一步看一步）"),
+                Map.entry("flexible", "弹性型"),
+                Map.entry("direct", "直接坦率型"),
+                Map.entry("tactful", "委婉体贴型"),
+                Map.entry("humorous", "幽默风趣型"),
+                Map.entry("listening", "倾听为主型"),
+                Map.entry("silent", "偶尔沉默型"),
+                Map.entry("warm_talkative", "热情健谈"),
+                Map.entry("calm_reserved", "沉稳内敛"),
+                Map.entry("same_frequency", "同频即可"),
+                Map.entry("meticulous", "严谨细致"),
+                Map.entry("efficient", "高效行动"),
+                Map.entry("steady", "踏实靠谱"),
+                Map.entry("optimistic_positive", "乐观积极"),
+                Map.entry("calm_rational", "冷静理智"),
+                Map.entry("empathic_sensitive", "敏感共情"),
+                Map.entry("stable", "情绪稳定")
+            );
+            List<String> codes = new ArrayList<>();
+            if (request.getSocialEnergy() != null) codes.add(request.getSocialEnergy());
+            if (request.getDecisionMaking() != null) codes.add(request.getDecisionMaking());
+            if (request.getLifeRhythm() != null) codes.add(request.getLifeRhythm());
+            if (request.getCommunicationStyle() != null) codes.add(request.getCommunicationStyle());
+            if (request.getPreferredSocialStyle() != null) codes.add(request.getPreferredSocialStyle());
+            if (request.getPreferredLifestyle() != null) codes.add(request.getPreferredLifestyle());
+            if (request.getPreferredInterests() != null) codes.add(request.getPreferredInterests());
+            for (String code : codes) {
+                String name = personalityCodeToName.get(code);
+                if (name == null) {
+                    continue;
+                }
+                Integer optionId = personalityTraitOptionMapper.selectOptionIdByName(name);
+                if (optionId != null) {
+                    userPersonalityMapper.insert(userId, optionId);
                 }
             }
         }
@@ -141,8 +270,10 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         // 6. 更新用户表的问卷完成状态
         userMapper.updateQuestionnaireCompleted(userId, true);
         
-        // 7. 写入问卷完成记录表（首次或累计）
-        userQuestionnaireCompletionMapper.upsertOnSubmit(userId);
+        // 7. 仅在最终提交时写入问卷完成记录表（累计提交次数）
+        if (finalSubmission) {
+            userQuestionnaireCompletionMapper.upsertOnSubmit(userId);
+        }
     }
 
     /**

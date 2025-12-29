@@ -5,7 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1356ec96-0f6d-4866-8e90-80fe6b8a2756" name="Changes" comment="后端项目初始化">
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/UserQuestionnaireCompletionMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/UserQuestionnaireCompletionMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/QuestionnaireController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/QuestionnaireController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostCreateRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/controller/dto/PostCreateRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/UserHobbyMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/mapper/UserHobbyMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/QuestionnaireService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/QuestionnaireService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/QuestionnaireServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/linkme/backend/service/impl/QuestionnaireServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/UserHobbyMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/UserHobbyMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/UserQuestionnaireCompletionMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/UserQuestionnaireCompletionMapper.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,7 +144,7 @@
       <workItem from="1766773468659" duration="1103000" />
       <workItem from="1766824774288" duration="2407000" />
       <workItem from="1766928957055" duration="5316000" />
-      <workItem from="1766975806686" duration="2085000" />
+      <workItem from="1766975806686" duration="3754000" />
     </task>
     <task id="LOCAL-00001" summary="后端项目初始化">
       <option name="closed" value="true" />

@@ -22,5 +22,21 @@
         WHERE uh.user_id = #{userId}
         ORDER BY h.category_id ASC, h.display_order ASC
     </select>
+    
+    <delete id="deleteByUserId">
+        DELETE FROM user_hobby
+        WHERE user_id = #{userId}
+    </delete>
+    
+    <insert id="insert">
+        INSERT INTO user_hobby (user_id, hobby_id, created_at)
+        VALUES (#{userId}, #{hobbyId}, NOW())
+    </insert>
+    
+    <select id="selectHobbyIdByName" resultType="int">
+        SELECT hobby_id FROM hobby
+        WHERE name = #{name}
+        LIMIT 1
+    </select>
 
 </mapper>

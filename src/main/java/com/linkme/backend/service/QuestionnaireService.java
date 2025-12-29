@@ -41,7 +41,7 @@ public interface QuestionnaireService {
      *                 - mustDimensions: 必须匹配维度ID列表
      *                 - priorityDimensions: 优先匹配维度列表
      */
-    void saveOrUpdateQuestionnaire(Integer userId, PostCreateRequest.QuestionnaireRequest request);
+    void saveOrUpdateQuestionnaire(Integer userId, PostCreateRequest.QuestionnaireRequest request, boolean finalSubmission);
     
     /**
      * 根据用户ID获取问卷数据

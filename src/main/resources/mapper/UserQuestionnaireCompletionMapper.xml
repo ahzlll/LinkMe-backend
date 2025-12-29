@@ -7,8 +7,7 @@
     VALUES (#{userId}, NOW(), NOW(), 1)
     ON DUPLICATE KEY UPDATE
       last_submitted_at = NOW(),
-      submission_count = submission_count + 1
+      submission_count = 1
   </insert>
   
 </mapper>
-

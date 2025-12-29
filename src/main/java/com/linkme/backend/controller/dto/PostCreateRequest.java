@@ -61,6 +61,31 @@ public class PostCreateRequest {
 
         @Schema(description = "优先匹配维度列表")
         private List<PriorityDimensionRequest> priorityDimensions;
+        
+        // 扩展字段：前端代码化的兴趣与性格，后端进行映射与保存
+        @Schema(description = "兴趣代码列表（如 photography, reading 等）")
+        private List<String> interests;
+        
+        @Schema(description = "社交能量代码（extroverted/introverted/ambivert）")
+        private String socialEnergy;
+        
+        @Schema(description = "决策方式代码（rational/emotional/balanced）")
+        private String decisionMaking;
+        
+        @Schema(description = "生活节奏代码（planned/casual/flexible）")
+        private String lifeRhythm;
+        
+        @Schema(description = "沟通风格代码（direct/tactful/humorous/listening/silent）")
+        private String communicationStyle;
+        
+        @Schema(description = "理想社交风格代码（warm_talkative/calm_reserved/same_frequency）")
+        private String preferredSocialStyle;
+        
+        @Schema(description = "理想处事风格代码（meticulous/efficient/flexible/steady）")
+        private String preferredLifestyle;
+        
+        @Schema(description = "理想情绪特质代码（optimistic_positive/calm_rational/empathic_sensitive/stable）")
+        private String preferredInterests;
 
         @Data
         @Schema(description = "性格特质选择")

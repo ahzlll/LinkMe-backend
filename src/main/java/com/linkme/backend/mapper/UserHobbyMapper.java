@@ -21,4 +21,10 @@ public interface UserHobbyMapper {
      * @return 爱好列表
      */
     List<Hobby> selectHobbiesByUserId(@Param("userId") Integer userId);
+    
+    int deleteByUserId(@Param("userId") Integer userId);
+    
+    int insert(@Param("userId") Integer userId, @Param("hobbyId") Integer hobbyId);
+    
+    Integer selectHobbyIdByName(@Param("name") String name);
 }
