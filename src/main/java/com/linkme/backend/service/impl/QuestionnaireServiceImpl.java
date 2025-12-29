@@ -46,6 +46,9 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
     
     @Autowired
     private RelationshipQualityDefMapper relationshipQualityDefMapper;
+    
+    @Autowired
+    private UserQuestionnaireCompletionMapper userQuestionnaireCompletionMapper;
 
     /**
      * 保存或更新问卷
@@ -137,6 +140,9 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
 
         // 6. 更新用户表的问卷完成状态
         userMapper.updateQuestionnaireCompleted(userId, true);
+        
+        // 7. 写入问卷完成记录表（首次或累计）
+        userQuestionnaireCompletionMapper.upsertOnSubmit(userId);
     }
 
     /**

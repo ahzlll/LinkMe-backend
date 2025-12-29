@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS user (
     INDEX `idx_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
+
 -- 2. 标签定义表（TagDef）
 CREATE TABLE IF NOT EXISTS tag_def (
     tag_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '标签ID',

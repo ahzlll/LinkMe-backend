@@ -19,11 +19,25 @@ CREATE TABLE IF NOT EXISTS user (
     role ENUM('customer', 'admin', 'moderator') DEFAULT 'customer' COMMENT '用户角色',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    matching_questionnaire_completed BOOLEAN DEFAULT FALSE COMMENT '是否完成匹配问卷',
+    matching_questionnaire_completed_at DATETIME DEFAULT NULL COMMENT '问卷完成时间',
     INDEX idx_email (email),
     INDEX idx_phone (phone),
     INDEX idx_created_at (created_at),
     INDEX `idx_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+
+-- 问卷完成记录表（UserQuestionnaireCompletion）
+CREATE TABLE IF NOT EXISTS user_questionnaire_completion (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    user_id INT NOT NULL COMMENT '用户ID',
+    first_completed_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '首次完成时间',
+    last_submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '上次提交时间',
+    submission_count INT DEFAULT 1 COMMENT '提交次数',
+    UNIQUE KEY uk_user_id (user_id),
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户问卷完成记录表';
 
 
 -- 2. 标签定义表（TagDef）
