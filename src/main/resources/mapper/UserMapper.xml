@@ -113,20 +113,22 @@
         </foreach>
     </select>
 
-    <!-- 筛选可被推荐的候选用户（排除自己/互相拉黑/不允许匹配） - author: riki -->
+    <!-- 筛选可被推荐的候选用户（排除自己/互相拉黑/不允许匹配，只返回已填写问卷的用户） -->
     <select id="selectMatchCandidates" resultMap="UserResultMap">
-        SELECT u.*
+        SELECT DISTINCT u.*
         FROM user u
         LEFT JOIN privacy_setting ps ON ps.user_id = u.user_id
+        LEFT JOIN user_questionnaire_completion c ON c.user_id = u.user_id
         WHERE u.user_id != #{currentUserId}
           AND COALESCE(ps.allow_match, TRUE) = TRUE
+          AND COALESCE(u.matching_questionnaire_completed, FALSE) = TRUE
           AND NOT EXISTS (
             SELECT 1
             FROM block b
             WHERE (b.blocker_id = #{currentUserId} AND b.blocked_id = u.user_id)
                OR (b.blocker_id = u.user_id AND b.blocked_id = #{currentUserId})
           )
-        ORDER BY u.created_at DESC
+        ORDER BY COALESCE(c.last_submitted_at, u.matching_questionnaire_completed_at) DESC
         LIMIT #{offset}, #{limit}
     </select>
 
