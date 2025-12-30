@@ -140,4 +140,19 @@
         WHERE user_id = #{userId}
     </update>
 
+    <!-- 根据用户ID查询用户基本信息（用于喜欢通知） -->
+    <select id="selectUserInfoById" resultType="map">
+        SELECT 
+            u.user_id,
+            u.username,
+            u.nickname,
+            u.avatar_url,
+            u.gender,
+            u.region,
+            u.bio
+        FROM user u
+        WHERE u.user_id = #{userId}
+        LIMIT 1
+    </select>
+
 </mapper>
