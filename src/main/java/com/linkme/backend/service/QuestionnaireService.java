@@ -64,5 +64,21 @@ public interface QuestionnaireService {
      */
     PostCreateRequest.QuestionnaireResponse getQuestionnaireByUserId(Integer userId);
     
+    /**
+     * 根据用户ID获取公开问卷数据
+     *
+     * 功能说明：
+     * - 查询用户的公开问卷数据（仅包含可公开的信息）
+     * - 主要用于匹配页面显示其他用户的兴趣爱好
+     * - 不包含敏感信息如年龄要求、距离偏好等
+     * - 如果用户没有提交过问卷，返回null
+     *
+     * @param userId 用户ID
+     * @return 问卷响应数据对象，仅包含公开信息
+     *         - 如果用户没有提交过问卷，返回null
+     *         - 主要包含兴趣爱好等可公开信息
+     */
+    PostCreateRequest.QuestionnaireResponse getPublicQuestionnaireByUserId(Integer userId);
+    
     List<Map<String, Object>> listCompletedUsers(Integer page, Integer size);
 }

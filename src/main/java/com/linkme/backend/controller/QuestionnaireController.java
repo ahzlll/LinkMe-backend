@@ -211,6 +211,50 @@ public class QuestionnaireController {
         }
         return R.ok(response);
     }
+
+    /**
+     * 获取指定用户的公开问卷信息
+     * 
+     * 功能说明：
+     * - 获取指定用户的公开问卷信息（仅包含兴趣爱好等可公开信息）
+     * - 需要Bearer Token认证
+     * - 用于匹配页面显示其他用户的兴趣爱好
+     * 
+     * 请求路径：GET /api/questionnaire/{userId}/public
+     * 
+     * 请求头：
+     * - Authorization: Bearer {token} (必需)
+     * 
+     * 路径参数：
+     * - userId: 用户ID（必需）
+     * 
+     * 响应：
+     * - 成功：返回200状态码和公开问卷信息对象
+     * - 失败：
+     *   - 401：未授权，请先登录
+     *   - 404：问卷数据不存在
+     * 
+     * @param userId 要查询的用户ID
+     * @param request HTTP请求对象，用于获取认证信息
+     * @return 统一响应对象，包含公开问卷信息或错误信息
+     */
+    @GetMapping("/{userId}/public")
+    @Operation(summary = "获取指定用户的公开问卷信息", description = "获取指定用户的公开问卷信息（仅包含兴趣爱好等可公开信息），用于匹配页面",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<PostCreateRequest.QuestionnaireResponse> getPublicQuestionnaireByUserId(
+            @Parameter(description = "用户ID") @PathVariable Integer userId,
+            HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        
+        PostCreateRequest.QuestionnaireResponse response = questionnaireService.getPublicQuestionnaireByUserId(userId);
+        if (response == null) {
+            return R.fail(404, "问卷数据不存在");
+        }
+        return R.ok(response);
+    }
     
     @GetMapping("/completed-users")
     @Operation(summary = "获取已填写问卷的用户列表", description = "按分页返回已完成问卷的用户基本信息及提交元数据",

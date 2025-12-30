@@ -536,6 +536,109 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
     }
 
     @Override
+    public PostCreateRequest.QuestionnaireResponse getPublicQuestionnaireByUserId(Integer userId) {
+        if (userId == null) {
+            return null;
+        }
+
+        // 检查用户是否已完成问卷
+        UserMatchingPreference preference = userMatchingPreferenceMapper.selectByUserId(userId);
+        if (preference == null) {
+            return null;
+        }
+
+        PostCreateRequest.QuestionnaireResponse response = new PostCreateRequest.QuestionnaireResponse();
+        response.setUserId(userId);
+        
+        // 只设置公开信息，不包含敏感信息如年龄要求、距离偏好等
+        // response.setAgeMin(null); // 不返回年龄要求
+        // response.setAgeMax(null); // 不返回年龄要求
+        // response.setAgeUnlimited(null); // 不返回年龄要求
+        // response.setDistancePreference(null); // 不返回距离偏好
+        // response.setRelationshipModeId(null); // 不返回关系模式
+        // response.setCommunicationExpectationId(null); // 不返回沟通期待
+        // response.setAdditionalRequirements(null); // 不返回其他要求
+
+        // 查询兴趣爱好（这是公开信息）
+        List<com.linkme.backend.entity.Hobby> hobbies = userHobbyMapper.selectHobbiesByUserId(userId);
+        if (hobbies != null && !hobbies.isEmpty()) {
+            Map<String, String> nameToCode = Map.ofEntries(
+                Map.entry("绘画", "art"),
+                Map.entry("摄影", "photography"),
+                Map.entry("书法", "calligraphy"),
+                Map.entry("写作", "writing"),
+                Map.entry("歌唱", "singing"),
+                Map.entry("舞蹈", "dance"),
+                Map.entry("戏剧", "theater"),
+                Map.entry("乐器演奏", "instrument"),
+                Map.entry("平面设计", "graphic_design"),
+                Map.entry("视频剪辑", "video_editing"),
+                Map.entry("阅读", "reading"),
+                Map.entry("编程", "programming"),
+                Map.entry("教学", "teaching"),
+                Map.entry("心理学", "psychology"),
+                Map.entry("语言学习", "language_learning"),
+                Map.entry("哲学思考", "philosophy"),
+                Map.entry("历史研究", "history_research"),
+                Map.entry("投资理财", "investment"),
+                Map.entry("公开演讲", "public_speaking"),
+                Map.entry("创业项目", "entrepreneurship"),
+                Map.entry("跑步", "running"),
+                Map.entry("健身", "fitness"),
+                Map.entry("游泳", "swimming"),
+                Map.entry("骑行", "cycling"),
+                Map.entry("钓鱼", "fishing"),
+                Map.entry("瑜伽", "yoga"),
+                Map.entry("露营", "camping"),
+                Map.entry("武术", "martial_arts"),
+                Map.entry("登山", "mountaineering"),
+                Map.entry("攀岩", "climbing"),
+                Map.entry("飞盘", "frisbee"),
+                Map.entry("球类运动", "team_sports"),
+                Map.entry("桌游", "board_games"),
+                Map.entry("棋牌", "card_games"),
+                Map.entry("魔术", "magic"),
+                Map.entry("收藏", "collecting"),
+                Map.entry("追剧", "tv_shows"),
+                Map.entry("看电影", "movies"),
+                Map.entry("听音乐", "music"),
+                Map.entry("剧本杀", "script_killing"),
+                Map.entry("密室逃脱", "escape_room"),
+                Map.entry("电子游戏", "gaming"),
+                Map.entry("烹饪/烘焙", "cooking_baking"),
+                Map.entry("咖啡/茶艺/调酒", "coffee_tea_mixology"),
+                Map.entry("手工 DIY", "handicraft_diy"),
+                Map.entry("缝纫", "sewing"),
+                Map.entry("家居装饰", "home_decoration"),
+                Map.entry("收纳整理", "organizing"),
+                Map.entry("花艺绿植", "floristry_gardening"),
+                Map.entry("旅行", "travel"),
+                Map.entry("观鸟", "bird_watching"),
+                Map.entry("音乐节", "music_festival"),
+                Map.entry("演唱会", "concert"),
+                Map.entry("探店打卡", "restaurant_hopping"),
+                Map.entry("展览打卡", "exhibition"),
+                Map.entry("天文观测", "astronomy"),
+                Map.entry("公益志愿", "volunteering"),
+                Map.entry("撸宠", "petting"),
+                Map.entry("城市漫步", "city_walk")
+            );
+            List<String> codes = new ArrayList<>();
+            for (com.linkme.backend.entity.Hobby h : hobbies) {
+                if (h != null && h.getName() != null) {
+                    String code = nameToCode.get(h.getName());
+                    if (code != null) {
+                        codes.add(code);
+                    }
+                }
+            }
+            response.setInterests(codes);
+        }
+
+        return response;
+    }
+
+    @Override
     public List<Map<String, Object>> listCompletedUsers(Integer page, Integer size) {
         int p = (page == null || page < 1) ? 1 : page;
         int s = (size == null || size < 1) ? 10 : size;
