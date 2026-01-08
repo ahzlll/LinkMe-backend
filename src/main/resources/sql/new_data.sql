@@ -221,16 +221,19 @@ CREATE TABLE IF NOT EXISTS message (
     message_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '消息ID',
     conversation_id INT NOT NULL COMMENT '会话ID',
     sender_id INT NOT NULL COMMENT '发送者ID',
+    hidden_for_user_id INT DEFAULT NULL COMMENT '对哪个用户隐藏（屏蔽功能使用）',
     content_type ENUM('text', 'image', 'video', 'voice', 'file') DEFAULT 'text' COMMENT '内容类型',
     content TEXT COMMENT '内容',
     is_read BOOLEAN DEFAULT FALSE COMMENT '是否已读',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
     FOREIGN KEY (conversation_id) REFERENCES conversation(conversation_id) ON DELETE CASCADE,
     FOREIGN KEY (sender_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (hidden_for_user_id) REFERENCES user(user_id) ON DELETE SET NULL,
     INDEX `idx_conversation_created` (`conversation_id`, `created_at`),
     INDEX `idx_sender_id` (`sender_id`),
     INDEX `idx_is_read` (`is_read`),
-    INDEX `idx_created_at` (`created_at`)
+    INDEX `idx_created_at` (`created_at`),
+    INDEX `idx_hidden_for_user_id` (`hidden_for_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='消息表';
 
 -- 16. 通知表（Notification）
