@@ -8,6 +8,8 @@ import com.linkme.backend.service.PostService;
 import com.linkme.backend.mapper.CommentMapper;
 import com.linkme.backend.mapper.LikeMapper;
 import com.linkme.backend.mapper.FavoriteMapper;
+import com.linkme.backend.mapper.UserMapper;
+import com.linkme.backend.service.NotificationService;
 import com.linkme.backend.controller.dto.PostCreateRequest;
 import com.linkme.backend.controller.dto.PostDetailResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,6 +53,10 @@ public class PostController {
     private LikeMapper likeMapper;
     @Autowired
     private FavoriteMapper favoriteMapper;
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private NotificationService notificationService;
     @Autowired
     private JwtUtil jwtUtil;
     
@@ -343,6 +349,61 @@ public class PostController {
         }
         
         int rows = commentMapper.insert(comment);
+        
+        // 评论成功后发送通知
+        if (rows > 0) {
+            try {
+                // 获取帖子信息
+                Post post = postService.getPostById(postId);
+                if (post != null) {
+                    // 获取评论用户信息
+                    Map<String, Object> fromUser = userMapper.selectUserInfoById(comment.getUserId());
+                    String fromUserName = "某位用户";
+                    if (fromUser != null && fromUser.get("nickname") != null) {
+                        fromUserName = (String) fromUser.get("nickname");
+                    }
+                    
+                    Integer targetUserId = null;
+                    String title = "";
+                    String content = "";
+                    
+                    if (comment.getParentId() == null) {
+                        // 顶级评论：通知帖子作者（如果评论者不是帖子作者）
+                        if (!comment.getUserId().equals(post.getUserId())) {
+                            targetUserId = post.getUserId();
+                            title = "新的评论";
+                            content = fromUserName + " 评论了你的帖子";
+                        }
+                    } else {
+                        // 回复评论：通知被回复的用户
+                        Comment parentComment = commentMapper.selectById(comment.getParentId());
+                        if (parentComment != null && !comment.getUserId().equals(parentComment.getUserId())) {
+                            targetUserId = parentComment.getUserId();
+                            title = "新的回复";
+                            content = fromUserName + " 回复了你的评论";
+                        }
+                    }
+                    
+                    // 发送通知
+                    if (targetUserId != null) {
+                        // 使用帖子ID作为关联ID，用户点击通知后可以跳转到帖子详情页
+                        notificationService.createNotification(
+                            targetUserId, // 接收者
+                            "COMMENT", // 通知类型：评论
+                            comment.getUserId(), // 操作者：评论用户
+                            postId, // 关联ID：帖子ID
+                            "POST", // 关联类型：帖子
+                            title,
+                            content
+                        );
+                    }
+                }
+            } catch (Exception e) {
+                // 通知发送失败不影响评论操作
+                System.err.println("发送评论通知失败: " + e.getMessage());
+            }
+        }
+        
         return rows > 0 ? R.ok("评论成功") : R.fail("评论失败");
     }
 
@@ -419,6 +480,35 @@ public class PostController {
         body.setPostId(postId);
         body.setCreatedAt(java.time.LocalDateTime.now());
         int rows = likeMapper.insert(body);
+        
+        // 点赞成功后发送通知给帖子作者（如果点赞者不是帖子作者）
+        if (rows > 0 && !body.getUserId().equals(post.getUserId())) {
+            try {
+                // 获取点赞用户信息
+                Map<String, Object> fromUser = userMapper.selectUserInfoById(body.getUserId());
+                String fromUserName = "某位用户";
+                if (fromUser != null && fromUser.get("nickname") != null) {
+                    fromUserName = (String) fromUser.get("nickname");
+                }
+                
+                // 发送通知给帖子作者
+                String title = "新的点赞";
+                String content = fromUserName + " 点赞了你的帖子";
+                notificationService.createNotification(
+                    post.getUserId(), // 接收者：帖子作者
+                    "LIKE", // 通知类型：点赞
+                    body.getUserId(), // 操作者：点赞用户
+                    postId, // 关联ID：帖子ID
+                    "POST", // 关联类型：帖子
+                    title,
+                    content
+                );
+            } catch (Exception e) {
+                // 通知发送失败不影响点赞操作
+                System.err.println("发送点赞通知失败: " + e.getMessage());
+            }
+        }
+        
         return rows > 0 ? R.ok("点赞成功") : R.fail("点赞失败");
     }
 

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.UserLikeMapper">
+
+    <!-- 插入喜欢记录 -->
+    <insert id="insertLike">
+        INSERT INTO user_like (from_user_id, to_user_id, created_at)
+        VALUES (#{fromUserId}, #{toUserId}, #{createdAt})
+    </insert>
+
+    <!-- 删除喜欢记录 -->
+    <delete id="deleteLike">
+        DELETE FROM user_like 
+        WHERE from_user_id = #{fromUserId} AND to_user_id = #{toUserId}
+    </delete>
+
+    <!-- 检查喜欢状态 -->
+    <select id="checkLikeStatus" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM user_like 
+        WHERE from_user_id = #{fromUserId} AND to_user_id = #{toUserId}
+    </select>
+
+    <!-- 查询我发送的喜欢列表 -->
+    <select id="selectSentLikes" resultType="map">
+        SELECT 
+            ul.from_user_id,
+            ul.to_user_id,
+            ul.created_at
+        FROM user_like ul
+        WHERE ul.from_user_id = #{userId}
+        ORDER BY ul.created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询我收到的喜欢列表 -->
+    <select id="selectReceivedLikes" resultType="map">
+        SELECT 
+            ul.from_user_id,
+            ul.to_user_id,
+            ul.created_at
+        FROM user_like ul
+        WHERE ul.to_user_id = #{userId}
+        ORDER BY ul.created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询用户之间的喜欢记录 -->
+    <select id="selectLikeRecord" resultType="map">
+        SELECT 
+            ul.from_user_id,
+            ul.to_user_id,
+            ul.created_at
+        FROM user_like ul
+        WHERE ul.from_user_id = #{fromUserId} AND ul.to_user_id = #{toUserId}
+        LIMIT 1
+    </select>
+
+</mapper>

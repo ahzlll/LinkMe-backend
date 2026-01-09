@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户数据访问层接口
@@ -129,4 +130,12 @@ public interface UserMapper {
      * @return 影响行数
      */
     int updateQuestionnaireCompleted(@Param("userId") Integer userId, @Param("completed") Boolean completed);
+
+    /**
+     * 根据用户ID查询用户基本信息（用于喜欢通知）
+     *
+     * @param userId 用户ID
+     * @return 用户基本信息Map
+     */
+    Map<String, Object> selectUserInfoById(@Param("userId") Integer userId);
 }

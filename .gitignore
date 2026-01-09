@@ -122,3 +122,6 @@ lombok.config
 .junit/
 test-results/
 
+.idea/
+
+

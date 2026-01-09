@@ -113,20 +113,22 @@
         </foreach>
     </select>
 
-    <!-- 筛选可被推荐的候选用户（排除自己/互相拉黑/不允许匹配） - author: riki -->
+    <!-- 筛选可被推荐的候选用户（排除自己/互相拉黑/不允许匹配，只返回已填写问卷的用户） -->
     <select id="selectMatchCandidates" resultMap="UserResultMap">
-        SELECT u.*
+        SELECT DISTINCT u.*, COALESCE(c.last_submitted_at, u.matching_questionnaire_completed_at) AS sort_time
         FROM user u
         LEFT JOIN privacy_setting ps ON ps.user_id = u.user_id
+        LEFT JOIN user_questionnaire_completion c ON c.user_id = u.user_id
         WHERE u.user_id != #{currentUserId}
           AND COALESCE(ps.allow_match, TRUE) = TRUE
+          AND COALESCE(u.matching_questionnaire_completed, FALSE) = TRUE
           AND NOT EXISTS (
             SELECT 1
             FROM block b
             WHERE (b.blocker_id = #{currentUserId} AND b.blocked_id = u.user_id)
                OR (b.blocker_id = u.user_id AND b.blocked_id = #{currentUserId})
           )
-        ORDER BY u.created_at DESC
+        ORDER BY sort_time DESC
         LIMIT #{offset}, #{limit}
     </select>
 
@@ -137,5 +139,20 @@
             matching_questionnaire_completed_at = CASE WHEN #{completed} = TRUE THEN NOW() ELSE NULL END
         WHERE user_id = #{userId}
     </update>
+
+    <!-- 根据用户ID查询用户基本信息（用于喜欢通知） -->
+    <select id="selectUserInfoById" resultType="map">
+        SELECT 
+            u.user_id,
+            u.username,
+            u.nickname,
+            u.avatar_url,
+            u.gender,
+            u.region,
+            u.bio
+        FROM user u
+        WHERE u.user_id = #{userId}
+        LIMIT 1
+    </select>
 
 </mapper>

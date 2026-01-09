@@ -3,6 +3,7 @@ package com.linkme.backend.controller.dto;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * 匹配推荐返回 DTO
@@ -36,4 +37,7 @@ public class MatchRecommendationResponse {
 
     /** 匹配度（0~100） */
     private Integer matchScore;
+
+    /** 兴趣编码列表（如 photography, reading 等） */
+    private List<String> interests;
 }
