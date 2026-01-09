@@ -214,8 +214,9 @@ MIT License
 ## 联系方式
 
 - 项目地址: <https://github.com/linkme/>
-- 问题反馈:
-- 邮箱:
+- 前端仓库：<https://github.com/Rosana127/LinkMe-frontend>
+- GitHub: <https://github.com/ahzlll>
+- 问题反馈: 通过 GitHub Issues
 
 ## 更新日志
 
