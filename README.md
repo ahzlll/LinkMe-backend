@@ -5,6 +5,7 @@
 - **[启动指南](./启动指南.md)** - 详细的环境配置和启动步骤
 - **[API 文档](./API.md)** - 完整的 API 接口文档和使用说明
 - **[数据库设计文档](./SQL.md)** - 数据库表结构说明和建库指南
+- **[匹配算法](./匹配算法.md)** -交友匹配的算法介绍
 
 ## 项目简介
 
@@ -47,7 +48,7 @@ LinkMe 是一个现代化的交友聊天社交软件后端系统，基于 Spring
 ### 4. 聊天通信
 
 - 私聊功能
-- 多媒体消息（文字、图片、视频）
+- 多媒体消息
 - 语音/视频通话
 - 消息通知
 
@@ -60,30 +61,60 @@ LinkMe 是一个现代化的交友聊天社交软件后端系统，基于 Spring
 ## 项目结构
 
 ```
-src/main/java/com/linkme/backend/
-├── LinkMeApplication.java          # 启动类
-├── common/                         # 公共类
-│   ├── R.java                      # 统一响应格式
-│   ├── GlobalExceptionHandler.java # 全局异常处理
-│   └── JwtUtil.java                # JWT工具类
-├── config/                         # 配置类
-│   ├── JwtInterceptor.java         # JWT拦截器
-│   ├── WebMvcConfig.java           # Web配置
-│   └── OpenApiConfig.java          # API文档配置
-├── controller/                     # 控制器层
-│   ├── UserController.java         # 用户控制器
-│   └── PostController.java          # 帖子控制器
-├── service/                        # 服务层
-│   ├── UserService.java            # 用户服务接口
-│   ├── PostService.java            # 帖子服务接口
-│   └── impl/                       # 服务实现类
-├── mapper/                         # 数据访问层
-│   ├── UserMapper.java             # 用户Mapper
-│   └── PostMapper.java             # 帖子Mapper
-└── entity/                         # 实体类
-    ├── User.java                   # 用户实体
-    ├── Post.java                   # 帖子实体
-    └── ...
+LinkMe-backend/LinkMe-backend/
+├── src/main/java/com/linkme/backend/
+│   ├── LinkMeApplication.java    # 启动类
+│   │
+│   ├── controller/                # 控制器层（REST API）
+│   │   ├── AIController.java       # AI相关接口
+│   │   ├── ChatController.java     # 聊天相关接口
+│   │   ├── FavoriteController.java # 收藏相关接口
+│   │   ├── HomeController.java     # 主页相关接口
+│   │   ├── LikeController.java     # 喜欢相关接口
+│   │   ├── MatchController.java    # 匹配相关接口
+│   │   ├── NotificationController.java # 通知相关接口
+│   │   ├── PostController.java     # 帖子相关接口
+│   │   ├── QuestionnaireController.java # 问卷相关接口
+│   │   ├── TagController.java      # 标签相关接口
+│   │   ├── UserController.java     # 用户相关接口
+│   │   └── dto/                    # 数据传输对象
+│   │
+│   ├── service/                   # 服务层（业务逻辑）
+│   │   ├── impl/                   # 服务实现类
+│   │   │   ├── AIServiceImpl.java
+│   │   │   ├── AISettingsServiceImpl.java
+│   │   │   ├── ChatServiceImpl.java
+│   │   │   ├── EmailServiceImpl.java
+│   │   │   ├── FavoriteServiceImpl.java
+│   │   │   ├── LikeServiceImpl.java
+│   │   │   ├── ....
+│   │
+│   ├── mapper/                    # 数据访问层（MyBatis Mapper）
+│   ├── entity/                    # 实体类（数据库表映射）
+│   ├── config/                    # 配置类
+│   │   ├── JwtInterceptor.java  # JWT拦截器
+│   │   ├── OpenApiConfig.java   # Swagger配置
+│   │   ├── WebMvcConfig.java    # Web MVC配置
+│   │   ├── WebSocketAuthInterceptor.java # WebSocket认证拦截器
+│   │   └── WebSocketConfig.java # WebSocket配置
+│   ├── common/                   # 公共类
+│   │   ├── GlobalExceptionHandler.java # 全局异常处理
+│   │   ├── JwtUtil.java         # JWT工具类
+│   │   ├── LoggingAspect.java   # 日志切面
+│   │   └── R.java               # 统一响应格式
+│   ├── util/                     # 工具类
+│   └── chat/                     # 聊天相关
+│       └── websocket/
+│           └── ChatWebSocketHandler.java # WebSocket处理器
+│
+├── src/main/resources/
+│   ├── application.yml           # 应用配置文件
+│   ├── mapper/                   # MyBatis XML映射文件
+│   └── sql/                      # SQL脚本
+│       ├── new_data.sql
+│       └── test.sql
+│
+└── pom.xml                       # Maven依赖配置
 ```
 
 ## 数据库设计
@@ -107,7 +138,6 @@ mvn spring-boot:run
 **访问 API 文档：**
 
 - Swagger UI: <http://localhost:8080/swagger-ui/index.html>
-- OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
 完整的 API 接口文档请参考 [API 文档](./API.md)。
 
