@@ -103,4 +103,13 @@ public interface PostMapper {
     int updateModerationStatus(@Param("postId") Integer postId, @Param("status") String status);
 
     List<Post> selectAllForAdmin(@Param("offset") Integer offset, @Param("limit") Integer limit);
+
+    /**
+     * 根据一组帖子ID批量查询帖子详情（保持原有 currentUserId 透传用于权限/状态判断）
+     *
+     * @param ids 帖子ID列表
+     * @param currentUserId 当前用户ID
+     * @return 帖子列表，顺序未必与 ids 一致
+     */
+    List<Post> selectByIds(@Param("ids") List<Integer> ids, @Param("currentUserId") Integer currentUserId);
 }

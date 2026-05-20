@@ -80,4 +80,11 @@ public interface LikeMapper {
      * @return 点赞数量
      */
     int countByUserId(@Param("userId") Integer userId);
+
+    /**
+     * 查询所有点赞记录（用于离线/批量计算协同过滤）
+     *
+     * @return 点赞列表
+     */
+    List<Like> selectAll();
 }
