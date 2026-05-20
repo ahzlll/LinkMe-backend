@@ -1,5 +1,6 @@
 package com.linkme.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -38,6 +39,10 @@ public class Comment {
      * 内容 - 评论文本内容
      */
     private String content;
+
+    /** 审核状态：visible / hidden / deleted */
+    @JsonAlias({"moderation_status", "moderationStatus"})
+    private String moderationStatus;
     
     /**
      * 父评论ID - 外键，可为空（回复其他评论）

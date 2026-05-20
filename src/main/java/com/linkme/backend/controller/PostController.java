@@ -1,9 +1,11 @@
 package com.linkme.backend.controller;
 
+import com.linkme.backend.common.AccountStatusUtil;
 import com.linkme.backend.common.R;
 import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.entity.Post;
 import com.linkme.backend.entity.Comment;
+import com.linkme.backend.entity.User;
 import com.linkme.backend.service.PostService;
 import com.linkme.backend.mapper.CommentMapper;
 import com.linkme.backend.mapper.LikeMapper;
@@ -72,6 +74,34 @@ public class PostController {
             } catch (Exception e) {
                 return null;
             }
+        }
+        return null;
+    }
+
+    private R<String> checkCanPost(Integer userId) {
+        if (userId == null) {
+            return R.fail(401, "未登录");
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return R.fail(404, "用户不存在");
+        }
+        if (!AccountStatusUtil.canPost(user)) {
+            return R.fail(403, "当前账号已被限制发帖");
+        }
+        return null;
+    }
+
+    private R<String> checkCanComment(Integer userId) {
+        if (userId == null) {
+            return R.fail(401, "未登录");
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return R.fail(404, "用户不存在");
+        }
+        if (!AccountStatusUtil.canComment(user)) {
+            return R.fail(403, "当前账号已被限制评论");
         }
         return null;
     }
@@ -158,6 +188,10 @@ public class PostController {
     @Operation(summary = "创建帖子（JSON格式）", description = "发布新帖子，images字段应为Base64编码字符串列表",
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> createPost(@RequestBody PostCreateRequest req) {
+        R<String> denied = checkCanPost(req.getUserId());
+        if (denied != null) {
+            return denied;
+        }
         boolean success = postService.createPostWithMediaAndTags(req.getUserId(), req.getContent(), req.getTopic(), req.getImages(), req.getTags());
         if (success) {
             return R.ok("帖子发布成功");
@@ -186,6 +220,10 @@ public class PostController {
             @RequestParam(required = false) String topic,
             @RequestParam(required = false) List<MultipartFile> images,
             @RequestParam(required = false) String tags) {
+        R<String> denied = checkCanPost(userId);
+        if (denied != null) {
+            return denied;
+        }
         try {
             // 将图片文件转换为Base64字符串列表
             List<String> base64Images = null;
@@ -334,6 +372,10 @@ public class PostController {
     @PostMapping("/{postId}/comments")
     @Operation(summary = "发表评论", security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> addComment(@PathVariable Integer postId, @RequestBody Comment comment) {
+        R<String> denied = checkCanComment(comment.getUserId());
+        if (denied != null) {
+            return denied;
+        }
         comment.setPostId(postId);
         comment.setCreatedAt(java.time.LocalDateTime.now());
         

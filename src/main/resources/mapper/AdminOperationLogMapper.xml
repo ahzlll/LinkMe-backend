@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.AdminOperationLogMapper">
+
+    <resultMap id="AdminOpLogMap" type="com.linkme.backend.entity.AdminOperationLog">
+        <id column="id" property="id"/>
+        <result column="admin_id" property="adminId"/>
+        <result column="target_user_id" property="targetUserId"/>
+        <result column="target_id" property="targetId"/>
+        <result column="target_type" property="targetType"/>
+        <result column="action" property="action"/>
+        <result column="reason" property="reason"/>
+        <result column="detail" property="detail"/>
+        <result column="create_time" property="createTime"/>
+        <result column="adminNickname" property="adminNickname"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO admin_operation_log (admin_id, target_user_id, target_id, target_type, action, reason, detail, create_time)
+        VALUES (#{adminId}, #{targetUserId}, #{targetId}, #{targetType}, #{action}, #{reason}, #{detail}, NOW())
+    </insert>
+
+    <select id="selectRecent" resultMap="AdminOpLogMap">
+        SELECT l.*, u.nickname AS adminNickname
+        FROM admin_operation_log l
+        LEFT JOIN user u ON u.user_id = l.admin_id
+        ORDER BY l.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+</mapper>

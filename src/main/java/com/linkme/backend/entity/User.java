@@ -77,6 +77,18 @@ public class User {
      * 简介 - 个人简介
      */
     private String bio;
+
+    private String role;
+
+    /** 账号状态：normal / warned / restricted_post / restricted_comment / temp_banned / perm_banned */
+    @JsonAlias({"account_status", "accountStatus"})
+    private String accountStatus;
+
+    @JsonAlias({"ban_until", "banUntil"})
+    private LocalDateTime banUntil;
+
+    @JsonAlias({"status_reason", "statusReason"})
+    private String statusReason;
     
     /**
      * 创建时间 - 注册时间

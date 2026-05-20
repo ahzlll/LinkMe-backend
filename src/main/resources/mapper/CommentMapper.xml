@@ -12,6 +12,7 @@
         <result column="nickname" property="nickname"/>
         <result column="username" property="username"/>
         <result column="avatarUrl" property="avatarUrl"/>
+        <result column="moderation_status" property="moderationStatus"/>
     </resultMap>
 
     <select id="selectById" parameterType="int" resultMap="CommentMap">
@@ -26,6 +27,7 @@
         FROM comment c
         LEFT JOIN user u ON c.user_id = u.user_id
         WHERE c.post_id = #{postId}
+          AND COALESCE(c.moderation_status, 'visible') = 'visible'
         ORDER BY c.created_at ASC
         LIMIT #{offset}, #{limit}
     </select>
@@ -64,8 +66,30 @@
     </delete>
 
     <select id="countByPostId" parameterType="int" resultType="int">
-        SELECT COUNT(*) FROM comment WHERE post_id = #{postId}
+        SELECT COUNT(*) FROM comment
+        WHERE post_id = #{postId}
+          AND COALESCE(moderation_status, 'visible') = 'visible'
     </select>
+
+    <select id="selectAll" resultMap="CommentMap">
+        SELECT c.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.user_id
+        ORDER BY c.created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectAllForAdmin" resultMap="CommentMap">
+        SELECT c.*, u.nickname, u.username, u.avatar_url as avatarUrl
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.user_id
+        ORDER BY c.created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <update id="updateModerationStatus">
+        UPDATE comment SET moderation_status = #{status} WHERE comment_id = #{commentId}
+    </update>
 
 </mapper>
 

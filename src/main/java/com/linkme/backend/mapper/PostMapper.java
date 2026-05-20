@@ -26,6 +26,8 @@ public interface PostMapper {
      * @return 帖子信息
      */
     Post selectById(@Param("postId") Integer postId);
+
+    Post selectByIdAny(@Param("postId") Integer postId);
     
     /**
      * 根据用户ID查询帖子列表
@@ -97,4 +99,8 @@ public interface PostMapper {
      * @return 帖子数量
      */
     int countByUserId(@Param("userId") Integer userId);
+
+    int updateModerationStatus(@Param("postId") Integer postId, @Param("status") String status);
+
+    List<Post> selectAllForAdmin(@Param("offset") Integer offset, @Param("limit") Integer limit);
 }

@@ -138,4 +138,17 @@ public interface UserMapper {
      * @return 用户基本信息Map
      */
     Map<String, Object> selectUserInfoById(@Param("userId") Integer userId);
+
+    int updateRole(@Param("userId") Integer userId, @Param("role") String role);
+
+    int updateAccountStatus(@Param("userId") Integer userId,
+                            @Param("accountStatus") String accountStatus,
+                            @Param("banUntil") java.time.LocalDateTime banUntil,
+                            @Param("statusReason") String statusReason);
+
+    List<User> selectForAdmin(@Param("offset") Integer offset,
+                              @Param("limit") Integer limit,
+                              @Param("keyword") String keyword,
+                              @Param("role") String role,
+                              @Param("accountStatus") String accountStatus);
 }

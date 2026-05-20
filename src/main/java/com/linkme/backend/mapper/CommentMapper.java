@@ -88,4 +88,10 @@ public interface CommentMapper {
      * @return 评论数量
      */
     int countByPostId(@Param("postId") Integer postId);
+
+    List<Comment> selectAll(@Param("offset") Integer offset, @Param("limit") Integer limit);
+
+    int updateModerationStatus(@Param("commentId") Integer commentId, @Param("status") String status);
+
+    List<Comment> selectAllForAdmin(@Param("offset") Integer offset, @Param("limit") Integer limit);
 }

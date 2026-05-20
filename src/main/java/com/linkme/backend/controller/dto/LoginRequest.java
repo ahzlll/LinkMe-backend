@@ -40,6 +40,12 @@ public class LoginRequest {
         required = true
     )
     private String password;
+
+    /**
+     * 登录入口：user-普通用户 / admin-管理端（需 admin 或 moderator 角色）
+     */
+    @Schema(description = "登录类型：user 或 admin", example = "user")
+    private String loginType;
 }
 
 

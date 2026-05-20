@@ -4,6 +4,7 @@ import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.common.R;
 import com.linkme.backend.controller.dto.LoginRequest;
 import com.linkme.backend.entity.User;
+import com.linkme.backend.common.AccountStatusUtil;
 import com.linkme.backend.service.UserService;
 import com.linkme.backend.service.VerificationCodeService;
 import com.linkme.backend.util.PasswordValidator;
@@ -69,6 +70,9 @@ public class UserController {
         userInfo.setCreatedAt(user.getCreatedAt());
         userInfo.setMatchingQuestionnaireCompleted(user.getMatchingQuestionnaireCompleted());
         userInfo.setMatchingQuestionnaireCompletedAt(user.getMatchingQuestionnaireCompletedAt());
+        userInfo.setRole(user.getRole());
+        userInfo.setAccountStatus(user.getAccountStatus());
+        userInfo.setBanUntil(user.getBanUntil());
         // 不包含passwordHash
         return userInfo;
     }
@@ -274,6 +278,18 @@ public class UserController {
         
         User user = userService.login(loginName, password);
         if (user != null) {
+            String loginType = loginRequest.getLoginType();
+            boolean adminLogin = loginType != null && "admin".equalsIgnoreCase(loginType.trim());
+            if (adminLogin && !AccountStatusUtil.isAdminRole(user)) {
+                return R.fail(403, "该账号没有管理员权限");
+            }
+            if (!adminLogin && AccountStatusUtil.isBanned(user)) {
+                return R.fail(403, "账号已被封禁，无法登录");
+            }
+            if (adminLogin && AccountStatusUtil.isBanned(user)) {
+                return R.fail(403, "管理员账号已被封禁");
+            }
+
             // 生成JWT token（如果username为空，使用email或phone作为替代）
             String usernameForToken = user.getUsername();
             if (usernameForToken == null || usernameForToken.trim().isEmpty()) {
@@ -284,6 +300,7 @@ public class UserController {
             Map<String, Object> result = new HashMap<>();
             result.put("user", sanitizeUser(user));
             result.put("token", token);
+            result.put("loginType", adminLogin ? "admin" : "user");
             return R.ok(result);
         } else {
             return R.fail(401, "用户名或密码错误");

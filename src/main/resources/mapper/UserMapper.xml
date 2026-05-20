@@ -15,6 +15,10 @@
         <result column="region" property="region"/>
         <result column="avatar_url" property="avatarUrl"/>
         <result column="bio" property="bio"/>
+        <result column="role" property="role"/>
+        <result column="account_status" property="accountStatus"/>
+        <result column="ban_until" property="banUntil"/>
+        <result column="status_reason" property="statusReason"/>
         <result column="created_at" property="createdAt"/>
         <result column="matching_questionnaire_completed" property="matchingQuestionnaireCompleted"/>
         <result column="matching_questionnaire_completed_at" property="matchingQuestionnaireCompletedAt"/>
@@ -153,6 +157,41 @@
         FROM user u
         WHERE u.user_id = #{userId}
         LIMIT 1
+    </select>
+
+    <update id="updateRole">
+        UPDATE user SET role = #{role} WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateAccountStatus">
+        UPDATE user
+        SET account_status = #{accountStatus},
+            ban_until = #{banUntil},
+            status_reason = #{statusReason}
+        WHERE user_id = #{userId}
+    </update>
+
+    <select id="selectForAdmin" resultMap="UserResultMap">
+        SELECT * FROM user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    CAST(user_id AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
+                    OR LOWER(username) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(nickname) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(email) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR phone LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="role != null and role != ''">
+                AND role = #{role}
+            </if>
+            <if test="accountStatus != null and accountStatus != ''">
+                AND account_status = #{accountStatus}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
     </select>
 
 </mapper>

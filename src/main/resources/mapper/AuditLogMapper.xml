@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.AuditLogMapper">
+
+    <resultMap id="AuditLogMap" type="com.linkme.backend.entity.AuditLog">
+        <id column="id" property="id"/>
+        <result column="target_id" property="targetId"/>
+        <result column="target_type" property="targetType"/>
+        <result column="auditor_id" property="auditorId"/>
+        <result column="action" property="action"/>
+        <result column="reason" property="reason"/>
+        <result column="create_time" property="createTime"/>
+        <result column="auditorNickname" property="auditorNickname"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO audit_log (target_id, target_type, auditor_id, action, reason, create_time)
+        VALUES (#{targetId}, #{targetType}, #{auditorId}, #{action}, #{reason}, NOW())
+    </insert>
+
+    <select id="selectRecent" resultMap="AuditLogMap">
+        SELECT a.*, u.nickname AS auditorNickname
+        FROM audit_log a
+        LEFT JOIN user u ON u.user_id = a.auditor_id
+        ORDER BY a.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+</mapper>

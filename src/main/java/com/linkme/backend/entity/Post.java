@@ -1,5 +1,6 @@
 package com.linkme.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +40,10 @@ public class Post {
      * 主题 - 帖子主题
      */
     private String topic;
+
+    /** 审核状态：visible / hidden / deleted */
+    @JsonAlias({"moderation_status", "moderationStatus"})
+    private String moderationStatus;
     
     /**
      * 创建时间 - 帖子创建时间
