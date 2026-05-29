@@ -135,7 +135,21 @@
       <version>2.0.43</version>
     </dependency>
 
+    <!-- 敏感词审核库（标准 Maven 依赖） -->
+    <dependency>
+      <groupId>com.github.houbb</groupId>
+      <artifactId>sensitive-word</artifactId>
+      <version>0.29.5</version>
+    </dependency>
+
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
 
   <build>
     <plugins>

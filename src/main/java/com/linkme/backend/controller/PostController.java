@@ -12,6 +12,7 @@ import com.linkme.backend.mapper.LikeMapper;
 import com.linkme.backend.mapper.FavoriteMapper;
 import com.linkme.backend.mapper.UserMapper;
 import com.linkme.backend.service.NotificationService;
+import com.linkme.backend.service.AuditService;
 import com.linkme.backend.controller.dto.PostCreateRequest;
 import com.linkme.backend.controller.dto.PostDetailResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,6 +60,8 @@ public class PostController {
     private UserMapper userMapper;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private AuditService auditService;
     @Autowired
     private JwtUtil jwtUtil;
     
@@ -192,6 +195,14 @@ public class PostController {
         if (denied != null) {
             return denied;
         }
+        AuditService.AuditResult auditResult = auditService.checkContent(
+                req.getUserId().longValue(), "post", null, req.getContent());
+        if (auditResult.isNeedManualReview()) {
+            return R.fail(403, "内容包含敏感词，已送人工复审");
+        }
+        if (!auditResult.isPassed()) {
+            return R.fail(403, "内容审核未通过");
+        }
         boolean success = postService.createPostWithMediaAndTags(req.getUserId(), req.getContent(), req.getTopic(), req.getImages(), req.getTags());
         if (success) {
             return R.ok("帖子发布成功");
@@ -225,6 +236,14 @@ public class PostController {
             return denied;
         }
         try {
+            AuditService.AuditResult auditResult = auditService.checkContent(
+                    userId.longValue(), "post", null, content);
+            if (auditResult.isNeedManualReview()) {
+                return R.fail(403, "内容包含敏感词，已送人工复审");
+            }
+            if (!auditResult.isPassed()) {
+                return R.fail(403, "内容审核未通过");
+            }
             // 将图片文件转换为Base64字符串列表
             List<String> base64Images = null;
             if (images != null && !images.isEmpty()) {
@@ -237,7 +256,7 @@ public class PostController {
                     }
                 }
             }
-            
+
             // 解析标签ID列表
             List<Integer> tagIds = null;
             if (tags != null && !tags.trim().isEmpty()) {
@@ -255,7 +274,7 @@ public class PostController {
                     }
                 }
             }
-            
+
             boolean success = postService.createPostWithMediaAndTags(userId, content, topic, base64Images, tagIds);
             if (success) {
                 return R.ok("帖子发布成功");
@@ -375,6 +394,14 @@ public class PostController {
         R<String> denied = checkCanComment(comment.getUserId());
         if (denied != null) {
             return denied;
+        }
+        AuditService.AuditResult auditResult = auditService.checkContent(
+                comment.getUserId().longValue(), "comment", null, comment.getContent());
+        if (auditResult.isNeedManualReview()) {
+            return R.fail(403, "评论包含敏感词，已送人工复审");
+        }
+        if (!auditResult.isPassed()) {
+            return R.fail(403, "评论审核未通过");
         }
         comment.setPostId(postId);
         comment.setCreatedAt(java.time.LocalDateTime.now());

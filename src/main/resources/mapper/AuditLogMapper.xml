@@ -4,25 +4,57 @@
 
     <resultMap id="AuditLogMap" type="com.linkme.backend.entity.AuditLog">
         <id column="id" property="id"/>
-        <result column="target_id" property="targetId"/>
-        <result column="target_type" property="targetType"/>
+        <result column="user_id" property="userId"/>
+        <result column="content_type" property="contentType"/>
+        <result column="content_id" property="contentId"/>
+        <result column="content" property="content"/>
+        <result column="is_violation" property="isViolation"/>
+        <result column="matched_words" property="matchedWords"/>
+        <result column="categories" property="categories"/>
+        <result column="audit_result" property="auditResult"/>
         <result column="auditor_id" property="auditorId"/>
-        <result column="action" property="action"/>
-        <result column="reason" property="reason"/>
+        <result column="audit_remark" property="auditRemark"/>
         <result column="create_time" property="createTime"/>
-        <result column="auditorNickname" property="auditorNickname"/>
+        <result column="audit_time" property="auditTime"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO audit_log (target_id, target_type, auditor_id, action, reason, create_time)
-        VALUES (#{targetId}, #{targetType}, #{auditorId}, #{action}, #{reason}, NOW())
+        INSERT INTO audit_log (user_id, content_type, content_id, content, is_violation,
+                               matched_words, categories, audit_result, auditor_id, audit_remark, create_time, audit_time)
+        VALUES (#{userId}, #{contentType}, #{contentId}, #{content}, #{isViolation},
+                #{matchedWords}, #{categories}, #{auditResult}, #{auditorId}, #{auditRemark}, #{createTime}, #{auditTime})
     </insert>
 
     <select id="selectRecent" resultMap="AuditLogMap">
-        SELECT a.*, u.nickname AS auditorNickname
-        FROM audit_log a
-        LEFT JOIN user u ON u.user_id = a.auditor_id
-        ORDER BY a.create_time DESC
+        SELECT * FROM audit_log
+        ORDER BY create_time DESC
         LIMIT #{offset}, #{limit}
     </select>
+
+    <select id="selectById" resultMap="AuditLogMap">
+        SELECT * FROM audit_log WHERE id = #{id}
+    </select>
+
+    <select id="selectByContent" resultMap="AuditLogMap">
+        SELECT * FROM audit_log
+        WHERE content_type = #{contentType} AND content_id = #{contentId}
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="countByResult" resultType="int">
+        SELECT COUNT(*) FROM audit_log WHERE audit_result = #{auditResult}
+    </select>
+
+    <select id="countTotal" resultType="int">
+        SELECT COUNT(*) FROM audit_log
+    </select>
+
+    <update id="updateResult">
+        UPDATE audit_log
+        SET audit_result = #{auditResult}, auditor_id = #{auditorId}, 
+            audit_remark = #{remark}, audit_time = NOW()
+        WHERE content_type = #{contentType} AND content_id = #{contentId}
+        ORDER BY create_time DESC
+        LIMIT 1
+    </update>
 </mapper>

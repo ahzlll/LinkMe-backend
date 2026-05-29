@@ -8,6 +8,7 @@ import com.linkme.backend.controller.dto.MessageRequest;
 import com.linkme.backend.controller.dto.MessageResponse;
 import com.linkme.backend.entity.Conversation;
 import com.linkme.backend.service.ChatService;
+import com.linkme.backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -36,7 +37,10 @@ public class ChatController {
     
     @Autowired
     private ChatService chatService;
-    
+
+    @Autowired
+    private AuditService auditService;
+
     @Autowired
     private JwtUtil jwtUtil;
     
@@ -190,7 +194,16 @@ public class ChatController {
         if (messageRequest.getContent() == null || messageRequest.getContent().trim().isEmpty()) {
             return R.fail(400, "消息内容不能为空");
         }
-        
+
+        AuditService.AuditResult auditResult = auditService.checkContent(
+                userId.longValue(), "message", null, messageRequest.getContent());
+        if (auditResult.isNeedManualReview()) {
+            return R.fail(403, "消息包含敏感词，已送人工复审");
+        }
+        if (!auditResult.isPassed()) {
+            return R.fail(403, "消息审核未通过");
+        }
+
         try {
             MessageResponse message = chatService.sendMessage(
                     userId,
@@ -229,7 +242,16 @@ public class ChatController {
         if (messageRequest.getContent() == null || messageRequest.getContent().trim().isEmpty()) {
             return R.fail(400, "消息内容不能为空");
         }
-        
+
+        AuditService.AuditResult auditResult = auditService.checkContent(
+                userId.longValue(), "message", null, messageRequest.getContent());
+        if (auditResult.isNeedManualReview()) {
+            return R.fail(403, "消息包含敏感词，已送人工复审");
+        }
+        if (!auditResult.isPassed()) {
+            return R.fail(403, "消息审核未通过");
+        }
+
         try {
             MessageResponse message = chatService.sendMessage(
                     userId,
