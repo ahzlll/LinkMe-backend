@@ -61,82 +61,58 @@ public class AuditServiceImpl implements AuditService {
             return new AuditResult(true, false, new ArrayList<>(), new ArrayList<>());
         }
 
-        if (sensitiveWordBs == null) {
-            if (localSensitiveWordService != null) {
-                return checkWithLocalService(userId, contentType, contentId, content);
+        List<String> allMatchedWords = new ArrayList<>();
+        boolean externalChecked = false;
+
+        if (sensitiveWordBs != null) {
+            try {
+                List<String> matchedWords = sensitiveWordBs.findAll(content);
+                if (matchedWords != null && !matchedWords.isEmpty()) {
+                    allMatchedWords.addAll(matchedWords);
+                }
+                externalChecked = true;
+            } catch (Exception e) {
+                System.err.println("外部敏感词库检测异常，将使用本地库: " + e.getMessage());
             }
-            logAudit(userId, contentType, contentId, content, 1, "SYSTEM_ERROR",
-                    "敏感词库未初始化", AuditLog.RESULT_NEED_MANUAL);
-            addToReviewQueue(userId, contentType, contentId, content,
-                    java.util.Arrays.asList("SYSTEM_ERROR"),
-                    java.util.Arrays.asList("敏感词库未初始化"));
-            return new AuditResult(false, true,
-                    java.util.Arrays.asList("SYSTEM_ERROR"),
-                    java.util.Arrays.asList("敏感词库未初始化"));
         }
 
-        try {
-            List<String> matchedWords = sensitiveWordBs.findAll(content);
-
-            if (matchedWords == null || matchedWords.isEmpty()) {
-                logAudit(userId, contentType, contentId, content, 0, null, null, AuditLog.RESULT_AUTO_PASS);
-                return new AuditResult(true, false, new ArrayList<>(), new ArrayList<>());
+        if (localSensitiveWordService != null) {
+            try {
+                List<String> localMatchedWords = localSensitiveWordService.findAll(content);
+                if (localMatchedWords != null && !localMatchedWords.isEmpty()) {
+                    for (String word : localMatchedWords) {
+                        if (!allMatchedWords.contains(word)) {
+                            allMatchedWords.add(word);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("本地敏感词库检测异常: " + e.getMessage());
             }
-
-            List<String> categories = matchedWords.stream()
-                    .map(w -> getCategoryForWord(w))
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            logAudit(userId, contentType, contentId, content, 1,
-                    String.join(",", matchedWords),
-                    String.join(",", categories),
-                    AuditLog.RESULT_NEED_MANUAL);
-
-            addToReviewQueue(userId, contentType, contentId, content, matchedWords, categories);
-
-            return new AuditResult(false, true, matchedWords, categories);
-
-        } catch (Exception e) {
-            if (localSensitiveWordService != null) {
-                return checkWithLocalService(userId, contentType, contentId, content);
-            }
-            logAudit(userId, contentType, contentId, content, 1, "SYSTEM_ERROR",
-                    "审核服务异常", AuditLog.RESULT_NEED_MANUAL);
-            addToReviewQueue(userId, contentType, contentId, content,
-                    java.util.Arrays.asList("SYSTEM_ERROR"),
-                    java.util.Arrays.asList("审核服务异常"));
-            return new AuditResult(false, true,
-                    java.util.Arrays.asList("SYSTEM_ERROR"),
-                    java.util.Arrays.asList("审核服务异常"));
         }
-    }
 
-    private String getCategoryForWord(String word) {
-        return "敏感词";
-    }
-
-    private AuditResult checkWithLocalService(Long userId, String contentType, Long contentId, String content) {
-        List<String> matchedWords = localSensitiveWordService.findAll(content);
-
-        if (matchedWords == null || matchedWords.isEmpty()) {
+        if (allMatchedWords.isEmpty()) {
             logAudit(userId, contentType, contentId, content, 0, null, null, AuditLog.RESULT_AUTO_PASS);
             return new AuditResult(true, false, new ArrayList<>(), new ArrayList<>());
         }
 
-        List<String> categories = matchedWords.stream()
+        List<String> categories = allMatchedWords.stream()
                 .map(w -> getCategoryForWord(w))
                 .distinct()
                 .collect(Collectors.toList());
 
         logAudit(userId, contentType, contentId, content, 1,
-                String.join(",", matchedWords),
+                String.join(",", allMatchedWords),
                 String.join(",", categories),
                 AuditLog.RESULT_NEED_MANUAL);
 
-        addToReviewQueue(userId, contentType, contentId, content, matchedWords, categories);
+        addToReviewQueue(userId, contentType, contentId, content, allMatchedWords, categories);
 
-        return new AuditResult(false, true, matchedWords, categories);
+        return new AuditResult(false, true, allMatchedWords, categories);
+    }
+
+    private String getCategoryForWord(String word) {
+        return "敏感词";
     }
 
     private void logAudit(Long userId, String contentType, Long contentId, String content,

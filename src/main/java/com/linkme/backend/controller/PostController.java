@@ -195,13 +195,15 @@ public class PostController {
         if (denied != null) {
             return denied;
         }
+        String fullContent = (req.getTopic() != null ? req.getTopic() + " " : "") + 
+                             (req.getContent() != null ? req.getContent() : "");
         AuditService.AuditResult auditResult = auditService.checkContent(
-                req.getUserId().longValue(), "post", null, req.getContent());
+                req.getUserId().longValue(), "post", null, fullContent);
         if (auditResult.isNeedManualReview()) {
-            return R.fail(403, "内容包含敏感词，已送人工复审");
+            return R.fail(403, "帖子主题或内容包含敏感词，已送人工复审");
         }
         if (!auditResult.isPassed()) {
-            return R.fail(403, "内容审核未通过");
+            return R.fail(403, "帖子审核未通过");
         }
         boolean success = postService.createPostWithMediaAndTags(req.getUserId(), req.getContent(), req.getTopic(), req.getImages(), req.getTags());
         if (success) {
@@ -236,13 +238,15 @@ public class PostController {
             return denied;
         }
         try {
+            String fullContent = (topic != null ? topic + " " : "") + 
+                                 (content != null ? content : "");
             AuditService.AuditResult auditResult = auditService.checkContent(
-                    userId.longValue(), "post", null, content);
+                    userId.longValue(), "post", null, fullContent);
             if (auditResult.isNeedManualReview()) {
-                return R.fail(403, "内容包含敏感词，已送人工复审");
+                return R.fail(403, "帖子主题或内容包含敏感词，已送人工复审");
             }
             if (!auditResult.isPassed()) {
-                return R.fail(403, "内容审核未通过");
+                return R.fail(403, "帖子审核未通过");
             }
             // 将图片文件转换为Base64字符串列表
             List<String> base64Images = null;

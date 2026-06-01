@@ -14,6 +14,7 @@ import com.linkme.backend.mapper.FollowMapper;
 import com.linkme.backend.mapper.BlockMapper;
 import com.linkme.backend.mapper.PostMapper;
 import com.linkme.backend.service.UserService;
+import com.linkme.backend.service.AuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private PostMapper postMapper;
+    
+    @Autowired(required = false)
+    private AuditService auditService;
     
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
@@ -158,6 +162,18 @@ public class UserServiceImpl implements UserService {
             System.out.println("gender: " + user.getGender());
             System.out.println("birthday: " + user.getBirthday());
             System.out.println("region: " + user.getRegion());
+            
+            // 检查个人简介是否包含敏感词（Service层双重保障）
+            // 注意：此检查仅作为备用，实际审核在Controller层完成
+            if (auditService != null && user.getBio() != null && !user.getBio().trim().isEmpty()) {
+                AuditService.AuditResult auditResult = auditService.checkContent(
+                        user.getUserId().longValue(), "user_bio", null, user.getBio());
+                
+                if (auditResult.isNeedManualReview() || !auditResult.isPassed()) {
+                    System.out.println("[Service层审核] 个人简介包含敏感词，拒绝更新");
+                    throw new RuntimeException("个人简介包含敏感词，审核未通过");
+                }
+            }
             
             int result = userMapper.update(user);
             System.out.println("SQL 执行结果，影响行数: " + result);

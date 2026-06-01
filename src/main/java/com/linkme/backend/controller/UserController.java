@@ -7,6 +7,7 @@ import com.linkme.backend.entity.User;
 import com.linkme.backend.common.AccountStatusUtil;
 import com.linkme.backend.service.UserService;
 import com.linkme.backend.service.VerificationCodeService;
+import com.linkme.backend.service.AuditService;
 import com.linkme.backend.util.PasswordValidator;
 import com.linkme.backend.util.EmailValidator;
 import com.linkme.backend.util.PhoneValidator;
@@ -45,6 +46,9 @@ public class UserController {
     
     @Autowired
     private VerificationCodeService verificationCodeService;
+    
+    @Autowired
+    private AuditService auditService;
     
     /**
      * 移除用户信息中的敏感数据（密码哈希）
@@ -133,6 +137,19 @@ public class UserController {
             if (!hasFieldToUpdate) {
                 System.err.println("错误：没有需要更新的字段");
                 return R.fail(400, "没有需要更新的字段");
+            }
+            
+            // 检查个人简介是否包含敏感词
+            if (user.getBio() != null && !user.getBio().trim().isEmpty()) {
+                AuditService.AuditResult auditResult = auditService.checkContent(
+                        userId.longValue(), "user_bio", null, user.getBio());
+                
+                if (auditResult.isNeedManualReview() || !auditResult.isPassed()) {
+                    // 检测到敏感词，返回失败让前端显示红色警告
+                    String matchedWords = String.join(", ", auditResult.getMatchedWords());
+                    System.out.println("[Controller审核] 个人简介包含敏感词: " + matchedWords);
+                    return R.fail(403, "个人简介疑似违规，包含敏感词【" + matchedWords + "】，此次修改无效");
+                }
             }
             
             boolean success = userService.updateUser(user);
