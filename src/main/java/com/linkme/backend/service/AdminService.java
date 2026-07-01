@@ -1,9 +1,9 @@
 package com.linkme.backend.service;
 
+import com.linkme.backend.controller.dto.AdminOperationLogResponse;
+import com.linkme.backend.controller.dto.AuditLogResponse;
 import com.linkme.backend.controller.dto.ContentModerateRequest;
 import com.linkme.backend.controller.dto.UserPunishRequest;
-import com.linkme.backend.entity.AdminOperationLog;
-import com.linkme.backend.entity.AuditLog;
 import com.linkme.backend.entity.Comment;
 import com.linkme.backend.entity.Post;
 import com.linkme.backend.entity.User;
@@ -34,7 +34,7 @@ public interface AdminService {
 
     Map<String, Integer> stats();
 
-    List<AuditLog> listAuditLogs(int page, int size);
+    List<AuditLogResponse> listAuditLogs(int page, int size);
 
-    List<AdminOperationLog> listOperationLogs(int page, int size);
+    List<AdminOperationLogResponse> listOperationLogs(int page, int size);
 }

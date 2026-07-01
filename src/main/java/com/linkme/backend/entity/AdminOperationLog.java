@@ -15,4 +15,6 @@ public class AdminOperationLog {
     private String detail;
     private LocalDateTime createTime;
     private String adminNickname;
+    /** 查询关联：目标用户昵称 */
+    private String targetUserNickname;
 }

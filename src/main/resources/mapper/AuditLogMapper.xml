@@ -16,6 +16,8 @@
         <result column="audit_remark" property="auditRemark"/>
         <result column="create_time" property="createTime"/>
         <result column="audit_time" property="auditTime"/>
+        <result column="userNickname" property="userNickname"/>
+        <result column="auditorNickname" property="auditorNickname"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -26,8 +28,13 @@
     </insert>
 
     <select id="selectRecent" resultMap="AuditLogMap">
-        SELECT * FROM audit_log
-        ORDER BY create_time DESC
+        SELECT a.*,
+               author.nickname AS userNickname,
+               auditor.nickname AS auditorNickname
+        FROM audit_log a
+        LEFT JOIN user author ON author.user_id = a.user_id
+        LEFT JOIN user auditor ON auditor.user_id = a.auditor_id
+        ORDER BY a.create_time DESC
         LIMIT #{offset}, #{limit}
     </select>
 

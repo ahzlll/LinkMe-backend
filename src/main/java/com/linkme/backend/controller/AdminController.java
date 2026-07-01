@@ -2,10 +2,10 @@ package com.linkme.backend.controller;
 
 import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.common.R;
+import com.linkme.backend.controller.dto.AdminOperationLogResponse;
+import com.linkme.backend.controller.dto.AuditLogResponse;
 import com.linkme.backend.controller.dto.ContentModerateRequest;
 import com.linkme.backend.controller.dto.UserPunishRequest;
-import com.linkme.backend.entity.AdminOperationLog;
-import com.linkme.backend.entity.AuditLog;
 import com.linkme.backend.entity.Comment;
 import com.linkme.backend.entity.Post;
 import com.linkme.backend.entity.User;
@@ -191,21 +191,21 @@ public class AdminController {
 
     @GetMapping("/audit-logs")
     @Operation(summary = "审核日志", security = @SecurityRequirement(name = "bearerAuth"))
-    public R<List<AuditLog>> auditLogs(@RequestParam(defaultValue = "1") Integer page,
+    public R<List<AuditLogResponse>> auditLogs(@RequestParam(defaultValue = "1") Integer page,
                                        @RequestParam(defaultValue = "20") Integer size,
                                        HttpServletRequest request) {
         R<?> check = forbid(request);
-        if (check != null) return (R<List<AuditLog>>) check;
+        if (check != null) return (R<List<AuditLogResponse>>) check;
         return R.ok(adminService.listAuditLogs(page, Math.min(size, 100)));
     }
 
     @GetMapping("/operation-logs")
     @Operation(summary = "管理员操作日志", security = @SecurityRequirement(name = "bearerAuth"))
-    public R<List<AdminOperationLog>> operationLogs(@RequestParam(defaultValue = "1") Integer page,
+    public R<List<AdminOperationLogResponse>> operationLogs(@RequestParam(defaultValue = "1") Integer page,
                                                     @RequestParam(defaultValue = "20") Integer size,
                                                     HttpServletRequest request) {
         R<?> check = forbid(request);
-        if (check != null) return (R<List<AdminOperationLog>>) check;
+        if (check != null) return (R<List<AdminOperationLogResponse>>) check;
         return R.ok(adminService.listOperationLogs(page, Math.min(size, 100)));
     }
 

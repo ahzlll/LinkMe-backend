@@ -18,6 +18,11 @@ public class AuditLog {
     private String auditRemark;
     private LocalDateTime createTime;
     private LocalDateTime auditTime;
+
+    /** 查询关联：发布者昵称 */
+    private String userNickname;
+    /** 查询关联：审核员昵称 */
+    private String auditorNickname;
     
     private Long targetId;
     private Integer targetType;

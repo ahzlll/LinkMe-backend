@@ -1,6 +1,9 @@
 package com.linkme.backend.service.impl;
 
 import com.linkme.backend.common.AccountStatusUtil;
+import com.linkme.backend.common.AdminLogDisplayUtil;
+import com.linkme.backend.controller.dto.AdminOperationLogResponse;
+import com.linkme.backend.controller.dto.AuditLogResponse;
 import com.linkme.backend.controller.dto.ContentModerateRequest;
 import com.linkme.backend.controller.dto.UserPunishRequest;
 import com.linkme.backend.entity.AdminOperationLog;
@@ -23,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminServiceImpl implements AdminService {
@@ -121,7 +125,7 @@ public class AdminServiceImpl implements AdminService {
         if (post == null) {
             throw new IllegalArgumentException("帖子不存在");
         }
-        return applyContentAction(adminId, postId, 0, post.getUserId(), request, true);
+        return applyContentAction(adminId, postId, 0, post.getUserId(), post.getContent(), request, true);
     }
 
     @Override
@@ -136,7 +140,7 @@ public class AdminServiceImpl implements AdminService {
         if (comment == null) {
             throw new IllegalArgumentException("评论不存在");
         }
-        return applyContentAction(adminId, commentId.longValue(), 1, comment.getUserId(), request, false);
+        return applyContentAction(adminId, commentId.longValue(), 1, comment.getUserId(), comment.getContent(), request, false);
     }
 
     @Override
@@ -160,45 +164,54 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<AuditLog> listAuditLogs(int page, int size) {
+    public List<AuditLogResponse> listAuditLogs(int page, int size) {
         int offset = (Math.max(page, 1) - 1) * size;
-        return auditLogMapper.selectRecent(offset, size);
+        return auditLogMapper.selectRecent(offset, size).stream()
+                .map(AdminLogDisplayUtil::toAuditLogResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<AdminOperationLog> listOperationLogs(int page, int size) {
+    public List<AdminOperationLogResponse> listOperationLogs(int page, int size) {
         int offset = (Math.max(page, 1) - 1) * size;
-        return adminOperationLogMapper.selectRecent(offset, size);
+        return adminOperationLogMapper.selectRecent(offset, size).stream()
+                .map(AdminLogDisplayUtil::toOperationLogResponse)
+                .collect(Collectors.toList());
     }
 
     private String applyContentAction(Integer adminId, long targetId, int targetType, Integer authorId,
-                                      ContentModerateRequest request, boolean isPost) {
+                                      String content, ContentModerateRequest request, boolean isPost) {
         String action = request.getAction() == null ? "" : request.getAction().trim().toLowerCase();
         String reason = request.getReason();
-        String auditAction;
         String moderationStatus;
         String adminAction;
+        int auditResult;
+        int isViolation;
 
         switch (action) {
             case "hide":
                 moderationStatus = "hidden";
-                auditAction = "BLOCK";
                 adminAction = isPost ? "HIDE_POST" : "HIDE_COMMENT";
+                auditResult = AuditLog.RESULT_OFFLINE;
+                isViolation = 1;
                 break;
             case "delete":
                 moderationStatus = "deleted";
-                auditAction = "DELETE";
                 adminAction = isPost ? "DELETE_POST" : "DELETE_COMMENT";
+                auditResult = AuditLog.RESULT_OFFLINE;
+                isViolation = 1;
                 break;
             case "approve":
                 moderationStatus = "visible";
-                auditAction = "PASS";
                 adminAction = isPost ? "APPROVE_POST" : "APPROVE_COMMENT";
+                auditResult = AuditLog.RESULT_MANUAL_PASS;
+                isViolation = 0;
                 break;
             case "reject":
                 moderationStatus = "hidden";
-                auditAction = "BLOCK";
                 adminAction = isPost ? "REJECT_POST" : "REJECT_COMMENT";
+                auditResult = AuditLog.RESULT_MANUAL_REJECT;
+                isViolation = 1;
                 break;
             default:
                 throw new IllegalArgumentException("不支持的内容操作");
@@ -226,15 +239,27 @@ public class AdminServiceImpl implements AdminService {
         }
 
         AuditLog audit = new AuditLog();
-        audit.setTargetId(targetId);
-        audit.setTargetType(targetType);
+        audit.setUserId(authorId.longValue());
+        audit.setContentType(isPost ? "post" : "comment");
+        audit.setContentId(targetId);
+        audit.setContent(truncateAuditContent(content));
+        audit.setIsViolation(isViolation);
+        audit.setAuditResult(auditResult);
         audit.setAuditorId(adminId.longValue());
-        audit.setAction(auditAction);
-        audit.setReason(reason);
+        audit.setAuditRemark(reason);
+        audit.setCreateTime(LocalDateTime.now());
+        audit.setAuditTime(LocalDateTime.now());
         auditLogMapper.insert(audit);
 
         safeLogAdminOp(adminId, authorId, targetId, targetType, adminAction, reason, null);
         return "操作成功";
+    }
+
+    private String truncateAuditContent(String content) {
+        if (content == null) {
+            return null;
+        }
+        return content.length() > 500 ? content.substring(0, 500) : content;
     }
 
     private void safeLogAdminOp(Integer adminId, Integer targetUserId, Long targetId, Integer targetType,
