@@ -1,5 +1,6 @@
 -- LinkMe交友聊天社交软件数据库完整初始化脚本
--- 包含所有迁移更新和匹配机制相关表结构
+-- 包含：基础业务表、管理端（账号处罚/内容审核状态/操作日志）、
+--       审核功能（敏感词检测日志/人工复审队列）、匹配机制相关表结构
 -- 创建数据库
 CREATE DATABASE IF NOT EXISTS linkme CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE linkme;
@@ -21,8 +22,8 @@ CREATE TABLE IF NOT EXISTS user (
     region VARCHAR(100) DEFAULT '' COMMENT '地区',
     avatar_url LONGTEXT COMMENT '头像Base64编码字符串',
     bio TEXT COMMENT '简介',
-    role ENUM('customer', 'admin', 'moderator') DEFAULT 'customer' COMMENT '用户角色',
-    account_status VARCHAR(32) NOT NULL DEFAULT 'normal' COMMENT '账号状态',
+    role ENUM('customer', 'admin', 'moderator') DEFAULT 'customer' COMMENT '用户角色（权限，与 account_status 处罚状态分离）',
+    account_status VARCHAR(32) NOT NULL DEFAULT 'normal' COMMENT '账号状态: normal|warned|restricted_post|restricted_comment|temp_banned|perm_banned',
     ban_until DATETIME DEFAULT NULL COMMENT '临时封禁截止',
     status_reason VARCHAR(255) DEFAULT NULL COMMENT '处罚原因',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -292,22 +293,7 @@ CREATE TABLE IF NOT EXISTS privacy_setting (
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='隐私设置表';
 
--- 19. 内容审核日志表 (AuditLog)
-CREATE TABLE IF NOT EXISTS `audit_log` (
-   `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
-   `target_id` BIGINT NOT NULL COMMENT '被审核内容ID',
-   `target_type` TINYINT NOT NULL COMMENT '被审核内容类型：0-帖子, 1-评论, 2-用户资料',
-   `auditor_id` BIGINT NOT NULL DEFAULT 0 COMMENT '审核员ID，0代表系统自动审核',
-   `action` ENUM('PASS', 'BLOCK', 'DELETE') NOT NULL COMMENT '执行操作',
-   `reason` VARCHAR(255) DEFAULT NULL COMMENT '原因备注',
-   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-   INDEX `idx_target` (`target_id`, `target_type`),
-   INDEX `idx_auditor_id` (`auditor_id`),
-   INDEX `idx_create_time` (`create_time`),
-   INDEX `idx_action` (`action`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='内容审核日志表';
-
--- 20. 屏蔽表（Block）
+-- 19. 屏蔽表（Block）
 CREATE TABLE IF NOT EXISTS block (
     blocker_id INT NOT NULL COMMENT '屏蔽者ID',
     blocked_id INT NOT NULL COMMENT '被屏蔽者ID',
@@ -321,10 +307,76 @@ CREATE TABLE IF NOT EXISTS block (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='屏蔽表';
 
 -- ============================================
+-- 管理端与内容审核（AdminService / AuditService）
+-- ============================================
+-- 说明：
+--   user.account_status / ban_until / status_reason  — 用户处罚与封禁（见上方 user 表）
+--   post.moderation_status / comment.moderation_status — 内容可见性（见上方 post、comment 表）
+
+-- 20. 管理员操作日志表（AdminOperationLog）
+-- 记录管理员对用户处罚、解封、帖子/评论审核等操作
+CREATE TABLE IF NOT EXISTS admin_operation_log (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    admin_id INT NOT NULL COMMENT '管理员 user_id',
+    target_user_id INT NULL COMMENT '目标用户ID',
+    target_id BIGINT NULL COMMENT '目标资源ID（帖子/评论等）',
+    target_type TINYINT NULL COMMENT '0-帖子, 1-评论, 2-用户',
+    action VARCHAR(64) NOT NULL COMMENT '操作类型：WARN/TEMP_BANNED/HIDE_POST/DELETE_USER 等',
+    reason VARCHAR(255) NULL COMMENT '操作原因',
+    detail VARCHAR(500) NULL COMMENT '补充说明',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    INDEX idx_admin_id (admin_id),
+    INDEX idx_target_user (target_user_id),
+    INDEX idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='管理员操作日志表';
+
+-- 21. 审核日志表（AuditLog）
+-- 记录敏感词自动检测、人工复审结果及事后下架（AuditLogMapper）
+CREATE TABLE IF NOT EXISTS audit_log (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    user_id BIGINT NOT NULL COMMENT '内容发布者ID',
+    content_type VARCHAR(20) NOT NULL COMMENT '内容类型: post / comment / message',
+    content_id BIGINT NULL COMMENT '内容ID（帖子ID/评论ID/消息ID）',
+    content TEXT NULL COMMENT '原始内容（截断存储，建议前500字）',
+    is_violation TINYINT(1) DEFAULT 0 COMMENT '是否违规: 0-否, 1-是',
+    matched_words VARCHAR(500) NULL COMMENT '命中的敏感词（逗号分隔）',
+    categories VARCHAR(200) NULL COMMENT '命中分类（逗号分隔）',
+    audit_result TINYINT DEFAULT 0 COMMENT '审核结果: 0-自动通过, 1-送人工, 2-人工通过, 3-人工拒绝, 4-事后下架',
+    auditor_id BIGINT NULL COMMENT '审核员ID（人工审核时记录）',
+    audit_remark VARCHAR(500) NULL COMMENT '审核备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    audit_time DATETIME NULL COMMENT '审核完成时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_content (content_type, content_id),
+    INDEX idx_create_time (create_time),
+    INDEX idx_audit_result (audit_result)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='审核日志表';
+
+-- 22. 人工复审队列表（ManualReviewQueue）
+-- 敏感词命中后待人工审核的内容队列（ManualReviewQueueMapper）
+CREATE TABLE IF NOT EXISTS manual_review_queue (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    user_id BIGINT NOT NULL COMMENT '内容发布者ID',
+    content_type VARCHAR(20) NOT NULL COMMENT '内容类型: post / comment / message',
+    content_id BIGINT NULL COMMENT '内容ID（若内容已创建）',
+    content TEXT NOT NULL COMMENT '原始完整内容',
+    matched_words VARCHAR(500) NULL COMMENT '算法命中的敏感词',
+    categories VARCHAR(200) NULL COMMENT '命中分类',
+    status TINYINT DEFAULT 0 COMMENT '状态: 0-待审核, 1-已通过, 2-已拒绝',
+    reviewer_id BIGINT NULL COMMENT '审核员ID',
+    review_remark VARCHAR(500) NULL COMMENT '审核备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
+    review_time DATETIME NULL COMMENT '审核时间',
+    INDEX idx_status (status),
+    INDEX idx_create_time (create_time),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='人工复审队列表';
+
+-- ============================================
 -- 匹配机制相关表结构
 -- ============================================
 
--- 21. 爱好分类表（HobbyCategory）
+-- 23. 爱好分类表（HobbyCategory）
 CREATE TABLE IF NOT EXISTS hobby_category (
     category_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '分类ID',
     name VARCHAR(50) NOT NULL COMMENT '分类名称',
@@ -335,7 +387,7 @@ CREATE TABLE IF NOT EXISTS hobby_category (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='爱好分类表';
 
--- 22. 爱好表（Hobby）
+-- 24. 爱好表（Hobby）
 CREATE TABLE IF NOT EXISTS hobby (
     hobby_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '爱好ID',
     category_id INT NOT NULL COMMENT '分类ID',
@@ -348,7 +400,7 @@ CREATE TABLE IF NOT EXISTS hobby (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='爱好表';
 
--- 23. 用户爱好关联表（UserHobby）
+-- 25. 用户爱好关联表（UserHobby）
 CREATE TABLE IF NOT EXISTS user_hobby (
     user_id INT NOT NULL COMMENT '用户ID',
     hobby_id INT NOT NULL COMMENT '爱好ID',
@@ -359,7 +411,7 @@ CREATE TABLE IF NOT EXISTS user_hobby (
     INDEX `idx_hobby_id` (`hobby_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户爱好关联表';
 
--- 24. 性格特质分类表（PersonalityTraitCategory）
+-- 26. 性格特质分类表（PersonalityTraitCategory）
 CREATE TABLE IF NOT EXISTS personality_trait_category (
     category_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '分类ID',
     name VARCHAR(50) NOT NULL COMMENT '分类名称',
@@ -372,7 +424,7 @@ CREATE TABLE IF NOT EXISTS personality_trait_category (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='性格特质分类表';
 
--- 25. 性格特质选项表（PersonalityTraitOption）
+-- 27. 性格特质选项表（PersonalityTraitOption）
 CREATE TABLE IF NOT EXISTS personality_trait_option (
     option_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '选项ID',
     category_id INT NOT NULL COMMENT '分类ID',
@@ -385,7 +437,7 @@ CREATE TABLE IF NOT EXISTS personality_trait_option (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='性格特质选项表';
 
--- 26. 用户性格特质表（UserPersonality）
+-- 28. 用户性格特质表（UserPersonality）
 CREATE TABLE IF NOT EXISTS user_personality (
     user_id INT NOT NULL COMMENT '用户ID',
     option_id INT NOT NULL COMMENT '选项ID',
@@ -397,7 +449,7 @@ CREATE TABLE IF NOT EXISTS user_personality (
     INDEX `idx_option_id` (`option_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户性格特质表';
 
--- 27. 关系品质表（RelationshipQuality）
+-- 29. 关系品质表（RelationshipQuality）
 CREATE TABLE IF NOT EXISTS relationship_quality (
     quality_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '品质ID',
     name VARCHAR(50) NOT NULL COMMENT '品质名称',
@@ -407,7 +459,7 @@ CREATE TABLE IF NOT EXISTS relationship_quality (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='关系品质表';
 
--- 28. 用户关系品质关联表（UserRelationshipQuality）
+-- 30. 用户关系品质关联表（UserRelationshipQuality）
 CREATE TABLE IF NOT EXISTS user_relationship_quality (
     user_id INT NOT NULL COMMENT '用户ID',
     quality_id INT NOT NULL COMMENT '品质ID',
@@ -418,7 +470,7 @@ CREATE TABLE IF NOT EXISTS user_relationship_quality (
     INDEX `idx_quality_id` (`quality_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户关系品质关联表';
 
--- 29. 关系模式表（RelationshipMode）
+-- 31. 关系模式表（RelationshipMode）
 CREATE TABLE IF NOT EXISTS relationship_mode (
     mode_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '模式ID',
     name VARCHAR(50) NOT NULL COMMENT '模式名称',
@@ -429,7 +481,7 @@ CREATE TABLE IF NOT EXISTS relationship_mode (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='关系模式表';
 
--- 30. 沟通期待表（CommunicationExpectation）
+-- 32. 沟通期待表（CommunicationExpectation）
 CREATE TABLE IF NOT EXISTS communication_expectation (
     expectation_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '期待ID',
     name VARCHAR(50) NOT NULL COMMENT '期待名称',
@@ -440,7 +492,7 @@ CREATE TABLE IF NOT EXISTS communication_expectation (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='沟通期待表';
 
--- 31. 匹配维度表（MatchingDimension）
+-- 33. 匹配维度表（MatchingDimension）
 CREATE TABLE IF NOT EXISTS matching_dimension (
     dimension_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '维度ID',
     name VARCHAR(50) NOT NULL COMMENT '维度名称',
@@ -452,7 +504,7 @@ CREATE TABLE IF NOT EXISTS matching_dimension (
     INDEX `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='匹配维度表';
 
--- 32. 用户匹配偏好表（UserMatchingPreference）
+-- 34. 用户匹配偏好表（UserMatchingPreference）
 CREATE TABLE IF NOT EXISTS user_matching_preference (
     preference_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '偏好ID',
     user_id INT NOT NULL COMMENT '用户ID',
@@ -473,7 +525,7 @@ CREATE TABLE IF NOT EXISTS user_matching_preference (
     CONSTRAINT `chk_age_range` CHECK (`age_min` IS NULL OR `age_max` IS NULL OR `age_min` <= `age_max`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户匹配偏好表';
 
--- 33. 用户匹配必须维度关联表（UserMatchingMustDimension）
+-- 35. 用户匹配必须维度关联表（UserMatchingMustDimension）
 CREATE TABLE IF NOT EXISTS user_matching_must_dimension (
     user_id INT NOT NULL COMMENT '用户ID',
     dimension_id INT NOT NULL COMMENT '维度ID',
@@ -484,7 +536,7 @@ CREATE TABLE IF NOT EXISTS user_matching_must_dimension (
     INDEX `idx_dimension_id` (`dimension_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户匹配必须维度关联表';
 
--- 34. 用户匹配优先维度关联表（UserMatchingPriorityDimension）
+-- 36. 用户匹配优先维度关联表（UserMatchingPriorityDimension）
 CREATE TABLE IF NOT EXISTS user_matching_priority_dimension (
     user_id INT NOT NULL COMMENT '用户ID',
     dimension_id INT NOT NULL COMMENT '维度ID',
@@ -498,8 +550,7 @@ CREATE TABLE IF NOT EXISTS user_matching_priority_dimension (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户匹配优先维度关联表';
 
 
--- 新增--
--- 创建用户喜欢表
+-- 37. 用户喜欢记录表（UserLike）
 CREATE TABLE IF NOT EXISTS user_like (
                                          id INT AUTO_INCREMENT PRIMARY KEY,
                                          from_user_id INT NOT NULL COMMENT '发送喜欢的用户ID',
@@ -518,7 +569,7 @@ CREATE TABLE IF NOT EXISTS user_like (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户喜欢记录表';
 
 
--- 问卷完成记录表（UserQuestionnaireCompletion）
+-- 38. 问卷完成记录表（UserQuestionnaireCompletion）
 CREATE TABLE IF NOT EXISTS user_questionnaire_completion (
                                                              id INT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
                                                              user_id INT NOT NULL COMMENT '用户ID',
