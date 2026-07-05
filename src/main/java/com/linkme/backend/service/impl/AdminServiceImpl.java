@@ -17,6 +17,7 @@ import com.linkme.backend.mapper.CommentMapper;
 import com.linkme.backend.mapper.PostMapper;
 import com.linkme.backend.mapper.UserMapper;
 import com.linkme.backend.service.AdminService;
+import com.linkme.backend.service.NotificationService;
 import com.linkme.backend.service.PostService;
 import com.linkme.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,8 @@ public class AdminServiceImpl implements AdminService {
     private AuditLogMapper auditLogMapper;
     @Autowired
     private AdminOperationLogMapper adminOperationLogMapper;
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public boolean isAdmin(Integer userId) {
@@ -99,6 +102,7 @@ public class AdminServiceImpl implements AdminService {
         if (affected <= 0) {
             throw new IllegalArgumentException("处罚失败，用户可能不存在");
         }
+        sendPunishmentNotification(adminId, targetUserId, accountStatus, reason, banUntil);
         safeLogAdminOp(adminId, targetUserId, null, 2, action.toUpperCase(), reason, null);
         return "处罚已生效";
     }
@@ -109,6 +113,7 @@ public class AdminServiceImpl implements AdminService {
         if (affected <= 0) {
             throw new IllegalArgumentException("解封失败，用户可能不存在");
         }
+        sendUnbanNotification(adminId, targetUserId, reason);
         safeLogAdminOp(adminId, targetUserId, null, 2, "UNBAN", reason, null);
         return "用户已解封";
     }
@@ -260,6 +265,63 @@ public class AdminServiceImpl implements AdminService {
             return null;
         }
         return content.length() > 500 ? content.substring(0, 500) : content;
+    }
+
+    private void sendPunishmentNotification(Integer adminId, Integer targetUserId, String accountStatus,
+                                            String reason, LocalDateTime banUntil) {
+        try {
+            String actionText = switch (accountStatus) {
+                case "warned" -> "警告";
+                case "restricted_post" -> "限制发帖";
+                case "restricted_comment" -> "限制评论";
+                case "temp_banned" -> "临时封禁";
+                case "perm_banned" -> "永久封禁";
+                default -> "账号处理";
+            };
+            StringBuilder content = new StringBuilder("你的账号已被管理员执行“")
+                    .append(actionText)
+                    .append("”处理。");
+            if (reason != null && !reason.isBlank()) {
+                content.append(" 原因：").append(reason).append("。");
+            }
+            if (banUntil != null) {
+                content.append(" 截止时间：").append(banUntil).append("。");
+            }
+            content.append(" 如有异议，请联系管理员申诉。");
+
+            notificationService.createNotification(
+                    targetUserId,
+                    "system",
+                    adminId,
+                    targetUserId,
+                    "account_status",
+                    "账号处罚通知",
+                    content.toString()
+            );
+        } catch (Exception e) {
+            System.err.println("处罚通知发送失败: " + e.getMessage());
+        }
+    }
+
+    private void sendUnbanNotification(Integer adminId, Integer targetUserId, String reason) {
+        try {
+            StringBuilder content = new StringBuilder("你的账号限制已解除，当前已恢复正常使用。");
+            if (reason != null && !reason.isBlank()) {
+                content.append(" 说明：").append(reason).append("。");
+            }
+
+            notificationService.createNotification(
+                    targetUserId,
+                    "system",
+                    adminId,
+                    targetUserId,
+                    "account_status",
+                    "账号解封通知",
+                    content.toString()
+            );
+        } catch (Exception e) {
+            System.err.println("解封通知发送失败: " + e.getMessage());
+        }
     }
 
     private void safeLogAdminOp(Integer adminId, Integer targetUserId, Long targetId, Integer targetType,

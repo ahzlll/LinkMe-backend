@@ -240,7 +240,7 @@ CREATE TABLE IF NOT EXISTS message (
 CREATE TABLE IF NOT EXISTS notification (
     notification_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '通知ID',
     user_id INT NOT NULL COMMENT '用户ID',
-    type ENUM('message', 'follow', 'heart', 'like', 'comment', 'match') NOT NULL COMMENT '通知类型',
+    type ENUM('message', 'follow', 'heart', 'like', 'comment', 'match', 'system') NOT NULL COMMENT '通知类型',
     actor_id INT NOT NULL COMMENT '操作者ID',
     related_id INT DEFAULT NULL COMMENT '关联实体ID',
     related_type VARCHAR(50) DEFAULT NULL COMMENT '关联实体类型',

@@ -177,6 +177,24 @@ public class UserController {
     @PostMapping("/register")
     @Operation(summary = "用户注册", description = "新用户注册，注册成功后自动登录返回token")
     public R<Map<String, Object>> register(@RequestBody User user) {
+        if (user.getEmail() != null) {
+            user.setEmail(user.getEmail().trim());
+            if (user.getEmail().isEmpty()) {
+                user.setEmail(null);
+            }
+        }
+        if (user.getPhone() != null) {
+            user.setPhone(user.getPhone().trim());
+            if (user.getPhone().isEmpty()) {
+                user.setPhone(null);
+            }
+        }
+        if (user.getRegion() == null || user.getRegion().trim().isEmpty()) {
+            user.setRegion("\u672a\u77e5");
+        } else {
+            user.setRegion(user.getRegion().trim());
+        }
+
         // 参数验证
         if (user.getPasswordHash() == null || user.getPasswordHash().trim().isEmpty()) {
             return R.fail(400, "密码不能为空");
@@ -295,16 +313,9 @@ public class UserController {
         
         User user = userService.login(loginName, password);
         if (user != null) {
-            String loginType = loginRequest.getLoginType();
-            boolean adminLogin = loginType != null && "admin".equalsIgnoreCase(loginType.trim());
-            if (adminLogin && !AccountStatusUtil.isAdminRole(user)) {
-                return R.fail(403, "该账号没有管理员权限");
-            }
-            if (!adminLogin && AccountStatusUtil.isBanned(user)) {
-                return R.fail(403, "账号已被封禁，无法登录");
-            }
-            if (adminLogin && AccountStatusUtil.isBanned(user)) {
-                return R.fail(403, "管理员账号已被封禁");
+            boolean adminLogin = AccountStatusUtil.isAdminRole(user);
+            if (AccountStatusUtil.isBanned(user)) {
+                return R.fail(403, "\u8d26\u53f7\u5df2\u88ab\u5c01\u7981\uff0c\u65e0\u6cd5\u767b\u5f55");
             }
 
             // 生成JWT token（如果username为空，使用email或phone作为替代）
