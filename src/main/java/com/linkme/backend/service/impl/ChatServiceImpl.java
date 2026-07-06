@@ -108,11 +108,17 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // 获取最后一条消息
-        Message lastMessage = messageMapper.selectLatestByConversationId(conversationId);
+        Message lastMessage = messageMapper.selectLatestByConversationId(conversation.getConversationId());
         if (lastMessage != null) {
-            response.setLastMessage(lastMessage.getContent());
-            response.setLastMessageType(lastMessage.getContentType());
-            response.setLastMessageTime(lastMessage.getCreatedAt());
+            // 检查消息是否对当前用户隐藏（被屏蔽用户发送的消息）/ Check if message is hidden for current user
+            if (lastMessage.getHiddenForUserId() != null && lastMessage.getHiddenForUserId().equals(userId)) {
+                response.setLastMessage("");
+                response.setLastMessageTime(null);
+            } else {
+                response.setLastMessage(lastMessage.getContent());
+                response.setLastMessageType(lastMessage.getContentType());
+                response.setLastMessageTime(lastMessage.getCreatedAt());
+            }
         }
 
         // 获取未读消息数量
@@ -153,9 +159,15 @@ public class ChatServiceImpl implements ChatService {
             // 获取最后一条消息
             Message lastMessage = messageMapper.selectLatestByConversationId(conversation.getConversationId());
             if (lastMessage != null) {
-                response.setLastMessage(lastMessage.getContent());
-                response.setLastMessageType(lastMessage.getContentType());
-                response.setLastMessageTime(lastMessage.getCreatedAt());
+                // 检查消息是否对当前用户隐藏（被屏蔽用户发送的消息）/ Check if message is hidden for current user
+                if (lastMessage.getHiddenForUserId() != null && lastMessage.getHiddenForUserId().equals(userId)) {
+                    response.setLastMessage("");
+                    response.setLastMessageTime(null);
+                } else {
+                    response.setLastMessage(lastMessage.getContent());
+                    response.setLastMessageType(lastMessage.getContentType());
+                    response.setLastMessageTime(lastMessage.getCreatedAt());
+                }
             }
 
             // 获取未读消息数量
