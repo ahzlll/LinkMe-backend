@@ -198,7 +198,7 @@ public class ChatController {
         AuditService.AuditResult auditResult = auditService.checkContent(
                 userId.longValue(), "message", null, messageRequest.getContent());
         if (auditResult.isNeedManualReview()) {
-            return R.fail(403, "消息包含敏感词，已送人工复审");
+            return R.fail(403, "消息包含敏感词，不可发送");
         }
         if (!auditResult.isPassed()) {
             return R.fail(403, "消息审核未通过");
@@ -246,7 +246,7 @@ public class ChatController {
         AuditService.AuditResult auditResult = auditService.checkContent(
                 userId.longValue(), "message", null, messageRequest.getContent());
         if (auditResult.isNeedManualReview()) {
-            return R.fail(403, "消息包含敏感词，已送人工复审");
+            return R.fail(403, "消息包含敏感词，不可发送");
         }
         if (!auditResult.isPassed()) {
             return R.fail(403, "消息审核未通过");

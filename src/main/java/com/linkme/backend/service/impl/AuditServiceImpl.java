@@ -263,4 +263,37 @@ public class AuditServiceImpl implements AuditService {
         }
         return stats;
     }
+
+    @Override
+    public boolean reportComment(Long reporterId, Long commentId, String commentContent, Integer postId, Integer commentUserId) {
+        try {
+            System.out.println("[举报评论] reporterId=" + reporterId + ", commentId=" + commentId + ", commentUserId=" + commentUserId);
+
+            logAudit(commentUserId != null ? commentUserId.longValue() : reporterId,
+                    "comment", commentId, commentContent, 1,
+                    "用户举报", "用户举报", AuditLog.RESULT_NEED_MANUAL);
+
+            List<String> matchedWords = new ArrayList<>();
+            if (commentContent != null && !commentContent.isEmpty()) {
+                if (sensitiveWordBs != null) {
+                    try {
+                        matchedWords = sensitiveWordBs.findAll(commentContent);
+                    } catch (Exception e) {
+                        System.err.println("检测举报评论敏感词失败: " + e.getMessage());
+                    }
+                }
+            }
+
+            addToReviewQueue(commentUserId != null ? commentUserId.longValue() : reporterId,
+                    "comment", commentId, commentContent,
+                    matchedWords.isEmpty() ? List.of("用户举报") : matchedWords,
+                    List.of("用户举报"));
+
+            System.out.println("[举报评论] 成功添加到人工审核队列");
+            return true;
+        } catch (Exception e) {
+            System.err.println("举报评论失败: " + e.getMessage());
+            return false;
+        }
+    }
 }

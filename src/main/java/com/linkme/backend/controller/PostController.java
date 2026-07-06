@@ -200,7 +200,7 @@ public class PostController {
         AuditService.AuditResult auditResult = auditService.checkContent(
                 req.getUserId().longValue(), "post", null, fullContent);
         if (auditResult.isNeedManualReview()) {
-            return R.fail(403, "帖子主题或内容包含敏感词，已送人工复审");
+            return R.fail(403, "帖子主题或内容包含敏感词，不可发表");
         }
         if (!auditResult.isPassed()) {
             return R.fail(403, "帖子审核未通过");
@@ -243,7 +243,7 @@ public class PostController {
             AuditService.AuditResult auditResult = auditService.checkContent(
                     userId.longValue(), "post", null, fullContent);
             if (auditResult.isNeedManualReview()) {
-                return R.fail(403, "帖子主题或内容包含敏感词，已送人工复审");
+                return R.fail(403, "帖子主题或内容包含敏感词，不可发表");
             }
             if (!auditResult.isPassed()) {
                 return R.fail(403, "帖子审核未通过");
@@ -402,7 +402,7 @@ public class PostController {
         AuditService.AuditResult auditResult = auditService.checkContent(
                 comment.getUserId().longValue(), "comment", null, comment.getContent());
         if (auditResult.isNeedManualReview()) {
-            return R.fail(403, "评论包含敏感词，已送人工复审");
+            return R.fail(403, "评论包含敏感词，不可发表");
         }
         if (!auditResult.isPassed()) {
             return R.fail(403, "评论审核未通过");
@@ -531,6 +531,52 @@ public class PostController {
             System.err.println("删除评论失败: " + e.getMessage());
             e.printStackTrace();
             return R.fail("删除评论失败: " + e.getMessage());
+        }
+    }
+
+    // 举报评论
+    @PostMapping("/{postId}/comments/{commentId}/report")
+    @Operation(summary = "举报评论", description = "举报评论，被举报的评论将送入人工审核队列",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> reportComment(@PathVariable @Parameter(description = "帖子ID") Integer postId,
+                                   @PathVariable @Parameter(description = "评论ID") Integer commentId,
+                                   HttpServletRequest request) {
+        try {
+            Integer currentUserId = getCurrentUserId(request);
+            if (currentUserId == null) {
+                return R.fail(401, "未登录");
+            }
+            
+            Comment comment = commentMapper.selectById(commentId);
+            if (comment == null) {
+                return R.fail(404, "评论不存在");
+            }
+            
+            if (!comment.getPostId().equals(postId)) {
+                return R.fail(400, "评论不属于该帖子");
+            }
+            
+            if (comment.getUserId().equals(currentUserId)) {
+                return R.fail(400, "不能举报自己的评论");
+            }
+            
+            boolean success = auditService.reportComment(
+                    currentUserId.longValue(),
+                    commentId.longValue(),
+                    comment.getContent(),
+                    postId,
+                    comment.getUserId()
+            );
+            
+            if (success) {
+                return R.ok("举报成功，我们会尽快处理");
+            } else {
+                return R.fail("举报失败，请重试");
+            }
+        } catch (Exception e) {
+            System.err.println("举报评论失败: " + e.getMessage());
+            e.printStackTrace();
+            return R.fail("举报评论失败: " + e.getMessage());
         }
     }
 
