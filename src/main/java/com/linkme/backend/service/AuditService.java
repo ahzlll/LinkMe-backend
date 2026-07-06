@@ -23,6 +23,8 @@ public interface AuditService {
 
     Map<String, Object> getAuditStats();
 
+    boolean reportComment(Long reporterId, Long commentId, String commentContent, Integer postId, Integer commentUserId);
+
     static class AuditResult {
         private boolean passed;
         private boolean needManualReview;
