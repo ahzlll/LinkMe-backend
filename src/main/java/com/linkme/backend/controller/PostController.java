@@ -180,6 +180,14 @@ public class PostController {
             // 为每个帖子填充images和tags字段
             enrichPostsWithAggregates(posts);
             
+            // 用用户当前头像覆盖发帖时的快照
+            for (Post post : posts) {
+                User postAuthor = userMapper.selectById(post.getUserId());
+                if (postAuthor != null && postAuthor.getAvatarUrl() != null && !postAuthor.getAvatarUrl().isBlank()) {
+                    post.setAvatarUrl(postAuthor.getAvatarUrl());
+                }
+            }
+            
             return R.ok(posts);
         } catch (Exception e) {
             // 记录完整的错误堆栈
@@ -352,7 +360,13 @@ public class PostController {
         // 设置用户信息
         resp.setNickname(post.getNickname());
         resp.setUsername(post.getUsername());
-        resp.setAvatarUrl(post.getAvatarUrl());
+        // 优先使用用户当前头像，发帖时的快照作为兜底
+        User author = userMapper.selectById(post.getUserId());
+        if (author != null && author.getAvatarUrl() != null && !author.getAvatarUrl().isBlank()) {
+            resp.setAvatarUrl(author.getAvatarUrl());
+        } else {
+            resp.setAvatarUrl(post.getAvatarUrl());
+        }
         var agg = postService.getPostAggregates(postId);
         @SuppressWarnings("unchecked")
         java.util.List<String> images = (java.util.List<String>) agg.get("images");
@@ -526,6 +540,13 @@ public class PostController {
                                                    @RequestParam(defaultValue = "10") Integer limit) {
         int offset = (page - 1) * limit;
         var list = commentMapper.selectByPostId(postId, offset, limit);
+        // 用用户当前头像覆盖评论的快照
+        for (Comment c : list) {
+            User commentAuthor = userMapper.selectById(c.getUserId());
+            if (commentAuthor != null && commentAuthor.getAvatarUrl() != null && !commentAuthor.getAvatarUrl().isBlank()) {
+                c.setAvatarUrl(commentAuthor.getAvatarUrl());
+            }
+        }
         return R.ok(list);
     }
 

@@ -54,6 +54,9 @@ public class PostCreateRequest {
 
         @Schema(description = "生活节奏代码（planned/casual/flexible）")
         private String lifeRhythm;
+
+        @Schema(description = "用户头像(Base64编码，选填)")
+        private String avatarUrl;
     }
 
     @Data
@@ -89,5 +92,8 @@ public class PostCreateRequest {
 
         @Schema(description = "生活节奏代码")
         private String lifeRhythm;
+
+        @Schema(description = "用户头像URL")
+        private String avatarUrl;
     }
 }

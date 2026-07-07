@@ -1,6 +1,7 @@
 package com.linkme.backend.service.impl;
 
 import com.linkme.backend.controller.dto.PostCreateRequest;
+import com.linkme.backend.entity.User;
 import com.linkme.backend.entity.UserMatchingPreference;
 import com.linkme.backend.entity.UserPersonalitySelection;
 import com.linkme.backend.mapper.*;
@@ -212,6 +213,15 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
             userMapper.updateQuestionnaireCompleted(userId, true);
             userQuestionnaireCompletionMapper.upsertOnSubmit(userId);
         }
+
+        // 5. 如果提交了头像，更新用户头像
+        if (request.getAvatarUrl() != null && !request.getAvatarUrl().isBlank()) {
+            User user = userMapper.selectById(userId);
+            if (user != null) {
+                user.setAvatarUrl(request.getAvatarUrl());
+                userMapper.update(user);
+            }
+        }
     }
 
     /**
@@ -236,6 +246,12 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         response.setAgeUnlimited(preference.getAgeUnlimited());
         response.setDistancePreference(preference.getDistancePreference());
         response.setAdditionalRequirements(preference.getAdditionalRequirements());
+
+        // 查询当前用户头像
+        User user = userMapper.selectById(userId);
+        if (user != null) {
+            response.setAvatarUrl(user.getAvatarUrl());
+        }
 
         // 2. 查询用户性格特质（仅 self 类型）
         List<UserPersonalitySelection> personalitySelections = userPersonalityMapper.selectSelectionsByUserId(userId);
