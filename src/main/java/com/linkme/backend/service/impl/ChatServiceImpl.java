@@ -276,6 +276,7 @@ public class ChatServiceImpl implements ChatService {
 
                 String messageJson = objectMapper.writeValueAsString(wsMessage);
                 webSocketHandler.sendMessageToUser(receiverId.toString(), messageJson);
+                webSocketHandler.sendMessageToUser(senderId.toString(), messageJson);
                 System.out.println("WebSocket消息已推送给用户: " + receiverId);
             } catch (Exception e) {
                 System.err.println("WebSocket推送消息失败: " + e.getMessage());
