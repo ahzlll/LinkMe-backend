@@ -16,7 +16,8 @@ public interface ManualReviewQueueMapper {
     int countPending();
 
     int updateStatus(@Param("id") Long id, @Param("status") Integer status,
-                     @Param("reviewerId") Long reviewerId, @Param("reviewRemark") String reviewRemark);
+                     @Param("reviewerId") Long reviewerId, @Param("reviewRemark") String reviewRemark,
+                     @Param("processAction") String processAction);
 
     List<ManualReviewQueue> selectByUserId(@Param("userId") Long userId, @Param("offset") int offset, @Param("limit") int limit);
 }

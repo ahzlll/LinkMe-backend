@@ -5,6 +5,7 @@ import com.linkme.backend.controller.dto.AuditLogResponse;
 import com.linkme.backend.controller.dto.ContentModerateRequest;
 import com.linkme.backend.controller.dto.UserPunishRequest;
 import com.linkme.backend.entity.Comment;
+import com.linkme.backend.entity.Message;
 import com.linkme.backend.entity.Post;
 import com.linkme.backend.entity.User;
 
@@ -29,6 +30,8 @@ public interface AdminService {
     List<Comment> listComments(int page, int size);
 
     String moderateComment(Integer adminId, Integer commentId, ContentModerateRequest request);
+
+    boolean deleteMessage(Integer adminId, Integer messageId);
 
     boolean deleteUser(Integer adminId, Integer userId);
 

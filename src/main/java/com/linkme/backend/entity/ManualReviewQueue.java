@@ -12,11 +12,20 @@ public class ManualReviewQueue {
     private String content;
     private String matchedWords;
     private String categories;
+    private String sourceType;
+    private Long reporterId;
+    private String reportReason;
+    private Long targetUserId;
+    private String processAction;
     private Integer status;
     private Long reviewerId;
     private String reviewRemark;
     private LocalDateTime createTime;
     private LocalDateTime reviewTime;
+
+    private String reporterNickname;
+    private String reviewerNickname;
+    private String targetUserNickname;
 
     public static final int STATUS_PENDING = 0;
     public static final int STATUS_APPROVED = 1;

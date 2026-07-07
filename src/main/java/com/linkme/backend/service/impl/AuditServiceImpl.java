@@ -7,6 +7,7 @@ import com.linkme.backend.mapper.AuditLogMapper;
 import com.linkme.backend.mapper.ManualReviewQueueMapper;
 import com.linkme.backend.service.AuditService;
 import com.linkme.backend.service.LocalSensitiveWordService;
+import com.linkme.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,9 @@ public class AuditServiceImpl implements AuditService {
 
     @Autowired(required = false)
     private LocalSensitiveWordService localSensitiveWordService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     private SensitiveWordBs sensitiveWordBs;
 
@@ -62,7 +66,6 @@ public class AuditServiceImpl implements AuditService {
         }
 
         List<String> allMatchedWords = new ArrayList<>();
-        boolean externalChecked = false;
 
         if (sensitiveWordBs != null) {
             try {
@@ -70,9 +73,8 @@ public class AuditServiceImpl implements AuditService {
                 if (matchedWords != null && !matchedWords.isEmpty()) {
                     allMatchedWords.addAll(matchedWords);
                 }
-                externalChecked = true;
             } catch (Exception e) {
-                System.err.println("外部敏感词库检测异常，将使用本地库: " + e.getMessage());
+                System.err.println("外部敏感词库检测异常，将尝试使用本地词库: " + e.getMessage());
             }
         }
 
@@ -97,18 +99,16 @@ public class AuditServiceImpl implements AuditService {
         }
 
         List<String> categories = allMatchedWords.stream()
-                .map(w -> getCategoryForWord(w))
+                .map(this::getCategoryForWord)
                 .distinct()
                 .collect(Collectors.toList());
 
         logAudit(userId, contentType, contentId, content, 1,
                 String.join(",", allMatchedWords),
                 String.join(",", categories),
-                AuditLog.RESULT_NEED_MANUAL);
+                AuditLog.RESULT_MANUAL_REJECT);
 
-        addToReviewQueue(userId, contentType, contentId, content, allMatchedWords, categories);
-
-        return new AuditResult(false, true, allMatchedWords, categories);
+        return new AuditResult(false, false, allMatchedWords, categories);
     }
 
     private String getCategoryForWord(String word) {
@@ -116,7 +116,7 @@ public class AuditServiceImpl implements AuditService {
     }
 
     private void logAudit(Long userId, String contentType, Long contentId, String content,
-                         int isViolation, String matchedWords, String categories, int auditResult) {
+                          int isViolation, String matchedWords, String categories, int auditResult) {
         try {
             AuditLog log = new AuditLog();
             log.setUserId(userId);
@@ -139,6 +139,13 @@ public class AuditServiceImpl implements AuditService {
 
     private void addToReviewQueue(Long userId, String contentType, Long contentId,
                                   String content, List<String> matchedWords, List<String> categories) {
+        addToReviewQueue(userId, contentType, contentId, content, matchedWords, categories,
+                "system", null, null, userId);
+    }
+
+    private void addToReviewQueue(Long userId, String contentType, Long contentId,
+                                  String content, List<String> matchedWords, List<String> categories,
+                                  String sourceType, Long reporterId, String reportReason, Long targetUserId) {
         try {
             ManualReviewQueue queue = new ManualReviewQueue();
             queue.setUserId(userId);
@@ -147,11 +154,40 @@ public class AuditServiceImpl implements AuditService {
             queue.setContent(content);
             queue.setMatchedWords(String.join(",", matchedWords));
             queue.setCategories(String.join(",", categories));
+            queue.setSourceType(sourceType);
+            queue.setReporterId(reporterId);
+            queue.setReportReason(reportReason);
+            queue.setTargetUserId(targetUserId);
             queue.setStatus(ManualReviewQueue.STATUS_PENDING);
             queue.setCreateTime(LocalDateTime.now());
             manualReviewQueueMapper.insert(queue);
         } catch (Exception e) {
             System.err.println("添加到人工复审队列失败: " + e.getMessage());
+        }
+    }
+
+    private boolean createUserReport(Long reporterId, Long ownerUserId, String contentType, Long contentId,
+                                     String content, String reason) {
+        try {
+            String safeReason = reason == null || reason.isBlank() ? "其他" : reason.trim();
+            logAudit(ownerUserId != null ? ownerUserId : reporterId,
+                    contentType, contentId, content, 1,
+                    null, "用户举报", AuditLog.RESULT_NEED_MANUAL);
+
+            addToReviewQueue(ownerUserId != null ? ownerUserId : reporterId,
+                    contentType,
+                    contentId,
+                    content,
+                    new ArrayList<>(),
+                    List.of("用户举报"),
+                    "user_report",
+                    reporterId,
+                    safeReason,
+                    ownerUserId);
+            return true;
+        } catch (Exception e) {
+            System.err.println("创建举报审核记录失败: " + e.getMessage());
+            return false;
         }
     }
 
@@ -167,6 +203,16 @@ public class AuditServiceImpl implements AuditService {
     }
 
     @Override
+    public ManualReviewQueue getReviewQueue(Long queueId) {
+        try {
+            return manualReviewQueueMapper.selectById(queueId);
+        } catch (Exception e) {
+            System.err.println("获取待审核详情失败: " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
     public int getPendingCount() {
         try {
             return manualReviewQueueMapper.countPending();
@@ -178,40 +224,43 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     public boolean approveContent(Long reviewerId, Long queueId, String remark) {
-        try {
-            ManualReviewQueue queue = manualReviewQueueMapper.selectById(queueId);
-            if (queue == null) {
-                return false;
-            }
-
-            manualReviewQueueMapper.updateStatus(queueId, ManualReviewQueue.STATUS_APPROVED, reviewerId, remark);
-
-            auditLogMapper.updateResult(queue.getContentId(), queue.getContentType(),
-                    AuditLog.RESULT_MANUAL_PASS, reviewerId, remark);
-
-            return true;
-        } catch (Exception e) {
-            System.err.println("审核通过失败: " + e.getMessage());
-            return false;
-        }
+        return completeReportAction(reviewerId, queueId, "approve_report", remark);
     }
 
     @Override
     public boolean rejectContent(Long reviewerId, Long queueId, String remark) {
+        return completeReportAction(reviewerId, queueId, "reject_report", remark);
+    }
+
+    @Override
+    public boolean completeReportAction(Long reviewerId, Long queueId, String processAction, String remark) {
         try {
             ManualReviewQueue queue = manualReviewQueueMapper.selectById(queueId);
             if (queue == null) {
                 return false;
             }
 
-            manualReviewQueueMapper.updateStatus(queueId, ManualReviewQueue.STATUS_REJECTED, reviewerId, remark);
+            boolean approved = !"reject_report".equals(processAction);
+            manualReviewQueueMapper.updateStatus(
+                    queueId,
+                    approved ? ManualReviewQueue.STATUS_APPROVED : ManualReviewQueue.STATUS_REJECTED,
+                    reviewerId,
+                    remark,
+                    processAction
+            );
 
-            auditLogMapper.updateResult(queue.getContentId(), queue.getContentType(),
-                    AuditLog.RESULT_MANUAL_REJECT, reviewerId, remark);
+            if ("reject_report".equals(processAction)) {
+                auditLogMapper.updateResult(queue.getContentId(), queue.getContentType(),
+                        AuditLog.RESULT_MANUAL_REJECT, reviewerId, remark);
+            } else if (!"delete_content".equals(processAction)) {
+                auditLogMapper.updateResult(queue.getContentId(), queue.getContentType(),
+                        AuditLog.RESULT_MANUAL_PASS, reviewerId, remark);
+            }
 
+            notifyReporter(queue, reviewerId, processAction, remark);
             return true;
         } catch (Exception e) {
-            System.err.println("审核拒绝失败: " + e.getMessage());
+            System.err.println("处理举报队列失败: " + e.getMessage());
             return false;
         }
     }
@@ -265,35 +314,79 @@ public class AuditServiceImpl implements AuditService {
     }
 
     @Override
+    public boolean reportPost(Long reporterId, Long postId, String postContent, Integer postUserId, String reason) {
+        return createUserReport(reporterId,
+                postUserId != null ? postUserId.longValue() : reporterId,
+                "post",
+                postId,
+                postContent,
+                reason);
+    }
+
+    @Override
     public boolean reportComment(Long reporterId, Long commentId, String commentContent, Integer postId, Integer commentUserId) {
+        return reportComment(reporterId, commentId, commentContent, postId, commentUserId, "其他");
+    }
+
+    @Override
+    public boolean reportComment(Long reporterId, Long commentId, String commentContent, Integer postId, Integer commentUserId, String reason) {
+        return createUserReport(reporterId,
+                commentUserId != null ? commentUserId.longValue() : reporterId,
+                "comment",
+                commentId,
+                commentContent,
+                reason);
+    }
+
+    @Override
+    public boolean reportUser(Long reporterId, Long targetUserId, String targetProfileContent, String reason) {
+        return createUserReport(reporterId,
+                targetUserId,
+                "user",
+                targetUserId,
+                targetProfileContent,
+                reason);
+    }
+
+    @Override
+    public boolean reportMessage(Long reporterId, Long messageId, String messageContent, Integer messageSenderId, String reason) {
+        return createUserReport(reporterId,
+                messageSenderId != null ? messageSenderId.longValue() : reporterId,
+                "message",
+                messageId,
+                messageContent,
+                reason);
+    }
+
+    private void notifyReporter(ManualReviewQueue queue, Long reviewerId, String processAction, String remark) {
+        if (queue.getReporterId() == null) {
+            return;
+        }
         try {
-            System.out.println("[举报评论] reporterId=" + reporterId + ", commentId=" + commentId + ", commentUserId=" + commentUserId);
+            String title = "\u4e3e\u62a5\u5904\u7406\u7ed3\u679c";
+            String suffix = (remark == null || remark.isBlank()) ? "" : " \u8bf4\u660e\uff1a" + remark;
+            String content = switch (processAction) {
+                case "reject_report" -> "\u7ecf\u5ba1\u6838\uff0c\u4e3e\u62a5\u5185\u5bb9\u6682\u65e0\u660e\u663e\u95ee\u9898\uff0c\u672c\u6b21\u4e3e\u62a5\u5df2\u9a73\u56de\u3002" + suffix;
+                case "delete_content" -> "\u7ecf\u5ba1\u6838\uff0c\u76f8\u5173\u5185\u5bb9\u5df2\u88ab\u5220\u9664\u3002" + suffix;
+                case "punish_user_warn" -> "\u7ecf\u5ba1\u6838\uff0c\u76f8\u5173\u7528\u6237\u5df2\u88ab\u8b66\u544a\u3002" + suffix;
+                case "punish_user_restricted_post" -> "\u7ecf\u5ba1\u6838\uff0c\u76f8\u5173\u7528\u6237\u5df2\u88ab\u9650\u5236\u53d1\u5e16\u3002" + suffix;
+                case "punish_user_restricted_comment" -> "\u7ecf\u5ba1\u6838\uff0c\u76f8\u5173\u7528\u6237\u5df2\u88ab\u9650\u5236\u8bc4\u8bba\u3002" + suffix;
+                case "punish_user_temp_banned" -> "\u7ecf\u5ba1\u6838\uff0c\u76f8\u5173\u7528\u6237\u5df2\u88ab\u4e34\u65f6\u5c01\u7981\u3002" + suffix;
+                case "punish_user_perm_banned" -> "\u7ecf\u5ba1\u6838\uff0c\u76f8\u5173\u7528\u6237\u5df2\u88ab\u6c38\u4e45\u5c01\u7981\u3002" + suffix;
+                default -> "\u4f60\u63d0\u4ea4\u7684\u4e3e\u62a5\u5df2\u5904\u7406\u3002" + suffix;
+            };
 
-            logAudit(commentUserId != null ? commentUserId.longValue() : reporterId,
-                    "comment", commentId, commentContent, 1,
-                    "用户举报", "用户举报", AuditLog.RESULT_NEED_MANUAL);
-
-            List<String> matchedWords = new ArrayList<>();
-            if (commentContent != null && !commentContent.isEmpty()) {
-                if (sensitiveWordBs != null) {
-                    try {
-                        matchedWords = sensitiveWordBs.findAll(commentContent);
-                    } catch (Exception e) {
-                        System.err.println("检测举报评论敏感词失败: " + e.getMessage());
-                    }
-                }
-            }
-
-            addToReviewQueue(commentUserId != null ? commentUserId.longValue() : reporterId,
-                    "comment", commentId, commentContent,
-                    matchedWords.isEmpty() ? List.of("用户举报") : matchedWords,
-                    List.of("用户举报"));
-
-            System.out.println("[举报评论] 成功添加到人工审核队列");
-            return true;
+            notificationService.createNotification(
+                    queue.getReporterId().intValue(),
+                    "system",
+                    reviewerId != null ? reviewerId.intValue() : null,
+                    queue.getContentId() != null ? queue.getContentId().intValue() : null,
+                    queue.getContentType(),
+                    title,
+                    content
+            );
         } catch (Exception e) {
-            System.err.println("举报评论失败: " + e.getMessage());
-            return false;
+            System.err.println("通知举报人失败: " + e.getMessage());
         }
     }
-}
+}

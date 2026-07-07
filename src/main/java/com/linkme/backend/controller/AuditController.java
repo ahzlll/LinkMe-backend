@@ -2,9 +2,11 @@ package com.linkme.backend.controller;
 
 import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.common.R;
+import com.linkme.backend.controller.dto.ContentModerateRequest;
+import com.linkme.backend.controller.dto.UserPunishRequest;
 import com.linkme.backend.entity.ManualReviewQueue;
-import com.linkme.backend.service.AuditService;
 import com.linkme.backend.service.AdminService;
+import com.linkme.backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/audit")
-@Tag(name = "内容审核管理", description = "人工复审队列管理、事后下架、敏感词库热重载")
+@Tag(name = "内容审核管理", description = "人工复审队列管理、举报处理、敏感词库热重载")
 public class AuditController {
 
     @Autowired
@@ -74,7 +76,7 @@ public class AuditController {
     }
 
     @PostMapping("/{queueId}/approve")
-    @Operation(summary = "人工审核通过", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "通过举报", security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> approve(@PathVariable Long queueId,
                              @RequestParam(required = false) String remark,
                              HttpServletRequest request) {
@@ -85,11 +87,11 @@ public class AuditController {
             return R.fail(401, "未登录");
         }
         boolean success = auditService.approveContent(reviewerId, queueId, remark);
-        return success ? R.ok("审核通过") : R.fail(400, "审核失败");
+        return success ? R.ok("举报已通过，已通知举报人") : R.fail(400, "处理失败");
     }
 
     @PostMapping("/{queueId}/reject")
-    @Operation(summary = "人工审核拒绝", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "驳回举报", security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> reject(@PathVariable Long queueId,
                             @RequestParam(required = false) String remark,
                             HttpServletRequest request) {
@@ -100,7 +102,76 @@ public class AuditController {
             return R.fail(401, "未登录");
         }
         boolean success = auditService.rejectContent(reviewerId, queueId, remark);
-        return success ? R.ok("已拒绝") : R.fail(400, "审核失败");
+        return success ? R.ok("举报已驳回，已通知举报人") : R.fail(400, "处理失败");
+    }
+
+    @PostMapping("/{queueId}/delete-content")
+    @Operation(summary = "直接删除被举报内容", security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> deleteReportedContent(@PathVariable Long queueId,
+                                           @RequestParam(required = false) String remark,
+                                           HttpServletRequest request) {
+        R<?> check = forbid(request);
+        if (check != null) return (R<String>) check;
+        Long reviewerId = currentUserId(request);
+        if (reviewerId == null) {
+            return R.fail(401, "未登录");
+        }
+        ManualReviewQueue queue = auditService.getReviewQueue(queueId);
+        if (queue == null) {
+            return R.fail(404, "举报记录不存在");
+        }
+        try {
+            switch (queue.getContentType()) {
+                case "post" -> {
+                    ContentModerateRequest body = new ContentModerateRequest();
+                    body.setAction("delete");
+                    body.setReason(remark);
+                    adminService.moderatePost(reviewerId.intValue(), queue.getContentId().intValue(), body);
+                }
+                case "comment" -> {
+                    ContentModerateRequest body = new ContentModerateRequest();
+                    body.setAction("delete");
+                    body.setReason(remark);
+                    adminService.moderateComment(reviewerId.intValue(), queue.getContentId().intValue(), body);
+                }
+                case "message" -> adminService.deleteMessage(reviewerId.intValue(), queue.getContentId().intValue());
+                default -> {
+                    return R.fail(400, "该举报类型不支持直接删除内容");
+                }
+            }
+            boolean success = auditService.completeReportAction(reviewerId, queueId, "delete_content", remark);
+            return success ? R.ok("内容已删除，已通知举报人") : R.fail(400, "删除后更新举报状态失败");
+        } catch (IllegalArgumentException e) {
+            return R.fail(400, e.getMessage());
+        }
+    }
+
+    @PostMapping("/{queueId}/punish")
+    @Operation(summary = "处罚被举报用户", security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> punishReportedUser(@PathVariable Long queueId,
+                                        @RequestBody UserPunishRequest body,
+                                        HttpServletRequest request) {
+        R<?> check = forbid(request);
+        if (check != null) return (R<String>) check;
+        Long reviewerId = currentUserId(request);
+        if (reviewerId == null) {
+            return R.fail(401, "未登录");
+        }
+        ManualReviewQueue queue = auditService.getReviewQueue(queueId);
+        if (queue == null) {
+            return R.fail(404, "举报记录不存在");
+        }
+        if (queue.getTargetUserId() == null) {
+            return R.fail(400, "该举报记录缺少被举报用户");
+        }
+        try {
+            String msg = adminService.punishUser(reviewerId.intValue(), queue.getTargetUserId().intValue(), body);
+            String processAction = "punish_user_" + (body.getAction() == null ? "warn" : body.getAction().trim().toLowerCase());
+            boolean success = auditService.completeReportAction(reviewerId, queueId, processAction, body.getReason());
+            return success ? R.ok(msg) : R.fail(400, "处罚成功，但更新举报状态失败");
+        } catch (IllegalArgumentException e) {
+            return R.fail(400, e.getMessage());
+        }
     }
 
     @PostMapping("/offline")
@@ -139,4 +210,4 @@ public class AuditController {
         if (check != null) return (R<Map<String, Object>>) check;
         return R.ok(auditService.getAuditStats());
     }
-}
+}

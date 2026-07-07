@@ -19,15 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 通知服务实现类
- * 
- * 功能描述：
- * - 实现通知相关的业务逻辑处理
- * - 包括通知创建、查询、标记已读等功能
- * - 支持实时推送通知
- * 
- * @author Ahz
- * @version 1.2
+ * 通知服务实现。
  */
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -46,16 +38,13 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public Notification createMessageNotification(Integer userId, Integer actorId, Integer messageId,
-            String contentType, String content) {
-        // 获取发送者信息
+                                                  String contentType, String content) {
         User actor = userMapper.selectById(actorId);
         String actorName = actor != null ? actor.getNickname() : "用户";
 
-        // 根据内容类型生成标题和内容
         String title = actorName + " 发来了一条消息";
         String notificationContent = content;
 
-        // 根据内容类型截取预览
         if ("image".equals(contentType)) {
             notificationContent = "[图片]";
         } else if ("video".equals(contentType)) {
@@ -74,29 +63,26 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public Notification createNotification(Integer userId, String type, Integer actorId,
-            Integer relatedId, String relatedType, String title, String content) {
+                                           Integer relatedId, String relatedType, String title, String content) {
         Notification notification = new Notification();
         notification.setUserId(userId);
         notification.setType(type);
         notification.setActorId(actorId);
         notification.setRelatedId(relatedId);
         notification.setRelatedType(relatedType);
-        notification.setTitle(title);
-        notification.setContent(content);
+        notification.setTitle(normalizeNotificationText(title, "系统通知"));
+        notification.setContent(normalizeNotificationText(content, ""));
         notification.setIsRead(false);
         notification.setCreatedAt(LocalDateTime.now());
 
         notificationMapper.insert(notification);
 
-        // 通过WebSocket实时推送通知
         try {
             NotificationResponse response = convertToResponse(notification);
 
-            // 手动构建推送消息，将LocalDateTime转换为字符串
             Map<String, Object> pushMessage = new HashMap<>();
             pushMessage.put("type", "notification");
 
-            // 构建通知数据，避免LocalDateTime序列化问题
             Map<String, Object> notificationData = new HashMap<>();
             notificationData.put("notificationId", response.getNotificationId());
             notificationData.put("userId", response.getUserId());
@@ -109,7 +95,6 @@ public class NotificationServiceImpl implements NotificationService {
             notificationData.put("title", response.getTitle());
             notificationData.put("content", response.getContent());
             notificationData.put("isRead", response.getIsRead());
-            // 将LocalDateTime转换为ISO 8601字符串格式
             notificationData.put("createdAt", response.getCreatedAt().toString());
 
             pushMessage.put("data", notificationData);
@@ -117,15 +102,44 @@ public class NotificationServiceImpl implements NotificationService {
 
             webSocketHandler.sendMessageToUser(userId.toString(), pushJson);
         } catch (Exception e) {
-            System.err.println("WebSocket推送通知失败: " + e.getMessage());
+            System.err.println("WebSocket 推送通知失败: " + e.getMessage());
         }
 
         return notification;
     }
 
+    private String normalizeNotificationText(String text, String fallback) {
+        String value = text == null ? "" : text.trim();
+        if (value.isEmpty()) {
+            return fallback;
+        }
+        if (value.contains("\\u")) {
+            value = decodeUnicodeEscapes(value);
+        }
+        return value;
+    }
+
+    private String decodeUnicodeEscapes(String text) {
+        StringBuilder builder = new StringBuilder();
+        for (int index = 0; index < text.length(); index++) {
+            char current = text.charAt(index);
+            if (current == '\\' && index + 5 < text.length() && text.charAt(index + 1) == 'u') {
+                String hex = text.substring(index + 2, index + 6);
+                try {
+                    builder.append((char) Integer.parseInt(hex, 16));
+                    index += 5;
+                    continue;
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            builder.append(current);
+        }
+        return builder.toString();
+    }
+
     @Override
     public List<NotificationResponse> getNotificationsByUserId(Integer userId, Boolean isRead,
-            Integer page, Integer size) {
+                                                               Integer page, Integer size) {
         int offset = (page - 1) * size;
         List<Notification> notifications = notificationMapper.selectByUserId(userId, isRead, offset, size);
 
@@ -177,7 +191,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     /**
-     * 将Notification实体转换为NotificationResponse DTO
+     * 将通知实体转换为响应 DTO。
      */
     private NotificationResponse convertToResponse(Notification notification) {
         NotificationResponse response = new NotificationResponse();
@@ -192,7 +206,6 @@ public class NotificationServiceImpl implements NotificationService {
         response.setIsRead(notification.getIsRead());
         response.setCreatedAt(notification.getCreatedAt());
 
-        // 获取操作者信息
         if (notification.getActorId() != null) {
             User actor = userMapper.selectById(notification.getActorId());
             if (actor != null) {

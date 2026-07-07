@@ -109,6 +109,22 @@ public class AdminSchemaCheckRunner implements ApplicationRunner {
             log.info("【审核功能】manual_review_queue 表不存在，正在自动创建...");
             createManualReviewQueueTable();
             log.info("【审核功能】manual_review_queue 表创建成功");
+        } else {
+            if (!columnExists("manual_review_queue", "source_type")) {
+                jdbcTemplate.execute("ALTER TABLE manual_review_queue ADD COLUMN source_type VARCHAR(20) DEFAULT 'system' COMMENT '来源类型：system/user_report'");
+            }
+            if (!columnExists("manual_review_queue", "reporter_id")) {
+                jdbcTemplate.execute("ALTER TABLE manual_review_queue ADD COLUMN reporter_id BIGINT NULL COMMENT '举报人ID'");
+            }
+            if (!columnExists("manual_review_queue", "report_reason")) {
+                jdbcTemplate.execute("ALTER TABLE manual_review_queue ADD COLUMN report_reason VARCHAR(255) NULL COMMENT '举报原因'");
+            }
+            if (!columnExists("manual_review_queue", "target_user_id")) {
+                jdbcTemplate.execute("ALTER TABLE manual_review_queue ADD COLUMN target_user_id BIGINT NULL COMMENT '被举报用户ID'");
+            }
+            if (!columnExists("manual_review_queue", "process_action")) {
+                jdbcTemplate.execute("ALTER TABLE manual_review_queue ADD COLUMN process_action VARCHAR(50) NULL COMMENT '处理动作'");
+            }
         }
     }
 
@@ -154,6 +170,11 @@ public class AdminSchemaCheckRunner implements ApplicationRunner {
                 `content` TEXT NOT NULL COMMENT '原始完整内容',
                 `matched_words` VARCHAR(500) COMMENT '算法命中的敏感词',
                 `categories` VARCHAR(200) COMMENT '命中分类',
+                `source_type` VARCHAR(20) DEFAULT 'system' COMMENT '来源类型：system/user_report',
+                `reporter_id` BIGINT NULL COMMENT '举报人ID',
+                `report_reason` VARCHAR(255) NULL COMMENT '举报原因',
+                `target_user_id` BIGINT NULL COMMENT '被举报用户ID',
+                `process_action` VARCHAR(50) NULL COMMENT '处理动作',
                 `status` TINYINT DEFAULT 0 COMMENT '状态: 0-待审核,1-已通过,2-已拒绝',
                 `reviewer_id` BIGINT COMMENT '审核员ID',
                 `review_remark` VARCHAR(500) COMMENT '审核备注',

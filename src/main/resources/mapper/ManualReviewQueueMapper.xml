@@ -10,18 +10,28 @@
         <result column="content" property="content"/>
         <result column="matched_words" property="matchedWords"/>
         <result column="categories" property="categories"/>
+        <result column="source_type" property="sourceType"/>
+        <result column="reporter_id" property="reporterId"/>
+        <result column="report_reason" property="reportReason"/>
+        <result column="target_user_id" property="targetUserId"/>
+        <result column="process_action" property="processAction"/>
         <result column="status" property="status"/>
         <result column="reviewer_id" property="reviewerId"/>
         <result column="review_remark" property="reviewRemark"/>
         <result column="create_time" property="createTime"/>
         <result column="review_time" property="reviewTime"/>
+        <result column="reporterNickname" property="reporterNickname"/>
+        <result column="reviewerNickname" property="reviewerNickname"/>
+        <result column="targetUserNickname" property="targetUserNickname"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO manual_review_queue (user_id, content_type, content_id, content,
-                                        matched_words, categories, status, create_time)
+                                        matched_words, categories, source_type, reporter_id,
+                                        report_reason, target_user_id, status, create_time)
         VALUES (#{userId}, #{contentType}, #{contentId}, #{content},
-                #{matchedWords}, #{categories}, #{status}, #{createTime})
+                #{matchedWords}, #{categories}, #{sourceType}, #{reporterId},
+                #{reportReason}, #{targetUserId}, #{status}, #{createTime})
     </insert>
 
     <select id="selectById" resultMap="ManualReviewQueueMap">
@@ -29,8 +39,15 @@
     </select>
 
     <select id="selectPending" resultMap="ManualReviewQueueMap">
-        SELECT * FROM manual_review_queue
-        WHERE status = 0
+        SELECT q.*,
+               reporter.nickname AS reporterNickname,
+               reviewer.nickname AS reviewerNickname,
+               target_user.nickname AS targetUserNickname
+        FROM manual_review_queue q
+        LEFT JOIN user reporter ON reporter.user_id = q.reporter_id
+        LEFT JOIN user reviewer ON reviewer.user_id = q.reviewer_id
+        LEFT JOIN user target_user ON target_user.user_id = q.target_user_id
+        WHERE q.status = 0
         ORDER BY create_time ASC
         LIMIT #{offset}, #{limit}
     </select>
@@ -42,13 +59,20 @@
     <update id="updateStatus">
         UPDATE manual_review_queue
         SET status = #{status}, reviewer_id = #{reviewerId},
-            review_remark = #{reviewRemark}, review_time = NOW()
+            review_remark = #{reviewRemark}, process_action = #{processAction}, review_time = NOW()
         WHERE id = #{id}
     </update>
 
     <select id="selectByUserId" resultMap="ManualReviewQueueMap">
-        SELECT * FROM manual_review_queue
-        WHERE user_id = #{userId}
+        SELECT q.*,
+               reporter.nickname AS reporterNickname,
+               reviewer.nickname AS reviewerNickname,
+               target_user.nickname AS targetUserNickname
+        FROM manual_review_queue q
+        LEFT JOIN user reporter ON reporter.user_id = q.reporter_id
+        LEFT JOIN user reviewer ON reviewer.user_id = q.reviewer_id
+        LEFT JOIN user target_user ON target_user.user_id = q.target_user_id
+        WHERE q.user_id = #{userId}
         ORDER BY create_time DESC
         LIMIT #{offset}, #{limit}
     </select>

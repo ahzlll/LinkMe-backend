@@ -16,6 +16,7 @@ import com.linkme.backend.service.NotificationService;
 import com.linkme.backend.service.AuditService;
 import com.linkme.backend.controller.dto.PostCreateRequest;
 import com.linkme.backend.controller.dto.PostDetailResponse;
+import com.linkme.backend.controller.dto.ReportRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -496,16 +497,16 @@ public class PostController {
                         // 顶级评论：通知帖子作者（如果评论者不是帖子作者）
                         if (!comment.getUserId().equals(post.getUserId())) {
                             targetUserId = post.getUserId();
-                            title = "新的评论";
-                            content = fromUserName + " 评论了你的帖子";
+                            title = "\u65b0\u7684\u8bc4\u8bba";
+                            content = fromUserName + " \u8bc4\u8bba\u4e86\u4f60\u7684\u5e16\u5b50";
                         }
                     } else {
                         // 回复评论：通知被回复的用户
                         Comment parentComment = commentMapper.selectById(comment.getParentId());
                         if (parentComment != null && !comment.getUserId().equals(parentComment.getUserId())) {
                             targetUserId = parentComment.getUserId();
-                            title = "新的回复";
-                            content = fromUserName + " 回复了你的评论";
+                            title = "\u65b0\u7684\u56de\u590d";
+                            content = fromUserName + " \u56de\u590d\u4e86\u4f60\u7684\u8bc4\u8bba";
                         }
                     }
                     
@@ -599,6 +600,7 @@ public class PostController {
                security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> reportComment(@PathVariable @Parameter(description = "帖子ID") Integer postId,
                                    @PathVariable @Parameter(description = "评论ID") Integer commentId,
+                                   @RequestBody(required = false) ReportRequest reportRequest,
                                    HttpServletRequest request) {
         try {
             Integer currentUserId = getCurrentUserId(request);
@@ -624,7 +626,8 @@ public class PostController {
                     commentId.longValue(),
                     comment.getContent(),
                     postId,
-                    comment.getUserId()
+                    comment.getUserId(),
+                    reportRequest != null ? reportRequest.getReason() : null
             );
             
             if (success) {
@@ -636,6 +639,41 @@ public class PostController {
             System.err.println("举报评论失败: " + e.getMessage());
             e.printStackTrace();
             return R.fail("举报评论失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{postId}/report")
+    @Operation(summary = "举报帖子", description = "举报帖子，被举报的帖子将送入人工审核队列",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> reportPost(@PathVariable @Parameter(description = "帖子ID") Integer postId,
+                                @RequestBody(required = false) ReportRequest reportRequest,
+                                HttpServletRequest request) {
+        try {
+            Integer currentUserId = getCurrentUserId(request);
+            if (currentUserId == null) {
+                return R.fail(401, "未登录");
+            }
+
+            Post post = postService.getPostById(postId);
+            if (post == null) {
+                return R.fail(404, "帖子不存在");
+            }
+            if (post.getUserId().equals(currentUserId)) {
+                return R.fail(400, "不能举报自己的帖子");
+            }
+
+            boolean success = auditService.reportPost(
+                    currentUserId.longValue(),
+                    postId.longValue(),
+                    (post.getTopic() == null ? "" : post.getTopic() + "\n") + (post.getContent() == null ? "" : post.getContent()),
+                    post.getUserId(),
+                    reportRequest != null ? reportRequest.getReason() : null
+            );
+            return success ? R.ok("举报成功，我们会尽快处理") : R.fail("举报失败，请重试");
+        } catch (Exception e) {
+            System.err.println("举报帖子失败: " + e.getMessage());
+            e.printStackTrace();
+            return R.fail("举报帖子失败: " + e.getMessage());
         }
     }
 

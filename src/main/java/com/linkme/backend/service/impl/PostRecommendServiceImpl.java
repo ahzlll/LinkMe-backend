@@ -138,7 +138,7 @@ public class PostRecommendServiceImpl implements PostRecommendService {
     }
 
     /**
-     * 按推荐 ID 顺序重排帖子列表（SQL IN 查询不保证顺序）
+     * 按推荐 ID 顺序重排帖子列表（SQL IN 查询不保֤˳序）
      */
     private List<Post> orderPostsByIds(List<Post> posts, List<Integer> orderedIds) {
         if (posts == null || posts.isEmpty() || orderedIds == null || orderedIds.isEmpty()) {

@@ -181,6 +181,19 @@ public class AdminController {
         return moderateComment(commentId, body, request);
     }
 
+    @DeleteMapping("/messages/{messageId}")
+    @Operation(summary = "删除私信消息", security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> deleteMessage(@PathVariable Integer messageId, HttpServletRequest request) {
+        R<?> check = forbid(request);
+        if (check != null) return (R<String>) check;
+        try {
+            return adminService.deleteMessage(currentUserId(request), messageId)
+                    ? R.ok("消息已删除") : R.fail(400, "删除失败");
+        } catch (IllegalArgumentException e) {
+            return R.fail(400, e.getMessage());
+        }
+    }
+
     @GetMapping("/stats")
     @Operation(summary = "统计", security = @SecurityRequirement(name = "bearerAuth"))
     public R<Map<String, Integer>> stats(HttpServletRequest request) {

@@ -1,10 +1,12 @@
 package com.linkme.backend.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -14,7 +16,7 @@ public class LocalSensitiveWordService {
     @Autowired(required = false)
     private Set<String> localSensitiveWords;
 
-    private Set<String> sensitiveWordSet = new HashSet<>();
+    private final Set<String> sensitiveWordSet = new HashSet<>();
     private Pattern[] patterns;
 
     @PostConstruct
@@ -35,18 +37,18 @@ public class LocalSensitiveWordService {
 
     private void buildPatterns() {
         patterns = new Pattern[sensitiveWordSet.size()];
-        int i = 0;
+        int index = 0;
         for (String word : sensitiveWordSet) {
-            patterns[i++] = Pattern.compile(Pattern.quote(word), Pattern.CASE_INSENSITIVE);
+            patterns[index++] = Pattern.compile(Pattern.quote(word), Pattern.CASE_INSENSITIVE);
         }
     }
 
-    public java.util.List<String> findAll(String text) {
+    public List<String> findAll(String text) {
         if (text == null || text.trim().isEmpty()) {
-            return new java.util.ArrayList<>();
+            return new ArrayList<>();
         }
 
-        java.util.List<String> found = new java.util.ArrayList<>();
+        List<String> found = new ArrayList<>();
         Set<String> foundSet = new HashSet<>();
 
         for (String word : sensitiveWordSet) {

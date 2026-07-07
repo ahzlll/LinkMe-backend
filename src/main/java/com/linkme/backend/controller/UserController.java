@@ -1,15 +1,16 @@
 package com.linkme.backend.controller;
 
+import com.linkme.backend.common.AccountStatusUtil;
 import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.common.R;
 import com.linkme.backend.controller.dto.LoginRequest;
+import com.linkme.backend.controller.dto.ReportRequest;
 import com.linkme.backend.entity.User;
-import com.linkme.backend.common.AccountStatusUtil;
+import com.linkme.backend.service.AuditService;
 import com.linkme.backend.service.UserService;
 import com.linkme.backend.service.VerificationCodeService;
-import com.linkme.backend.service.AuditService;
-import com.linkme.backend.util.PasswordValidator;
 import com.linkme.backend.util.EmailValidator;
+import com.linkme.backend.util.PasswordValidator;
 import com.linkme.backend.util.PhoneValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,35 +25,35 @@ import java.util.Map;
 
 /**
  * 用户控制器
- * 
+ *
  * 功能描述：
- * - 处理用户相关的HTTP请求
+ * - 处理用户相关的 HTTP 请求
  * - 包括用户注册、登录、信息管理等功能
- * -用户问卷
- * 
+ * - 包括用户问卷、关注、屏蔽、举报等功能
+ *
  * @author Ahz，riki
  * @version 1.2.3
  */
 @RestController
 @RequestMapping("/user")
-@Tag(name = "用户管理", description = "用户相关的API接口")
+@Tag(name = "用户管理", description = "用户相关的 API 接口")
 public class UserController {
-    
+
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
-    
+
     @Autowired
     private VerificationCodeService verificationCodeService;
-    
+
     @Autowired
     private AuditService auditService;
-    
+
     /**
-     * 移除用户信息中的敏感数据（密码哈希）
-     * 
+     * 移除用户信息中的敏感数据（密码哈希）。
+     *
      * @param user 原始用户对象
      * @return 清理后的用户对象
      */
@@ -75,22 +76,21 @@ public class UserController {
         userInfo.setMatchingQuestionnaireCompleted(user.getMatchingQuestionnaireCompleted());
         userInfo.setMatchingQuestionnaireCompletedAt(user.getMatchingQuestionnaireCompletedAt());
         userInfo.setRole(user.getRole());
-        userInfo.setAccountStatus(user.getAccountStatus());
-        userInfo.setBanUntil(user.getBanUntil());
-        // 不包含passwordHash
+        userInfo.setAccountStatus(AccountStatusUtil.getEffectiveStatus(user));
+        userInfo.setBanUntil(AccountStatusUtil.getEffectiveBanUntil(user));
         return userInfo;
     }
-    
+
     /**
-     * 获取用户信息
-     * 
-     * @param userId 用户ID
+     * 获取用户信息。
+     *
+     * @param userId 用户 ID
      * @return 用户信息（不包含敏感数据）
      */
     @GetMapping("/{userId}/info")
-    @Operation(summary = "获取用户信息", description = "根据用户ID获取用户详细信息", 
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<User> getUserInfo(@PathVariable @Parameter(description = "用户ID") Integer userId) {
+    @Operation(summary = "获取用户信息", description = "根据用户 ID 获取用户详细信息",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<User> getUserInfo(@PathVariable @Parameter(description = "用户 ID") Integer userId) {
         User user = userService.getUserById(userId);
         if (user != null) {
             return R.ok(sanitizeUser(user));
@@ -98,63 +98,59 @@ public class UserController {
             return R.fail(404, "用户不存在");
         }
     }
-    
+
     /**
-     * 更新用户信息
-     * 
-     * @param userId 用户ID
+     * 更新用户信息。
+     *
+     * @param userId 用户 ID
      * @param user 用户信息
      * @return 更新结果
      */
     @PutMapping("/{userId}/info")
-    @Operation(summary = "更新用户信息", description = "更新用户的基本信息", 
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<String> updateUserInfo(@PathVariable @Parameter(description = "用户ID") Integer userId,
-                                   @RequestBody User user) {
+    @Operation(summary = "更新用户信息", description = "更新用户的基本信息",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> updateUserInfo(@PathVariable @Parameter(description = "用户 ID") Integer userId,
+                                    @RequestBody User user) {
         try {
             user.setUserId(userId);
-            
-            // 打印接收到的原始数据
+
             System.out.println("=== Controller 接收到的数据 ===");
-            System.out.println("用户ID: " + userId);
+            System.out.println("用户 ID: " + userId);
             System.out.println("nickname: " + user.getNickname());
             System.out.println("bio: " + user.getBio());
             System.out.println("avatarUrl: " + (user.getAvatarUrl() != null ? "有值(长度:" + user.getAvatarUrl().length() + ")" : "null"));
             System.out.println("gender: " + user.getGender());
             System.out.println("birthday: " + user.getBirthday());
             System.out.println("region: " + user.getRegion());
-            
-            // 检查是否有字段需要更新
-            boolean hasFieldToUpdate = user.getNickname() != null || 
-                                      user.getBio() != null || 
-                                      user.getAvatarUrl() != null ||
-                                      user.getGender() != null ||
-                                      user.getBirthday() != null ||
-                                      user.getRegion() != null;
-            
+
+            boolean hasFieldToUpdate = user.getNickname() != null
+                    || user.getBio() != null
+                    || user.getAvatarUrl() != null
+                    || user.getGender() != null
+                    || user.getBirthday() != null
+                    || user.getRegion() != null;
+
             System.out.println("是否有字段需要更新: " + hasFieldToUpdate);
-            
+
             if (!hasFieldToUpdate) {
                 System.err.println("错误：没有需要更新的字段");
                 return R.fail(400, "没有需要更新的字段");
             }
-            
-            // 检查个人简介是否包含敏感词
+
             if (user.getBio() != null && !user.getBio().trim().isEmpty()) {
                 AuditService.AuditResult auditResult = auditService.checkContent(
                         userId.longValue(), "user_bio", null, user.getBio());
-                
+
                 if (auditResult.isNeedManualReview() || !auditResult.isPassed()) {
-                    // 检测到敏感词，返回失败让前端显示红色警告
                     String matchedWords = String.join(", ", auditResult.getMatchedWords());
                     System.out.println("[Controller审核] 个人简介包含敏感词: " + matchedWords);
                     return R.fail(403, "个人简介疑似违规，包含敏感词【" + matchedWords + "】，此次修改无效");
                 }
             }
-            
+
             boolean success = userService.updateUser(user);
             System.out.println("Service 返回结果: " + success);
-            
+
             if (success) {
                 return R.ok("用户信息更新成功");
             } else {
@@ -167,15 +163,15 @@ public class UserController {
             return R.fail(500, "更新用户信息时发生错误: " + e.getMessage());
         }
     }
-    
+
     /**
-     * 用户注册
-     * 
+     * 用户注册。
+     *
      * @param user 用户信息
-     * @return 注册结果（注册成功后返回用户信息和token）
+     * @return 注册结果（注册成功后返回用户信息和 token）
      */
     @PostMapping("/register")
-    @Operation(summary = "用户注册", description = "新用户注册，注册成功后自动登录返回token")
+    @Operation(summary = "用户注册", description = "新用户注册，注册成功后自动登录返回 token")
     public R<Map<String, Object>> register(@RequestBody User user) {
         if (user.getEmail() != null) {
             user.setEmail(user.getEmail().trim());
@@ -190,88 +186,78 @@ public class UserController {
             }
         }
         if (user.getRegion() == null || user.getRegion().trim().isEmpty()) {
-            user.setRegion("\u672a\u77e5");
+            user.setRegion("未知");
         } else {
             user.setRegion(user.getRegion().trim());
         }
 
-        // 参数验证
         if (user.getPasswordHash() == null || user.getPasswordHash().trim().isEmpty()) {
             return R.fail(400, "密码不能为空");
         }
         if (user.getEmail() == null && user.getPhone() == null) {
             return R.fail(400, "邮箱或手机号至少填写一个");
         }
-        
-        // 邮箱格式验证
+
         if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
             String emailError = EmailValidator.getErrorMessage(user.getEmail());
             if (emailError != null) {
                 return R.fail(400, emailError);
             }
         }
-        
-        // 手机号格式验证
+
         if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
             String phoneError = PhoneValidator.getErrorMessage(user.getPhone());
             if (phoneError != null) {
                 return R.fail(400, phoneError);
             }
         }
-        
-        // 密码验证
+
         String passwordError = PasswordValidator.getErrorMessage(user.getPasswordHash());
         if (passwordError != null) {
             return R.fail(400, passwordError);
         }
-        
-        // 检查用户名是否已存在
+
         if (user.getUsername() != null && !user.getUsername().trim().isEmpty()) {
             User existingUser = userService.getUserByUsername(user.getUsername());
             if (existingUser != null) {
                 return R.fail(400, "注册失败，用户名已存在");
             }
         }
-        
-        // 检查邮箱是否已存在
+
         if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
             User existingUser = userService.getUserByEmail(user.getEmail());
             if (existingUser != null) {
                 return R.fail(400, "注册失败，邮箱已存在");
             }
         }
-        
-        // 检查手机号是否已存在
+
         if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
             User existingUser = userService.getUserByPhone(user.getPhone());
             if (existingUser != null) {
                 return R.fail(400, "注册失败，手机号已存在");
             }
         }
-        
-        // 验证 username 是否为空（因为数据库要求 NOT NULL）
+
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             return R.fail(400, "注册失败，用户名不能为空");
         }
-        
+
         boolean success = userService.register(user);
         if (success) {
-            // 注册成功后，重新查询用户信息（获取生成的userId）
             User registeredUser = null;
             if (user.getEmail() != null) {
                 registeredUser = userService.getUserByEmail(user.getEmail());
             } else if (user.getPhone() != null) {
                 registeredUser = userService.getUserByPhone(user.getPhone());
             }
-            
+
             if (registeredUser != null) {
-                // 生成JWT token（如果username为空，使用email或phone作为替代）
                 String usernameForToken = registeredUser.getUsername();
                 if (usernameForToken == null || usernameForToken.trim().isEmpty()) {
                     usernameForToken = registeredUser.getEmail() != null ? registeredUser.getEmail() : registeredUser.getPhone();
                 }
                 String token = jwtUtil.generateToken(registeredUser.getUserId(), usernameForToken);
-                
+
                 Map<String, Object> result = new HashMap<>();
                 result.put("user", sanitizeUser(registeredUser));
                 result.put("token", token);
@@ -280,51 +266,46 @@ public class UserController {
                 return R.ok("注册成功");
             }
         } else {
-            // 如果到这里，说明插入数据库时失败了
-            // 可能是数据库约束错误或其他异常
-            // 检查控制台日志以获取详细错误信息
             return R.fail(400, "注册失败，可能是数据库插入错误。请检查控制台日志获取详细信息。如果问题持续，请联系管理员。");
         }
     }
-    
+
     /**
-     * 用户登录
-     * 
+     * 用户登录。
+     *
      * @param loginRequest 登录请求
-     * @return 登录结果（包含用户信息和token）
+     * @return 登录结果（包含用户信息和 token）
      */
     @PostMapping("/login")
-    @Operation(summary = "用户登录", description = "用户登录验证，支持邮箱、手机号或用户名登录。\n" +
-               "登录名格式：\n" +
-               "- 邮箱：user@example.com\n" +
-               "- 手机号：13800138000\n" +
-               "- 用户名：testuser")
+    @Operation(summary = "用户登录", description = "用户登录验证，支持邮箱、手机号或用户名登录。\n"
+            + "登录名格式：\n"
+            + "- 邮箱：user@example.com\n"
+            + "- 手机号：13800138000\n"
+            + "- 用户名：testuser")
     public R<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
         String loginName = loginRequest.getLoginName();
         String password = loginRequest.getPassword();
-        
-        // 参数验证
+
         if (loginName == null || loginName.trim().isEmpty()) {
             return R.fail(400, "登录名不能为空");
         }
         if (password == null || password.trim().isEmpty()) {
             return R.fail(400, "密码不能为空");
         }
-        
+
         User user = userService.login(loginName, password);
         if (user != null) {
             boolean adminLogin = AccountStatusUtil.isAdminRole(user);
             if (AccountStatusUtil.isBanned(user)) {
-                return R.fail(403, "\u8d26\u53f7\u5df2\u88ab\u5c01\u7981\uff0c\u65e0\u6cd5\u767b\u5f55");
+                return R.fail(403, "账号已被封禁，无法登录");
             }
 
-            // 生成JWT token（如果username为空，使用email或phone作为替代）
             String usernameForToken = user.getUsername();
             if (usernameForToken == null || usernameForToken.trim().isEmpty()) {
                 usernameForToken = user.getEmail() != null ? user.getEmail() : user.getPhone();
             }
             String token = jwtUtil.generateToken(user.getUserId(), usernameForToken);
-            
+
             Map<String, Object> result = new HashMap<>();
             result.put("user", sanitizeUser(user));
             result.put("token", token);
@@ -334,52 +315,50 @@ public class UserController {
             return R.fail(401, "用户名或密码错误");
         }
     }
-    
+
     /**
-     * 获取用户列表
-     * 
+     * 获取用户列表。
+     *
      * @param page 页码
      * @param size 每页数量
      * @return 用户列表
      */
     @GetMapping("/list")
-    @Operation(summary = "获取用户列表", description = "分页获取用户列表", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "获取用户列表", description = "分页获取用户列表",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<List<User>> getUserList(@RequestParam(defaultValue = "1") Integer page,
-                                    @RequestParam(defaultValue = "10") Integer size) {
+                                     @RequestParam(defaultValue = "10") Integer size) {
         List<User> users = userService.getUserList(page, size);
         return R.ok(users);
     }
-    
+
     /**
-     * 修改密码
-     * 
-     * @param userId 用户ID
+     * 修改密码。
+     *
+     * @param userId 用户 ID
      * @param request 密码修改请求（包含 oldPassword 和 newPassword）
      * @return 修改结果
      */
     @PutMapping("/{userId}/password")
-    @Operation(summary = "修改密码", description = "用户修改密码，需要提供旧密码", 
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<String> changePassword(@PathVariable @Parameter(description = "用户ID") Integer userId,
-                                   @RequestBody Map<String, String> request) {
+    @Operation(summary = "修改密码", description = "用户修改密码，需要提供旧密码",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> changePassword(@PathVariable @Parameter(description = "用户 ID") Integer userId,
+                                    @RequestBody Map<String, String> request) {
         String oldPassword = request.get("oldPassword");
         String newPassword = request.get("newPassword");
-        
-        // 参数验证
+
         if (oldPassword == null || oldPassword.trim().isEmpty()) {
             return R.fail(400, "旧密码不能为空");
         }
         if (newPassword == null || newPassword.trim().isEmpty()) {
             return R.fail(400, "新密码不能为空");
         }
-        
-        // 密码验证
+
         String passwordError = PasswordValidator.getErrorMessage(newPassword);
         if (passwordError != null) {
             return R.fail(400, passwordError);
         }
-        
+
         boolean success = userService.changePassword(userId, oldPassword, newPassword);
         if (success) {
             return R.ok("密码修改成功");
@@ -387,10 +366,10 @@ public class UserController {
             return R.fail(400, "密码修改失败，请检查旧密码是否正确");
         }
     }
-    
+
     /**
-     * 发送重置密码验证码
-     * 
+     * 发送重置密码验证码。
+     *
      * @param request 请求（包含 email 或 phone）
      * @return 发送结果
      */
@@ -399,28 +378,25 @@ public class UserController {
     public R<String> sendResetPasswordCode(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String phone = request.get("phone");
-        
-        // 参数验证
+
         if ((email == null || email.trim().isEmpty()) && (phone == null || phone.trim().isEmpty())) {
             return R.fail(400, "邮箱或手机号至少填写一个");
         }
-        
-        // 邮箱格式验证
+
         if (email != null && !email.trim().isEmpty()) {
             String emailError = EmailValidator.getErrorMessage(email);
             if (emailError != null) {
                 return R.fail(400, emailError);
             }
         }
-        
-        // 手机号格式验证
+
         if (phone != null && !phone.trim().isEmpty()) {
             String phoneError = PhoneValidator.getErrorMessage(phone);
             if (phoneError != null) {
                 return R.fail(400, phoneError);
             }
         }
-        
+
         boolean success = verificationCodeService.sendVerificationCode(email, phone, "reset_password");
         if (success) {
             return R.ok("验证码已发送");
@@ -428,10 +404,10 @@ public class UserController {
             return R.fail(400, "验证码发送失败，请检查邮箱或手机号是否正确");
         }
     }
-    
+
     /**
-     * 重置密码（忘记密码时使用）
-     * 
+     * 重置密码（忘记密码时使用）。
+     *
      * @param request 重置密码请求（包含 email/phone、code、newPassword）
      * @return 重置结果
      */
@@ -442,8 +418,7 @@ public class UserController {
         String phone = request.get("phone");
         String code = request.get("code");
         String newPassword = request.get("newPassword");
-        
-        // 参数验证
+
         if ((email == null || email.trim().isEmpty()) && (phone == null || phone.trim().isEmpty())) {
             return R.fail(400, "邮箱或手机号至少填写一个");
         }
@@ -453,51 +428,44 @@ public class UserController {
         if (newPassword == null || newPassword.trim().isEmpty()) {
             return R.fail(400, "新密码不能为空");
         }
-        
-        // 邮箱格式验证
+
         if (email != null && !email.trim().isEmpty()) {
             String emailError = EmailValidator.getErrorMessage(email);
             if (emailError != null) {
                 return R.fail(400, emailError);
             }
         }
-        
-        // 手机号格式验证
+
         if (phone != null && !phone.trim().isEmpty()) {
             String phoneError = PhoneValidator.getErrorMessage(phone);
             if (phoneError != null) {
                 return R.fail(400, phoneError);
             }
         }
-        
-        // 密码验证
+
         String passwordError = PasswordValidator.getErrorMessage(newPassword);
         if (passwordError != null) {
             return R.fail(400, passwordError);
         }
-        
-        // 确定类型
+
         String type = email != null && !email.trim().isEmpty() ? "email" : "phone";
-        
-        // 验证验证码
+
         boolean codeValid = verificationCodeService.verifyCode(code, email, phone, type, "reset_password");
         if (!codeValid) {
             return R.fail(400, "验证码错误或已过期");
         }
-        
-        // 查找用户
-        User user = null;
+
+        User user;
         if (type.equals("email")) {
             user = userService.getUserByEmail(email);
         } else {
             user = userService.getUserByPhone(phone);
         }
-        
+
         if (user == null) {
             return R.fail(404, "用户不存在");
         }
-        
-        // 重置密码
+
         boolean success = userService.resetPassword(user.getUserId(), newPassword);
         if (success) {
             return R.ok("密码重置成功");
@@ -505,17 +473,17 @@ public class UserController {
             return R.fail(400, "密码重置失败");
         }
     }
-    
+
     /**
-     * 删除用户
-     * 
-     * @param userId 用户ID
+     * 删除用户。
+     *
+     * @param userId 用户 ID
      * @return 删除结果
      */
     @DeleteMapping("/{userId}")
-    @Operation(summary = "删除用户", description = "根据用户ID删除用户", 
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<String> deleteUser(@PathVariable @Parameter(description = "用户ID") Integer userId) {
+    @Operation(summary = "删除用户", description = "根据用户 ID 删除用户",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> deleteUser(@PathVariable @Parameter(description = "用户 ID") Integer userId) {
         boolean success = userService.deleteUser(userId);
         if (success) {
             return R.ok("用户删除成功");
@@ -523,21 +491,21 @@ public class UserController {
             return R.fail(400, "用户删除失败，用户可能不存在");
         }
     }
-    
+
     /**
-     * 获取用户点赞的帖子列表
-     * 
-     * @param userId 用户ID
+     * 获取用户点赞的帖子列表。
+     *
+     * @param userId 用户 ID
      * @param page 页码
      * @param limit 每页数量
-     * @param request HTTP请求
+     * @param request HTTP 请求
      * @return 点赞列表
      */
     @GetMapping("/{userId}/likes")
-    @Operation(summary = "获取用户点赞的帖子", description = "获取指定用户点赞的所有帖子", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "获取用户点赞的帖子", description = "获取指定用户点赞的所有帖子",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<List<com.linkme.backend.entity.Like>> getUserLikes(
-            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @PathVariable @Parameter(description = "用户 ID") Integer userId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "100") Integer limit,
             jakarta.servlet.http.HttpServletRequest request) {
@@ -545,54 +513,52 @@ public class UserController {
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
-        // 验证当前用户是否有权限访问该用户的点赞
+
         if (!currentUserId.equals(userId)) {
             return R.fail(403, "没有权限访问其他用户的点赞");
         }
-        
+
         int offset = (page - 1) * limit;
         List<com.linkme.backend.entity.Like> likes = userService.getUserLikes(userId, offset, limit);
         return R.ok(likes);
     }
-    
+
     /**
-     * 获取用户统计数据
-     * 
-     * @param userId 用户ID
-     * @param request HTTP请求
+     * 获取用户统计数据。
+     *
+     * @param userId 用户 ID
+     * @param request HTTP 请求
      * @return 用户统计数据
      */
     @GetMapping("/{userId}/stats")
-    @Operation(summary = "获取用户统计数据", description = "获取指定用户的统计数据，包括帖子数、获赞数、粉丝数、关注数", 
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<Map<String, Integer>> getUserStats(@PathVariable @Parameter(description = "用户ID") Integer userId,
-            jakarta.servlet.http.HttpServletRequest request) {
+    @Operation(summary = "获取用户统计数据", description = "获取指定用户的统计数据，包括帖子数、获赞数、粉丝数、关注数",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<Map<String, Integer>> getUserStats(@PathVariable @Parameter(description = "用户 ID") Integer userId,
+                                                jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
-        // 允许查看任何用户的统计数据（公开信息）
-        java.util.Map<String, Integer> stats = userService.getUserStats(userId);
+
+        Map<String, Integer> stats = userService.getUserStats(userId);
         return R.ok(stats);
     }
-    
+
     /**
-     * 获取用户收藏的帖子列表
-     * 
-     * @param userId 用户ID
-     * @param folderId 收藏夹ID（可选）
+     * 获取用户收藏的帖子列表。
+     *
+     * @param userId 用户 ID
+     * @param folderId 收藏夹 ID（可选）
      * @param page 页码
      * @param limit 每页数量
-     * @param request HTTP请求
+     * @param request HTTP 请求
      * @return 收藏列表
      */
     @GetMapping("/{userId}/favorites")
-    @Operation(summary = "获取用户收藏的帖子", description = "获取指定用户收藏的所有帖子，可指定收藏夹", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "获取用户收藏的帖子", description = "获取指定用户收藏的所有帖子，可指定收藏夹",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<List<com.linkme.backend.entity.Favorite>> getUserFavorites(
-            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @PathVariable @Parameter(description = "用户 ID") Integer userId,
             @RequestParam(required = false) Integer folderId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "100") Integer limit,
@@ -601,68 +567,65 @@ public class UserController {
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
-        // 验证当前用户是否有权限访问该用户的收藏
+
         if (!currentUserId.equals(userId)) {
             return R.fail(403, "没有权限访问其他用户的收藏");
         }
-        
+
         int offset = (page - 1) * limit;
         List<com.linkme.backend.entity.Favorite> favorites = userService.getUserFavorites(userId, folderId, offset, limit);
         return R.ok(favorites);
     }
-    
+
     /**
-     * 获取用户的收藏夹列表
-     * 
-     * @param userId 用户ID
-     * @param request HTTP请求
+     * 获取用户收藏夹列表。
+     *
+     * @param userId 用户 ID
+     * @param request HTTP 请求
      * @return 收藏夹列表
      */
     @GetMapping("/{userId}/favorite-folders")
-    @Operation(summary = "获取用户收藏夹列表", description = "获取指定用户的所有收藏夹", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "获取用户收藏夹列表", description = "获取指定用户的所有收藏夹",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<List<com.linkme.backend.entity.FavoriteFolder>> getFavoriteFolders(
-            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @PathVariable @Parameter(description = "用户 ID") Integer userId,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
-        // 验证当前用户是否有权限访问该用户的收藏夹
+
         if (!currentUserId.equals(userId)) {
             return R.fail(403, "没有权限访问其他用户的收藏夹");
         }
-        
+
         List<com.linkme.backend.entity.FavoriteFolder> folders = userService.getFavoriteFolders(userId);
         return R.ok(folders);
     }
-    
+
     /**
-     * 创建收藏夹
-     * 
-     * @param userId 用户ID
-     * @param request HTTP请求
+     * 创建收藏夹。
+     *
+     * @param userId 用户 ID
+     * @param request HTTP 请求
      * @return 创建结果
      */
     @PostMapping("/{userId}/favorite-folders")
-    @Operation(summary = "创建收藏夹", description = "为用户创建新的收藏夹", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "创建收藏夹", description = "为用户创建新的收藏夹",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<com.linkme.backend.entity.FavoriteFolder> createFavoriteFolder(
-            @PathVariable @Parameter(description = "用户ID") Integer userId,
+            @PathVariable @Parameter(description = "用户 ID") Integer userId,
             @RequestBody Map<String, String> request,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         Integer currentUserId = getCurrentUserId(httpRequest);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
-        // 验证当前用户是否有权限为该用户创建收藏夹
+
         if (!currentUserId.equals(userId)) {
             return R.fail(403, "没有权限为其他用户创建收藏夹");
         }
-        
+
         String name = request.get("name");
         if (name == null || name.trim().isEmpty()) {
             return R.fail(400, "收藏夹名称不能为空");
@@ -674,31 +637,30 @@ public class UserController {
             return R.fail(400, "创建收藏夹失败，可能名称已存在");
         }
     }
-    
+
     /**
-     * 删除收藏夹
-     * 
-     * @param userId 用户ID
-     * @param folderId 收藏夹ID
+     * 删除收藏夹。
+     *
+     * @param userId 用户 ID
+     * @param folderId 收藏夹 ID
      * @return 删除结果
      */
     @DeleteMapping("/{userId}/favorite-folders/{folderId}")
-    @Operation(summary = "删除收藏夹", description = "删除指定的收藏夹", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "删除收藏夹", description = "删除指定的收藏夹",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> deleteFavoriteFolder(
-            @PathVariable @Parameter(description = "用户ID") Integer userId,
-            @PathVariable @Parameter(description = "收藏夹ID") Integer folderId,
+            @PathVariable @Parameter(description = "用户 ID") Integer userId,
+            @PathVariable @Parameter(description = "收藏夹 ID") Integer folderId,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
-        // 验证当前用户是否有权限删除该用户的收藏夹
+
         if (!currentUserId.equals(userId)) {
             return R.fail(403, "没有权限删除其他用户的收藏夹");
         }
-        
+
         boolean success = userService.deleteFavoriteFolder(userId, folderId);
         if (success) {
             return R.ok("收藏夹删除成功");
@@ -706,29 +668,29 @@ public class UserController {
             return R.fail(400, "收藏夹删除失败，可能不存在或无权限");
         }
     }
-    
+
     /**
-     * 关注用户
-     * 
-     * @param userId 被关注者ID
-     * @param request HTTP请求
+     * 关注用户。
+     *
+     * @param userId 被关注者 ID
+     * @param request HTTP 请求
      * @return 关注结果
      */
     @PostMapping("/follow/{userId}")
-    @Operation(summary = "关注用户", description = "关注指定用户", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "关注用户", description = "关注指定用户",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> followUser(
-            @PathVariable @Parameter(description = "被关注者ID") Integer userId,
+            @PathVariable @Parameter(description = "被关注者 ID") Integer userId,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
+
         if (currentUserId.equals(userId)) {
             return R.fail(400, "不能关注自己");
         }
-        
+
         boolean success = userService.followUser(currentUserId, userId);
         if (success) {
             return R.ok("关注成功");
@@ -736,25 +698,25 @@ public class UserController {
             return R.fail(400, "关注失败，可能已经关注过或用户不存在");
         }
     }
-    
+
     /**
-     * 取消关注用户
-     * 
-     * @param userId 被关注者ID
-     * @param request HTTP请求
+     * 取消关注用户。
+     *
+     * @param userId 被关注者 ID
+     * @param request HTTP 请求
      * @return 取消关注结果
      */
     @DeleteMapping("/unfollow/{userId}")
-    @Operation(summary = "取消关注用户", description = "取消关注指定用户", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "取消关注用户", description = "取消关注指定用户",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<String> unfollowUser(
-            @PathVariable @Parameter(description = "被关注者ID") Integer userId,
+            @PathVariable @Parameter(description = "被关注者 ID") Integer userId,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
+
         boolean success = userService.unfollowUser(currentUserId, userId);
         if (success) {
             return R.ok("取消关注成功");
@@ -762,111 +724,111 @@ public class UserController {
             return R.fail(400, "取消关注失败，可能未关注该用户");
         }
     }
-    
+
     /**
-     * 检查关注状态
-     * 
-     * @param userId 被检查的用户ID
-     * @param request HTTP请求
+     * 检查关注状态。
+     *
+     * @param userId 被检查的用户 ID
+     * @param request HTTP 请求
      * @return 关注状态
      */
     @GetMapping("/follow/{userId}/check")
-    @Operation(summary = "检查关注状态", description = "检查当前用户是否关注了指定用户", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "检查关注状态", description = "检查当前用户是否关注了指定用户",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<Map<String, Boolean>> checkFollowing(
-            @PathVariable @Parameter(description = "被检查的用户ID") Integer userId,
+            @PathVariable @Parameter(description = "被检查的用户 ID") Integer userId,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
+
         boolean isFollowing = userService.isFollowing(currentUserId, userId);
         return R.ok(Map.of("isFollowing", isFollowing));
     }
-    
+
     /**
-     * 获取用户关注列表
-     * 
-     * @param userId 用户ID
+     * 获取用户关注列表。
+     *
+     * @param userId 用户 ID
      * @param offset 偏移量
      * @param limit 限制数量
-     * @param request HTTP请求
+     * @param request HTTP 请求
      * @return 关注列表
      */
     @GetMapping("/{userId}/followings")
     @Operation(summary = "获取用户关注列表", description = "获取指定用户的关注列表",
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<List<Map<String, Object>>> getFollowings(@PathVariable @Parameter(description = "用户ID") Integer userId,
-                                      @RequestParam(defaultValue = "0") Integer offset,
-                                      @RequestParam(defaultValue = "10") Integer limit,
-                                      jakarta.servlet.http.HttpServletRequest request) {
-        Integer currentUserId = getCurrentUserId(request);
-        if (currentUserId == null) {
-            return R.fail(401, "未授权，请先登录");
-        }
-        
-        // 验证当前用户是否有权限访问该用户的关注列表
-        if (!currentUserId.equals(userId)) {
-            return R.fail(403, "没有权限访问其他用户的关注列表");
-        }
-        
-        List<Map<String, Object>> followings = userService.getFollowings(userId, currentUserId, offset, limit);
-        return R.ok(followings);
-    }
-    
-    /**
-     * 获取用户粉丝列表
-     * 
-     * @param userId 用户ID
-     * @param offset 偏移量
-     * @param limit 限制数量
-     * @param request HTTP请求
-     * @return 粉丝列表
-     */
-    @GetMapping("/{userId}/followers")
-    @Operation(summary = "获取用户粉丝列表", description = "获取指定用户的粉丝列表",
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<List<Map<String, Object>>> getFollowers(@PathVariable @Parameter(description = "用户ID") Integer userId,
-                                     @RequestParam(defaultValue = "0") Integer offset,
-                                     @RequestParam(defaultValue = "10") Integer limit,
-                                     jakarta.servlet.http.HttpServletRequest request) {
-        Integer currentUserId = getCurrentUserId(request);
-        if (currentUserId == null) {
-            return R.fail(401, "未授权，请先登录");
-        }
-        
-        // 验证当前用户是否有权限访问该用户的粉丝列表
-        if (!currentUserId.equals(userId)) {
-            return R.fail(403, "没有权限访问其他用户的粉丝列表");
-        }
-        
-        List<Map<String, Object>> followers = userService.getFollowers(userId, currentUserId, offset, limit);
-        return R.ok(followers);
-    }
-    
-    /**
-     * 屏蔽用户
-     * 
-     * @param userId 被屏蔽者ID
-     * @param request HTTP请求
-     * @return 屏蔽结果
-     */
-    @PostMapping("/block/{userId}")
-    @Operation(summary = "屏蔽用户", description = "屏蔽指定用户", 
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<String> blockUser(
-            @PathVariable @Parameter(description = "被屏蔽者ID") Integer userId,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<Map<String, Object>>> getFollowings(
+            @PathVariable @Parameter(description = "用户 ID") Integer userId,
+            @RequestParam(defaultValue = "0") Integer offset,
+            @RequestParam(defaultValue = "10") Integer limit,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
+
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限访问其他用户的关注列表");
+        }
+
+        List<Map<String, Object>> followings = userService.getFollowings(userId, currentUserId, offset, limit);
+        return R.ok(followings);
+    }
+
+    /**
+     * 获取用户粉丝列表。
+     *
+     * @param userId 用户 ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @param request HTTP 请求
+     * @return 粉丝列表
+     */
+    @GetMapping("/{userId}/followers")
+    @Operation(summary = "获取用户粉丝列表", description = "获取指定用户的粉丝列表",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<Map<String, Object>>> getFollowers(
+            @PathVariable @Parameter(description = "用户 ID") Integer userId,
+            @RequestParam(defaultValue = "0") Integer offset,
+            @RequestParam(defaultValue = "10") Integer limit,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+
+        if (!currentUserId.equals(userId)) {
+            return R.fail(403, "没有权限访问其他用户的粉丝列表");
+        }
+
+        List<Map<String, Object>> followers = userService.getFollowers(userId, currentUserId, offset, limit);
+        return R.ok(followers);
+    }
+
+    /**
+     * 屏蔽用户。
+     *
+     * @param userId 被屏蔽者 ID
+     * @param request HTTP 请求
+     * @return 屏蔽结果
+     */
+    @PostMapping("/block/{userId}")
+    @Operation(summary = "屏蔽用户", description = "屏蔽指定用户",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> blockUser(
+            @PathVariable @Parameter(description = "被屏蔽者 ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+
         if (currentUserId.equals(userId)) {
             return R.fail(400, "不能屏蔽自己");
         }
-        
+
         boolean success = userService.blockUser(currentUserId, userId);
         if (success) {
             return R.ok("屏蔽成功");
@@ -874,25 +836,69 @@ public class UserController {
             return R.fail(400, "屏蔽失败，可能已经屏蔽过或用户不存在");
         }
     }
-    
+
     /**
-     * 取消屏蔽用户
-     * 
-     * @param userId 被屏蔽者ID
-     * @param request HTTP请求
-     * @return 取消屏蔽结果
+     * 举报用户。
+     *
+     * @param userId 被举报用户 ID
+     * @param requestBody 举报请求体
+     * @param request HTTP 请求
+     * @return 举报结果
      */
-    @DeleteMapping("/unblock/{userId}")
-    @Operation(summary = "取消屏蔽用户", description = "取消屏蔽指定用户", 
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public R<String> unblockUser(
-            @PathVariable @Parameter(description = "被屏蔽者ID") Integer userId,
+    @PostMapping("/{userId}/report")
+    @Operation(summary = "举报用户", description = "举报指定用户，举报信息会进入管理端待审核队列",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> reportUser(
+            @PathVariable @Parameter(description = "被举报用户 ID") Integer userId,
+            @RequestBody(required = false) ReportRequest requestBody,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
+        if (currentUserId.equals(userId)) {
+            return R.fail(400, "不能举报自己");
+        }
+
+        User targetUser = userService.getUserById(userId);
+        if (targetUser == null) {
+            return R.fail(404, "用户不存在");
+        }
+
+        String profileContent = String.format(
+                "昵称：%s；用户名：%s；简介：%s",
+                targetUser.getNickname() == null ? "" : targetUser.getNickname(),
+                targetUser.getUsername() == null ? "" : targetUser.getUsername(),
+                targetUser.getBio() == null ? "" : targetUser.getBio()
+        );
+
+        boolean success = auditService.reportUser(
+                currentUserId.longValue(),
+                userId.longValue(),
+                profileContent,
+                requestBody != null ? requestBody.getReason() : null
+        );
+        return success ? R.ok("举报成功，我们会尽快处理") : R.fail("举报失败，请重试");
+    }
+
+    /**
+     * 取消屏蔽用户。
+     *
+     * @param userId 被屏蔽者 ID
+     * @param request HTTP 请求
+     * @return 取消屏蔽结果
+     */
+    @DeleteMapping("/unblock/{userId}")
+    @Operation(summary = "取消屏蔽用户", description = "取消屏蔽指定用户",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> unblockUser(
+            @PathVariable @Parameter(description = "被屏蔽者 ID") Integer userId,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+
         boolean success = userService.unblockUser(currentUserId, userId);
         if (success) {
             return R.ok("取消屏蔽成功");
@@ -900,31 +906,31 @@ public class UserController {
             return R.fail(400, "取消屏蔽失败，可能未屏蔽该用户");
         }
     }
-    
+
     /**
-     * 检查屏蔽状态
-     * 
-     * @param userId 被检查的用户ID
-     * @param request HTTP请求
+     * 检查屏蔽状态。
+     *
+     * @param userId 被检查的用户 ID
+     * @param request HTTP 请求
      * @return 屏蔽状态
      */
     @GetMapping("/block/{userId}/check")
-    @Operation(summary = "检查屏蔽状态", description = "检查当前用户是否屏蔽了指定用户", 
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "检查屏蔽状态", description = "检查当前用户是否屏蔽了指定用户",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public R<Map<String, Boolean>> checkBlocking(
-            @PathVariable @Parameter(description = "被检查的用户ID") Integer userId,
+            @PathVariable @Parameter(description = "被检查的用户 ID") Integer userId,
             jakarta.servlet.http.HttpServletRequest request) {
         Integer currentUserId = getCurrentUserId(request);
         if (currentUserId == null) {
             return R.fail(401, "未授权，请先登录");
         }
-        
+
         boolean isBlocking = userService.isBlocking(currentUserId, userId);
         return R.ok(Map.of("isBlocking", isBlocking));
     }
-    
+
     /**
-     * 从请求头中获取当前用户ID
+     * 从请求头中获取当前用户 ID。
      */
     private Integer getCurrentUserId(jakarta.servlet.http.HttpServletRequest request) {
         String token = request.getHeader("Authorization");

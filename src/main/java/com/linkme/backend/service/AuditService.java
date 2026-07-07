@@ -11,11 +11,15 @@ public interface AuditService {
 
     List<ManualReviewQueue> getPendingReviewList(int page, int size);
 
+    ManualReviewQueue getReviewQueue(Long queueId);
+
     int getPendingCount();
 
     boolean approveContent(Long reviewerId, Long queueId, String remark);
 
     boolean rejectContent(Long reviewerId, Long queueId, String remark);
+
+    boolean completeReportAction(Long reviewerId, Long queueId, String processAction, String remark);
 
     boolean offlineContent(Long auditorId, String contentType, Long contentId, String remark);
 
@@ -23,7 +27,15 @@ public interface AuditService {
 
     Map<String, Object> getAuditStats();
 
+    boolean reportPost(Long reporterId, Long postId, String postContent, Integer postUserId, String reason);
+
     boolean reportComment(Long reporterId, Long commentId, String commentContent, Integer postId, Integer commentUserId);
+
+    boolean reportComment(Long reporterId, Long commentId, String commentContent, Integer postId, Integer commentUserId, String reason);
+
+    boolean reportUser(Long reporterId, Long targetUserId, String targetProfileContent, String reason);
+
+    boolean reportMessage(Long reporterId, Long messageId, String messageContent, Integer messageSenderId, String reason);
 
     static class AuditResult {
         private boolean passed;

@@ -75,7 +75,7 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         Map.entry("cycling", "骑行"),
         Map.entry("fishing", "钓鱼"),
         Map.entry("yoga", "瑜伽"),
-        Map.entry("camping", "露营"),
+        Map.entry("camping", "¶Ӫ"),
         Map.entry("martial_arts", "武术"),
         Map.entry("mountaineering", "登山"),
         Map.entry("climbing", "攀岩"),

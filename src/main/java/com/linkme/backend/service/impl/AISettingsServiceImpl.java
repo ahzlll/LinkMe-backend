@@ -23,7 +23,7 @@ public class AISettingsServiceImpl implements AISettingsService {
      *
      * @param initEnabled 初始开关状态，来自配置项 ai.enabled，默认 true
      */
-    public AISettingsServiceImpl(@Value("${ai.enabled:true}") boolean initEnabled) {
+    public AISettingsServiceImpl(@Value("${ai.enabled:false}") boolean initEnabled) {
         this.enabled = new AtomicBoolean(initEnabled);
     }
     @Override

@@ -223,7 +223,7 @@ INSERT INTO comment (post_id, user_id, content, parent_id) VALUES
 (11, 10, '看到学生成长是最开心的事', NULL),
 (12, 3, '杭州我也去过，西湖真的很美', NULL),
 (12, 11, '断桥残雪确实很浪漫', NULL),
-(13, 2, '定期体检真的很重要，谢谢提醒', NULL),
+(13, 2, '定期体检真的很重要，лл提醒', NULL),
 (13, 12, '作为医生，看到大家重视健康很开心', NULL),
 (14, 2, '法律条文确实需要仔细研究', NULL),
 (14, 13, '律师这个职业需要不断学习', NULL),
@@ -455,7 +455,7 @@ INSERT INTO conversation (user1_id, user2_id, user1_muted, user2_muted, user1_pi
 INSERT INTO message (conversation_id, sender_id, content_type, content, is_read) VALUES
 -- 现有消息
 (1, 2, 'text', '你好小红，你的设计作品很棒！', true), -- 小明和小红的对话
-(1, 3, 'text', '谢谢小明！你的编程分享也很有帮助', true),
+(1, 3, 'text', 'лл小明！你的编程分享也很有帮助', true),
 (1, 2, 'text', '有机会可以合作项目', false),
 (2, 2, 'text', '小丽，看到你坚持健身很有感触', true), -- 小明和小丽的对话
 (2, 4, 'text', '是啊，健身让我变得更自信了', true),
@@ -465,17 +465,17 @@ INSERT INTO message (conversation_id, sender_id, content_type, content, is_read)
 (3, 5, 'text', '下次可以一起去吗？', false),
 -- 新增消息
 (4, 2, 'text', 'Alex，你的产品设计思考很有深度', true), -- 小明和Alex的对话
-(4, 7, 'text', '谢谢小明，你的技术分享也很有价值', true),
+(4, 7, 'text', 'лл小明，你的技术分享也很有价值', true),
 (4, 7, 'text', '有机会可以一起讨论产品和技术', false),
 (5, 2, 'text', 'Mike，React 18的新特性你研究得怎么样了？', true), -- 小明和Mike的对话
 (5, 9, 'text', '并发渲染确实很强大，性能提升明显', true),
 (5, 2, 'text', '有时间可以一起探讨一下实现细节', false),
 (6, 3, 'text', '小丽，你的健身心得很有帮助', true), -- 小红和小丽的对话
-(6, 4, 'text', '谢谢小红，一起加油！', true),
+(6, 4, 'text', 'лл小红，一起加油！', true),
 (7, 3, 'text', 'Sarah，运营工作确实很有挑战性', true), -- 小红和Sarah的对话
 (7, 8, 'text', '是啊，但看到活动成功很有成就感', true),
 (8, 4, 'text', '大卫，创业路上的思考很有启发', true), -- 小丽和大卫的对话
-(8, 5, 'text', '谢谢小丽，产品定位确实很重要', true),
+(8, 5, 'text', 'лл小丽，产品定位确实很重要', true),
 (9, 4, 'text', 'Lisa，健康提醒很有用', true), -- 小丽和Lisa的对话
 (9, 12, 'text', '定期体检真的很重要', true),
 (10, 5, 'text', 'Alex，产品管理经验可以分享一下吗？', true), -- 大卫和Alex的对话
@@ -628,7 +628,7 @@ INSERT INTO hobby (category_id, name, display_order) VALUES
 (3, '骑行', 4),
 (3, '钓鱼', 5),
 (3, '瑜伽', 6),
-(3, '露营', 7),
+(3, '¶Ӫ', 7),
 (3, '武术', 8),
 (3, '登山', 9),
 (3, '攀岩', 10),

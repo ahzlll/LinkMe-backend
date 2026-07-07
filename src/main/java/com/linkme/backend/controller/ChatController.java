@@ -6,7 +6,11 @@ import com.linkme.backend.controller.dto.ConversationCreateRequest;
 import com.linkme.backend.controller.dto.ConversationResponse;
 import com.linkme.backend.controller.dto.MessageRequest;
 import com.linkme.backend.controller.dto.MessageResponse;
+import com.linkme.backend.controller.dto.ReportRequest;
 import com.linkme.backend.entity.Conversation;
+import com.linkme.backend.entity.Message;
+import com.linkme.backend.mapper.ConversationMapper;
+import com.linkme.backend.mapper.MessageMapper;
 import com.linkme.backend.service.ChatService;
 import com.linkme.backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +47,12 @@ public class ChatController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private MessageMapper messageMapper;
+
+    @Autowired
+    private ConversationMapper conversationMapper;
     
     /**
      * 从请求头中获取当前用户ID
@@ -422,6 +432,41 @@ public class ChatController {
         } else {
             return R.fail(400, "清空失败，会话可能不存在或无权限访问");
         }
+    }
+
+    @PostMapping("/messages/{messageId}/report")
+    @Operation(summary = "举报私信消息", description = "举报一条私信，举报信息将进入管理端待审核队列",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<String> reportMessage(@PathVariable @Parameter(description = "消息ID") Integer messageId,
+                                   @RequestBody(required = false) ReportRequest reportRequest,
+                                   HttpServletRequest request) {
+        Integer userId = getCurrentUserId(request);
+        if (userId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+
+        Message message = messageMapper.selectById(messageId);
+        if (message == null) {
+            return R.fail(404, "消息不存在");
+        }
+        if (message.getSenderId() != null && message.getSenderId().equals(userId)) {
+            return R.fail(400, "不能举报自己发送的消息");
+        }
+
+        Conversation conversation = conversationMapper.selectById(message.getConversationId());
+        if (conversation == null
+                || (!conversation.getUser1Id().equals(userId) && !conversation.getUser2Id().equals(userId))) {
+            return R.fail(403, "无权举报这条消息");
+        }
+
+        boolean success = auditService.reportMessage(
+                userId.longValue(),
+                messageId.longValue(),
+                message.getContent(),
+                message.getSenderId(),
+                reportRequest != null ? reportRequest.getReason() : null
+        );
+        return success ? R.ok("举报成功，我们会尽快处理") : R.fail("举报失败，请重试");
     }
 }
 

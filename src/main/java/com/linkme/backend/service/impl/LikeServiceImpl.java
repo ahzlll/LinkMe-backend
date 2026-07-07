@@ -1,92 +1,66 @@
 package com.linkme.backend.service.impl;
 
-import com.linkme.backend.service.LikeService;
 import com.linkme.backend.mapper.UserLikeMapper;
 import com.linkme.backend.mapper.UserMapper;
+import com.linkme.backend.service.LikeService;
 import com.linkme.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 喜欢服务实现类
- * 
- * 功能描述：
- * - 实现用户之间的喜欢通知业务逻辑
- * - 包括发送喜欢、取消喜欢、查询喜欢状态等功能
- * 
- * @author riki
- * @version 1.0
- */
 @Service
 public class LikeServiceImpl implements LikeService {
-    
+
     @Autowired
     private UserLikeMapper userLikeMapper;
-    
+
     @Autowired
     private UserMapper userMapper;
-    
+
     @Autowired
     private NotificationService notificationService;
-    
+
     @Override
     @Transactional
     public void sendLikeNotification(Integer fromUserId, Integer toUserId) {
-        // 检查目标用户是否存在
         if (userMapper.selectById(toUserId) == null) {
-            throw new RuntimeException("目标用户不存在");
+            throw new RuntimeException("\u76ee\u6807\u7528\u6237\u4e0d\u5b58\u5728");
         }
-        
-        // 检查是否已经发送过喜欢通知
+
         if (userLikeMapper.checkLikeStatus(fromUserId, toUserId)) {
-            throw new RuntimeException("已经发送过喜欢通知");
+            throw new RuntimeException("\u5df2\u7ecf\u53d1\u9001\u8fc7\u559c\u6b22\u901a\u77e5");
         }
-        
-        // 创建喜欢记录
+
         userLikeMapper.insertLike(fromUserId, toUserId, LocalDateTime.now());
-        
-        // 获取发送点赞的用户信息
+
         Map<String, Object> fromUser = userMapper.selectUserInfoById(fromUserId);
-        String fromUserName = "某位用户";
+        String fromUserName = "\u67d0\u4f4d\u7528\u6237";
         if (fromUser != null && fromUser.get("nickname") != null) {
             fromUserName = (String) fromUser.get("nickname");
         }
-        
-        // 发送通知给目标用户
+
         String title = "新的喜欢";
-        String content = fromUserName + " 对你表示了喜欢！";
-        notificationService.createNotification(toUserId, "LIKE", fromUserId, 
-                                           fromUserId, "USER", title, content);
+        String content = fromUserName + " 对你表达了喜欢！";
+        notificationService.createNotification(toUserId, "LIKE", fromUserId,
+                fromUserId, "USER", title, content);
     }
-    
+
     @Override
     @Transactional
     public boolean cancelLikeNotification(Integer fromUserId, Integer toUserId) {
-        // 删除喜欢记录
         int deleted = userLikeMapper.deleteLike(fromUserId, toUserId);
-        
-        if (deleted > 0) {
-            // 删除相关的通知（可选）
-            // notificationService.deleteLikeNotification(fromUserId, toUserId);
-            return true;
-        }
-        
-        return false;
+        return deleted > 0;
     }
-    
+
     @Override
     public List<Map<String, Object>> getSentLikes(Integer userId, Integer page, Integer size) {
         int offset = (page - 1) * size;
         List<Map<String, Object>> likes = userLikeMapper.selectSentLikes(userId, offset, size);
-        
-        // 为每个喜欢记录添加目标用户信息
+
         for (Map<String, Object> like : likes) {
             Integer targetUserId = (Integer) like.get("target_user_id");
             Map<String, Object> targetUser = userMapper.selectUserInfoById(targetUserId);
@@ -94,16 +68,15 @@ public class LikeServiceImpl implements LikeService {
                 like.put("targetUser", targetUser);
             }
         }
-        
+
         return likes;
     }
-    
+
     @Override
     public List<Map<String, Object>> getReceivedLikes(Integer userId, Integer page, Integer size) {
         int offset = (page - 1) * size;
         List<Map<String, Object>> likes = userLikeMapper.selectReceivedLikes(userId, offset, size);
-        
-        // 为每个喜欢记录添加发送者信息
+
         for (Map<String, Object> like : likes) {
             Integer fromUserId = (Integer) like.get("from_user_id");
             Map<String, Object> fromUser = userMapper.selectUserInfoById(fromUserId);
@@ -111,10 +84,10 @@ public class LikeServiceImpl implements LikeService {
                 like.put("fromUser", fromUser);
             }
         }
-        
+
         return likes;
     }
-    
+
     @Override
     public boolean checkLikeStatus(Integer fromUserId, Integer toUserId) {
         return userLikeMapper.checkLikeStatus(fromUserId, toUserId);

@@ -436,7 +436,7 @@ INSERT INTO conversation (user1_id, user2_id) VALUES
 -- 15. 插入消息数据
 INSERT INTO message (conversation_id, sender_id, content_type, content, is_read) VALUES
 (1, 2, 'text', '你好小红，你的设计作品很棒！', true), -- 小明和小红的对话
-(1, 3, 'text', '谢谢小明！你的编程分享也很有帮助', true),
+(1, 3, 'text', 'лл小明！你的编程分享也很有帮助', true),
 (1, 2, 'text', '有机会可以合作项目', false),
 (2, 2, 'text', '小丽，看到你坚持健身很有感触', true), -- 小明和小丽的对话
 (2, 4, 'text', '是啊，健身让我变得更自信了', true),

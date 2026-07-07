@@ -20,7 +20,7 @@ import java.util.List;
 public interface NotificationMapper {
     
     /**
-     * 根据通知ID查询通知信息
+     * 根据通知ID查ѯͨ知信息
      * 
      * @param notificationId 通知ID
      * @return 通知信息
@@ -28,7 +28,7 @@ public interface NotificationMapper {
     Notification selectById(@Param("notificationId") Integer notificationId);
     
     /**
-     * 根据用户ID查询通知列表
+     * 根据用户ID查ѯͨ知列表
      * 
      * @param userId 用户ID
      * @param isRead 是否已读（可选）
@@ -39,7 +39,7 @@ public interface NotificationMapper {
     List<Notification> selectByUserId(@Param("userId") Integer userId, @Param("isRead") Boolean isRead, @Param("offset") Integer offset, @Param("limit") Integer limit);
     
     /**
-     * 根据操作者ID查询通知列表
+     * 根据操作者ID查ѯͨ知列表
      * 
      * @param actorId 操作者ID
      * @param offset 偏移量

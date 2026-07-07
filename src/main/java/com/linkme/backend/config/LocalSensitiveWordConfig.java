@@ -26,11 +26,10 @@ public class LocalSensitiveWordConfig {
         words.add("反动");
         words.add("邪教");
         words.add("敏感");
-        words.add("裸");
+        words.add("裸聊");
         words.add("色情");
         words.add("赌场");
         words.add("博彩");
-        words.add("毒品");
         words.add("制毒");
         words.add("贩卖毒品");
         words.add("腐败");

@@ -7,6 +7,6 @@ public class UserPunishRequest {
     /** warn | restricted_post | restricted_comment | temp_banned | perm_banned */
     private String action;
     private String reason;
-    /** 临时封禁天数，仅 temp_banned 时有效 */
+    /** Optional duration in days for warn/restrict/temp-ban actions */
     private Integer banDays;
 }

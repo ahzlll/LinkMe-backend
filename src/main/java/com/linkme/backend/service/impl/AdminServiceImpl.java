@@ -9,11 +9,13 @@ import com.linkme.backend.controller.dto.UserPunishRequest;
 import com.linkme.backend.entity.AdminOperationLog;
 import com.linkme.backend.entity.AuditLog;
 import com.linkme.backend.entity.Comment;
+import com.linkme.backend.entity.Message;
 import com.linkme.backend.entity.Post;
 import com.linkme.backend.entity.User;
 import com.linkme.backend.mapper.AdminOperationLogMapper;
 import com.linkme.backend.mapper.AuditLogMapper;
 import com.linkme.backend.mapper.CommentMapper;
+import com.linkme.backend.mapper.MessageMapper;
 import com.linkme.backend.mapper.PostMapper;
 import com.linkme.backend.mapper.UserMapper;
 import com.linkme.backend.service.AdminService;
@@ -43,6 +45,8 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private CommentMapper commentMapper;
     @Autowired
+    private MessageMapper messageMapper;
+    @Autowired
     private AuditLogMapper auditLogMapper;
     @Autowired
     private AdminOperationLogMapper adminOperationLogMapper;
@@ -58,7 +62,10 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public List<User> listUsers(int page, int size, String keyword, String role, String accountStatus) {
         int offset = (Math.max(page, 1) - 1) * size;
-        return userMapper.selectForAdmin(offset, size, keyword, role, accountStatus);
+        return userMapper.selectForAdmin(offset, size, keyword, role, accountStatus)
+                .stream()
+                .map(this::sanitize)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -69,8 +76,9 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public String punishUser(Integer adminId, Integer targetUserId, UserPunishRequest request) {
         if (adminId.equals(targetUserId)) {
-            throw new IllegalArgumentException("不能处罚当前管理员账号");
+            throw new IllegalArgumentException("Cannot punish the current admin account");
         }
+
         String action = request.getAction() == null ? "" : request.getAction().trim().toLowerCase();
         String reason = request.getReason();
         LocalDateTime banUntil = null;
@@ -79,43 +87,47 @@ public class AdminServiceImpl implements AdminService {
         switch (action) {
             case "warn":
                 accountStatus = "warned";
+                banUntil = resolveBanUntil(action, request.getBanDays(), 7);
                 break;
             case "restricted_post":
                 accountStatus = "restricted_post";
+                banUntil = resolveBanUntil(action, request.getBanDays(), 7);
                 break;
             case "restricted_comment":
                 accountStatus = "restricted_comment";
+                banUntil = resolveBanUntil(action, request.getBanDays(), 7);
                 break;
             case "temp_banned":
                 accountStatus = "temp_banned";
-                int days = request.getBanDays() == null || request.getBanDays() < 1 ? 7 : request.getBanDays();
-                banUntil = LocalDateTime.now().plusDays(days);
+                banUntil = resolveBanUntil(action, request.getBanDays(), 7);
                 break;
             case "perm_banned":
                 accountStatus = "perm_banned";
                 break;
             default:
-                throw new IllegalArgumentException("不支持的处罚类型");
+                throw new IllegalArgumentException("Unsupported punishment action");
         }
 
         int affected = userMapper.updateAccountStatus(targetUserId, accountStatus, banUntil, reason);
         if (affected <= 0) {
-            throw new IllegalArgumentException("处罚失败，用户可能不存在");
+            throw new IllegalArgumentException("Punishment failed, user may not exist");
         }
+
         sendPunishmentNotification(adminId, targetUserId, accountStatus, reason, banUntil);
         safeLogAdminOp(adminId, targetUserId, null, 2, action.toUpperCase(), reason, null);
-        return "处罚已生效";
+        return "Punishment applied";
     }
 
     @Override
     public String unbanUser(Integer adminId, Integer targetUserId, String reason) {
         int affected = userMapper.updateAccountStatus(targetUserId, "normal", null, reason);
         if (affected <= 0) {
-            throw new IllegalArgumentException("解封失败，用户可能不存在");
+            throw new IllegalArgumentException("Unban failed, user may not exist");
         }
+
         sendUnbanNotification(adminId, targetUserId, reason);
         safeLogAdminOp(adminId, targetUserId, null, 2, "UNBAN", reason, null);
-        return "用户已解封";
+        return "User unbanned";
     }
 
     @Override
@@ -128,7 +140,7 @@ public class AdminServiceImpl implements AdminService {
     public String moderatePost(Integer adminId, Integer postId, ContentModerateRequest request) {
         Post post = postMapper.selectByIdAny(postId);
         if (post == null) {
-            throw new IllegalArgumentException("帖子不存在");
+            throw new IllegalArgumentException("Post not found");
         }
         return applyContentAction(adminId, postId, 0, post.getUserId(), post.getContent(), request, true);
     }
@@ -143,15 +155,43 @@ public class AdminServiceImpl implements AdminService {
     public String moderateComment(Integer adminId, Integer commentId, ContentModerateRequest request) {
         Comment comment = commentMapper.selectById(commentId);
         if (comment == null) {
-            throw new IllegalArgumentException("评论不存在");
+            throw new IllegalArgumentException("Comment not found");
         }
         return applyContentAction(adminId, commentId.longValue(), 1, comment.getUserId(), comment.getContent(), request, false);
     }
 
     @Override
+    public boolean deleteMessage(Integer adminId, Integer messageId) {
+        Message message = messageMapper.selectById(messageId);
+        if (message == null) {
+            throw new IllegalArgumentException("Message not found");
+        }
+
+        int affected = messageMapper.deleteById(messageId);
+        if (affected > 0) {
+            AuditLog audit = new AuditLog();
+            audit.setUserId(message.getSenderId().longValue());
+            audit.setContentType("message");
+            audit.setContentId(messageId.longValue());
+            audit.setContent(truncateAuditContent(message.getContent()));
+            audit.setIsViolation(1);
+            audit.setAuditResult(AuditLog.RESULT_OFFLINE);
+            audit.setAuditorId(adminId.longValue());
+            audit.setAuditRemark("Admin deleted private message");
+            audit.setCreateTime(LocalDateTime.now());
+            audit.setAuditTime(LocalDateTime.now());
+            auditLogMapper.insert(audit);
+            safeLogAdminOp(adminId, message.getSenderId(), messageId.longValue(), 3,
+                    "DELETE_MESSAGE", "Admin deleted private message", null);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public boolean deleteUser(Integer adminId, Integer userId) {
         if (adminId.equals(userId)) {
-            throw new IllegalArgumentException("不能删除当前管理员账号");
+            throw new IllegalArgumentException("Cannot delete the current admin account");
         }
         boolean ok = userService.deleteUser(userId);
         if (ok) {
@@ -219,7 +259,7 @@ public class AdminServiceImpl implements AdminService {
                 isViolation = 1;
                 break;
             default:
-                throw new IllegalArgumentException("不支持的内容操作");
+                throw new IllegalArgumentException("Unsupported moderation action");
         }
 
         int affected;
@@ -240,7 +280,7 @@ public class AdminServiceImpl implements AdminService {
         }
 
         if (affected <= 0 && !"delete".equals(action)) {
-            throw new IllegalArgumentException("操作失败，内容可能不存在");
+            throw new IllegalArgumentException("Moderation failed, content may not exist");
         }
 
         AuditLog audit = new AuditLog();
@@ -257,7 +297,7 @@ public class AdminServiceImpl implements AdminService {
         auditLogMapper.insert(audit);
 
         safeLogAdminOp(adminId, authorId, targetId, targetType, adminAction, reason, null);
-        return "操作成功";
+        return "Operation succeeded";
     }
 
     private String truncateAuditContent(String content) {
@@ -267,63 +307,67 @@ public class AdminServiceImpl implements AdminService {
         return content.length() > 500 ? content.substring(0, 500) : content;
     }
 
+    private LocalDateTime resolveBanUntil(String action, Integer daysInput, int defaultDays) {
+        if ("perm_banned".equals(action)) {
+            return null;
+        }
+        int days = daysInput == null || daysInput < 1 ? defaultDays : daysInput;
+        return LocalDateTime.now().plusDays(days);
+    }
+
     private void sendPunishmentNotification(Integer adminId, Integer targetUserId, String accountStatus,
                                             String reason, LocalDateTime banUntil) {
         try {
             String actionText = switch (accountStatus) {
-                case "warned" -> "警告";
-                case "restricted_post" -> "限制发帖";
-                case "restricted_comment" -> "限制评论";
-                case "temp_banned" -> "临时封禁";
-                case "perm_banned" -> "永久封禁";
-                default -> "账号处理";
+                case "warned" -> "\u8b66\u544a";
+                case "restricted_post" -> "\u9650\u5236\u53d1\u5e16";
+                case "restricted_comment" -> "\u9650\u5236\u8bc4\u8bba";
+                case "temp_banned" -> "\u4e34\u65f6\u5c01\u7981";
+                case "perm_banned" -> "\u6c38\u4e45\u5c01\u7981";
+                default -> "\u8d26\u53f7\u5904\u7406";
             };
-            StringBuilder content = new StringBuilder("你的账号已被管理员执行“")
+            StringBuilder content = new StringBuilder("\u4f60\u7684\u8d26\u53f7\u5df2\u88ab\u7ba1\u7406\u5458\u6267\u884c\u201c")
                     .append(actionText)
-                    .append("”处理。");
+                    .append("\u201d\u5904\u7406\u3002");
             if (reason != null && !reason.isBlank()) {
-                content.append(" 原因：").append(reason).append("。");
+                content.append(" \u539f\u56e0\uff1a").append(reason).append("\u3002");
             }
             if (banUntil != null) {
-                content.append(" 截止时间：").append(banUntil).append("。");
+                content.append(" \u622a\u6b62\u65f6\u95f4\uff1a").append(banUntil).append("\u3002");
             }
-            content.append(" 如有异议，请联系管理员申诉。");
-
+            content.append(" \u5982\u6709\u5f02\u8bae\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u7533\u8bc9\u3002");
             notificationService.createNotification(
                     targetUserId,
                     "system",
                     adminId,
                     targetUserId,
                     "account_status",
-                    "账号处罚通知",
+                    "\u8d26\u53f7\u5904\u7f5a\u901a\u77e5",
                     content.toString()
             );
         } catch (Exception e) {
-            System.err.println("处罚通知发送失败: " + e.getMessage());
+            System.err.println("\u53d1\u9001\u5904\u7f5a\u901a\u77e5\u5931\u8d25: " + e.getMessage());
         }
     }
-
     private void sendUnbanNotification(Integer adminId, Integer targetUserId, String reason) {
         try {
-            StringBuilder content = new StringBuilder("你的账号限制已解除，当前已恢复正常使用。");
+            StringBuilder content = new StringBuilder("\u4f60\u7684\u8d26\u53f7\u9650\u5236\u5df2\u89e3\u9664\uff0c\u5f53\u524d\u5df2\u6062\u590d\u6b63\u5e38\u4f7f\u7528\u3002");
             if (reason != null && !reason.isBlank()) {
-                content.append(" 说明：").append(reason).append("。");
+                content.append(" \u8bf4\u660e\uff1a").append(reason).append("\u3002");
             }
-
             notificationService.createNotification(
                     targetUserId,
                     "system",
                     adminId,
                     targetUserId,
                     "account_status",
-                    "账号解封通知",
+                    "\u8d26\u53f7\u89e3\u5c01\u901a\u77e5",
                     content.toString()
             );
         } catch (Exception e) {
-            System.err.println("解封通知发送失败: " + e.getMessage());
+            System.err.println("\u53d1\u9001\u89e3\u5c01\u901a\u77e5\u5931\u8d25: " + e.getMessage());
         }
     }
-
     private void safeLogAdminOp(Integer adminId, Integer targetUserId, Long targetId, Integer targetType,
                                 String action, String reason, String detail) {
         try {
@@ -337,7 +381,7 @@ public class AdminServiceImpl implements AdminService {
             logEntry.setDetail(detail);
             adminOperationLogMapper.insert(logEntry);
         } catch (Exception e) {
-            System.err.println("管理员操作日志写入失败（处罚/审核已落库）: " + e.getMessage());
+            System.err.println("Failed to write admin operation log: " + e.getMessage());
         }
     }
 
@@ -357,8 +401,8 @@ public class AdminServiceImpl implements AdminService {
         safe.setAvatarUrl(user.getAvatarUrl());
         safe.setBio(user.getBio());
         safe.setRole(user.getRole());
-        safe.setAccountStatus(user.getAccountStatus());
-        safe.setBanUntil(user.getBanUntil());
+        safe.setAccountStatus(AccountStatusUtil.getEffectiveStatus(user));
+        safe.setBanUntil(AccountStatusUtil.getEffectiveBanUntil(user));
         safe.setStatusReason(user.getStatusReason());
         safe.setCreatedAt(user.getCreatedAt());
         return safe;
