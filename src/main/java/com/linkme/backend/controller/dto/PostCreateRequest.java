@@ -1,6 +1,5 @@
 package com.linkme.backend.controller.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.List;
  * - tags: 标签 ID 列表
  *
  * author: riki
- * version: 1.2
+ * version: 2.0
  */
 @Data
 public class PostCreateRequest {
@@ -41,90 +40,20 @@ public class PostCreateRequest {
         @Schema(description = "距离偏好(same_city/same_city_or_remote/unlimited)")
         private String distancePreference;
 
-        @Schema(description = "理想关系模式ID")
-        private Integer relationshipModeId;
-
-        @Schema(description = "沟通期待ID")
-        private Integer communicationExpectationId;
-
         @Schema(description = "其他交友要求")
         private String additionalRequirements;
 
-        @Schema(description = "性格特质选择列表")
-        private List<PersonalitySelectionRequest> personalities;
-
-        @Schema(description = "关系品质选择列表")
-        private List<RelationshipQualityRequest> relationshipQualities;
-
-        @Schema(description = "必须匹配维度ID列表")
-        private List<Integer> mustDimensions;
-
-        @Schema(description = "优先匹配维度列表")
-        private List<PriorityDimensionRequest> priorityDimensions;
-        
-        // 扩展字段：前端代码化的兴趣与性格，后端进行映射与保存
         @Schema(description = "兴趣代码列表（如 photography, reading 等）")
         private List<String> interests;
-        
+
         @Schema(description = "社交能量代码（extroverted/introverted/ambivert）")
         private String socialEnergy;
-        
+
         @Schema(description = "决策方式代码（rational/emotional/balanced）")
         private String decisionMaking;
-        
+
         @Schema(description = "生活节奏代码（planned/casual/flexible）")
         private String lifeRhythm;
-        
-        @Schema(description = "沟通风格代码（direct/tactful/humorous/listening/silent）")
-        private String communicationStyle;
-        
-        @Schema(description = "理想社交风格代码（warm_talkative/calm_reserved/same_frequency）")
-        private String preferredSocialStyle;
-        
-        @Schema(description = "理想处事风格代码（meticulous/efficient/flexible/steady）")
-        private String preferredLifestyle;
-        
-        @Schema(description = "理想情绪特质代码（optimistic_positive/calm_rational/empathic_sensitive/stable）")
-        private String preferredInterests;
-
-        @Data
-        @Schema(description = "性格特质选择")
-        public static class PersonalitySelectionRequest {
-            @Schema(description = "性格特质选项ID")
-            private Integer traitOptionId;
-            @Schema(description = "选择类型(self/ideal)")
-            private String selectionType;
-        }
-
-        @Data
-        @Schema(description = "关系品质选择")
-        public static class RelationshipQualityRequest {
-            @Schema(description = "关系品质ID")
-            private Integer qualityId;
-            @Schema(description = "关系品质名称")
-            private String qualityName;
-
-            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-            public RelationshipQualityRequest(Object value) {
-                if (value instanceof Number) {
-                    this.qualityId = ((Number) value).intValue();
-                } else if (value instanceof String) {
-                    this.qualityName = (String) value;
-                }
-            }
-
-            public RelationshipQualityRequest() {
-            }
-        }
-
-        @Data
-        @Schema(description = "优先匹配维度")
-        public static class PriorityDimensionRequest {
-            @Schema(description = "维度ID")
-            private Integer dimensionId;
-            @Schema(description = "优先级(high/medium/low)")
-            private String priority;
-        }
     }
 
     @Data
@@ -146,93 +75,19 @@ public class PostCreateRequest {
         @Schema(description = "距离偏好")
         private String distancePreference;
 
-        @Schema(description = "理想关系模式ID")
-        private Integer relationshipModeId;
-
-        @Schema(description = "沟通期待ID")
-        private Integer communicationExpectationId;
-
         @Schema(description = "其他交友要求")
         private String additionalRequirements;
-        
+
         @Schema(description = "兴趣代码列表")
-        private java.util.List<String> interests;
-        
+        private List<String> interests;
+
         @Schema(description = "社交能量代码")
         private String socialEnergy;
-        
+
         @Schema(description = "决策方式代码")
         private String decisionMaking;
-        
+
         @Schema(description = "生活节奏代码")
         private String lifeRhythm;
-        
-        @Schema(description = "沟通风格代码")
-        private String communicationStyle;
-        
-        @Schema(description = "理想社交风格代码")
-        private String preferredSocialStyle;
-        
-        @Schema(description = "理想处事风格代码")
-        private String preferredLifestyle;
-        
-        @Schema(description = "理想情绪特质代码")
-        private String preferredInterests;
-
-        @Schema(description = "性格特质选择列表")
-        private List<PersonalitySelectionResponse> personalities;
-
-        @Schema(description = "关系品质选择列表")
-        private List<RelationshipQualityResponse> relationshipQualities;
-
-        @Schema(description = "必须匹配维度列表")
-        private List<DimensionResponse> mustDimensions;
-
-        @Schema(description = "优先匹配维度列表")
-        private List<PriorityDimensionResponse> priorityDimensions;
-
-        @Data
-        @Schema(description = "性格特质选择响应")
-        public static class PersonalitySelectionResponse {
-            @Schema(description = "性格特质选项ID")
-            private Integer traitOptionId;
-            @Schema(description = "选择类型")
-            private String selectionType;
-            @Schema(description = "特质分类名称")
-            private String categoryName;
-            @Schema(description = "特质选项名称")
-            private String optionName;
-        }
-
-        @Data
-        @Schema(description = "关系品质响应")
-        public static class RelationshipQualityResponse {
-            @Schema(description = "关系品质ID")
-            private Integer qualityId;
-            @Schema(description = "品质名称")
-            private String qualityName;
-        }
-
-        @Data
-        @Schema(description = "维度响应")
-        public static class DimensionResponse {
-            @Schema(description = "维度ID")
-            private Integer dimensionId;
-            @Schema(description = "维度名称")
-            private String dimensionName;
-        }
-
-        @Data
-        @Schema(description = "优先维度响应")
-        public static class PriorityDimensionResponse {
-            @Schema(description = "维度ID")
-            private Integer dimensionId;
-            @Schema(description = "维度名称")
-            private String dimensionName;
-            @Schema(description = "优先级")
-            private String priority;
-        }
     }
 }
-
-

@@ -7,6 +7,8 @@ import com.linkme.backend.controller.dto.ConversationResponse;
 import com.linkme.backend.controller.dto.MessageRequest;
 import com.linkme.backend.controller.dto.MessageResponse;
 import com.linkme.backend.entity.Conversation;
+import com.linkme.backend.entity.User;
+import com.linkme.backend.mapper.UserMapper;
 import com.linkme.backend.service.ChatService;
 import com.linkme.backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +45,9 @@ public class ChatController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserMapper userMapper;
     
     /**
      * 从请求头中获取当前用户ID
@@ -56,6 +61,18 @@ public class ChatController {
             } catch (Exception e) {
                 return null;
             }
+        }
+        return null;
+    }
+
+    /**
+     * 校验当前用户是否已完成匹配问卷，未完成返回错误信息
+     * @return 错误信息字符串，null 表示通过
+     */
+    private String checkQuestionnaireCompleted(Integer currentUserId) {
+        User currentUser = userMapper.selectById(currentUserId);
+        if (currentUser == null || !Boolean.TRUE.equals(currentUser.getMatchingQuestionnaireCompleted())) {
+            return "请先完成匹配问卷后再进行此操作";
         }
         return null;
     }
@@ -109,7 +126,12 @@ public class ChatController {
         if (requestBody.getUserId().equals(currentUserId)) {
             return R.fail(400, "不能与自己创建会话");
         }
-        
+
+        String questionnaireError = checkQuestionnaireCompleted(currentUserId);
+        if (questionnaireError != null) {
+            return R.fail(403, questionnaireError);
+        }
+
         try {
             Conversation conversation = chatService.createOrGetConversation(currentUserId, requestBody.getUserId());
             ConversationResponse response = chatService.getConversationById(conversation.getConversationId(), currentUserId);
@@ -195,6 +217,11 @@ public class ChatController {
             return R.fail(400, "消息内容不能为空");
         }
 
+        String questionnaireError = checkQuestionnaireCompleted(userId);
+        if (questionnaireError != null) {
+            return R.fail(403, questionnaireError);
+        }
+
         AuditService.AuditResult auditResult = auditService.checkContent(
                 userId.longValue(), "message", null, messageRequest.getContent());
         if (auditResult.isNeedManualReview()) {
@@ -241,6 +268,11 @@ public class ChatController {
         
         if (messageRequest.getContent() == null || messageRequest.getContent().trim().isEmpty()) {
             return R.fail(400, "消息内容不能为空");
+        }
+
+        String questionnaireError = checkQuestionnaireCompleted(userId);
+        if (questionnaireError != null) {
+            return R.fail(403, questionnaireError);
         }
 
         AuditService.AuditResult auditResult = auditService.checkContent(

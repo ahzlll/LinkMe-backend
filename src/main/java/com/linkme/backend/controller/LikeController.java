@@ -2,6 +2,8 @@ package com.linkme.backend.controller;
 
 import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.common.R;
+import com.linkme.backend.entity.User;
+import com.linkme.backend.mapper.UserMapper;
 import com.linkme.backend.service.LikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,9 +33,12 @@ public class LikeController {
     
     @Autowired
     private LikeService likeService;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserMapper userMapper;
     
     /**
      * 从请求头中获取当前用户ID
@@ -77,7 +82,13 @@ public class LikeController {
         if (currentUserId.equals(targetUserId)) {
             return R.fail(400, "不能给自己发送喜欢通知");
         }
-        
+
+        // 校验当前用户是否已完成问卷
+        User currentUser = userMapper.selectById(currentUserId);
+        if (currentUser == null || !Boolean.TRUE.equals(currentUser.getMatchingQuestionnaireCompleted())) {
+            return R.fail(403, "请先完成匹配问卷后再进行此操作");
+        }
+
         try {
             likeService.sendLikeNotification(currentUserId, targetUserId);
             return R.ok("喜欢通知发送成功");

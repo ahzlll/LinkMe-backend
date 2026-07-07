@@ -323,6 +323,13 @@
 
 ### 匹配机制相关表结构
 
+> **⚠️ 简化说明**：匹配系统已简化为冷启动推荐 + 问卷加分模式。以下表结构保留备查，但仅以下表在应用代码中活跃使用：
+> - `hobby_category` / `hobby` / `user_hobby` — 兴趣爱好
+> - `personality_trait_category` / `personality_trait_option` / `user_personality` — 自身性格（仅 `trait_type=self`）
+> - `user_matching_preference` — 年龄/距离/额外要求
+>
+> 以下表（`relationship_quality`、`relationship_mode`、`communication_expectation`、`matching_dimension` 及其关联表）**保留表结构但不再被应用代码读写**，可在后续版本中按需清理。
+
 #### 21. 爱好分类表 (hobby_category)
 
 **作用**: 存储爱好分类，用于匹配机制
@@ -366,6 +373,7 @@
 - `name`: 分类名称
 - `description`: 分类描述
 - `trait_type`: 特质类型（self-自身特质，ideal-理想对象特质）
+  > **注意**：当前仅使用 `self` 类型，`ideal` 类型不再播种数据也不再被应用代码使用。
 - `display_order`: 显示顺序
 - 唯一约束：`(name, trait_type)` 确保同一类型下不能有同名分类
 
@@ -456,9 +464,9 @@
 - `age_max`: 最大年龄要求
 - `age_unlimited`: 是否无年龄限制
 - `distance_preference`: 关系距离要求（same_city/same_city_or_remote/unlimited）
-- `relationship_mode_id`: 理想关系模式 ID
-- `communication_expectation_id`: 沟通期待 ID
 - `additional_requirements`: 其他未被覆盖的交友要求
+
+> **注意**：`relationship_mode_id` 和 `communication_expectation_id` 字段仍保留在表中，但应用代码不再写入或读取。
 
 #### 33. 用户匹配必须维度关联表 (user_matching_must_dimension)
 
@@ -511,14 +519,35 @@
    - `user` ← `conversation` → `user`
    - `conversation` ← `message` ← `user`
 
-5. **匹配机制**
-   - `user` ← `user_hobby` → `hobby` → `hobby_category`
-   - `user` ← `user_personality` → `personality_trait_option` → `personality_trait_category`
-   - `user` ← `user_relationship_quality` → `relationship_quality`
-   - `user` ← `user_matching_preference` → `relationship_mode`
-   - `user` ← `user_matching_preference` → `communication_expectation`
-   - `user` ← `user_matching_must_dimension` → `matching_dimension`
-   - `user` ← `user_matching_priority_dimension` → `matching_dimension`
+5. **匹配机制（简化版）**
+   - `user` ← `user_hobby` → `hobby` → `hobby_category`（兴趣爱好匹配加分）
+   - `user` ← `user_personality` → `personality_trait_option` → `personality_trait_category`（自身性格匹配加分，仅 self 类型）
+   - `user` ← `user_matching_preference`（年龄范围、距离偏好、额外要求）
+   - `user.matching_questionnaire_completed` — 问卷完成标记，控制是否可发起喜欢/聊天
+
+   > 以下关联已不再被应用代码使用，表结构保留备查：
+   > - `user` ← `user_relationship_quality` → `relationship_quality`
+   > - `user` ← `user_matching_must_dimension` → `matching_dimension`
+   > - `user` ← `user_matching_priority_dimension` → `matching_dimension`
+
+### 匹配算法说明
+
+当前匹配推荐采用 **冷启动评分 + 问卷加分** 双层模型：
+
+1. **冷启动评分（始终计算）**
+   - 基础分：50 分
+   - 同城加分：+25 分
+   - 年龄接近度加分：差值 0→+25，1-3→+20，4-7→+12，8-12→+5，13+→0
+
+2. **问卷加分（仅当前用户已完成问卷时生效）**
+   - 兴趣重叠加分（运动类 +2，其他 +1）
+   - 自身性格匹配加分（每维度 +2，最高 +6）
+   - 年龄偏好惩罚（不在偏好范围内 -10）
+   - 距离偏好惩罚（不符 -8）
+
+3. **候选人池**
+   - 硬过滤：仅推荐 `matching_questionnaire_completed=TRUE` 的用户
+   - 排序：按 `created_at DESC`（注册时间倒序）
 
 ## 注意事项
 

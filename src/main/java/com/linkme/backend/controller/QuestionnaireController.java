@@ -86,13 +86,11 @@ public class QuestionnaireController {
      *   - ageMax: 最大年龄要求
      *   - ageUnlimited: 是否无年龄限制
      *   - distancePreference: 距离偏好
-     *   - relationshipModeId: 理想关系模式ID
-     *   - communicationExpectationId: 沟通期待ID
      *   - additionalRequirements: 其他交友要求
-     *   - personalities: 性格特质选择列表
-     *   - relationshipQualities: 关系品质选择列表
-     *   - mustDimensions: 必须匹配维度ID列表
-     *   - priorityDimensions: 优先匹配维度列表
+     *   - interests: 兴趣代码列表
+     *   - socialEnergy: 社交能量代码
+     *   - decisionMaking: 决策方式代码
+     *   - lifeRhythm: 生活节奏代码
      * 
      * 响应：
      * - 成功：返回200状态码和成功消息
