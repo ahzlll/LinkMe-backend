@@ -84,6 +84,37 @@ public class PostController {
         return null;
     }
 
+    /** 为帖子列表填充图片与标签 */
+    private void enrichPostsWithAggregates(List<Post> posts) {
+        if (posts == null) {
+            return;
+        }
+        for (Post post : posts) {
+            if (post == null || post.getPostId() == null) {
+                continue;
+            }
+            try {
+                Map<String, Object> agg = postService.getPostAggregates(post.getPostId());
+                if (agg != null) {
+                    @SuppressWarnings("unchecked")
+                    List<String> images = (List<String>) agg.get("images");
+                    post.setImages(images != null ? images : new ArrayList<>());
+                    @SuppressWarnings("unchecked")
+                    List<Integer> tags = (List<Integer>) agg.get("tags");
+                    post.setTags(tags != null ? tags : new ArrayList<>());
+                } else {
+                    post.setImages(new ArrayList<>());
+                    post.setTags(new ArrayList<>());
+                }
+            } catch (Exception e) {
+                System.err.println("获取帖子聚合数据失败, postId=" + post.getPostId() + ", error=" + e.getMessage());
+                e.printStackTrace();
+                post.setImages(new ArrayList<>());
+                post.setTags(new ArrayList<>());
+            }
+        }
+    }
+
     private R<String> checkCanPost(Integer userId) {
         if (userId == null) {
             return R.fail(401, "未登录");
@@ -147,32 +178,7 @@ public class PostController {
             }
             
             // 为每个帖子填充images和tags字段
-            for (Post post : posts) {
-                if (post == null || post.getPostId() == null) {
-                    continue; // 跳过无效的帖子
-                }
-                try {
-                    Map<String, Object> agg = postService.getPostAggregates(post.getPostId());
-                    if (agg != null) {
-                        @SuppressWarnings("unchecked")
-                        List<String> images = (List<String>) agg.get("images");
-                        post.setImages(images != null ? images : new ArrayList<>());
-                        @SuppressWarnings("unchecked")
-                        List<Integer> tags = (List<Integer>) agg.get("tags");
-                        post.setTags(tags != null ? tags : new ArrayList<>());
-                    } else {
-                        post.setImages(new ArrayList<>());
-                        post.setTags(new ArrayList<>());
-                    }
-                } catch (Exception e) {
-                    // 如果获取聚合数据失败，设置空列表，避免影响其他帖子
-                    // 记录错误但不中断整个请求
-                    System.err.println("获取帖子聚合数据失败, postId=" + post.getPostId() + ", error=" + e.getMessage());
-                    e.printStackTrace();
-                    post.setImages(new ArrayList<>());
-                    post.setTags(new ArrayList<>());
-                }
-            }
+            enrichPostsWithAggregates(posts);
             
             return R.ok(posts);
         } catch (Exception e) {
@@ -200,7 +206,11 @@ public class PostController {
             // limit 做简单保护，避免过大导致性能问题
             int safeLimit = limit == null || limit < 1 ? 20 : Math.min(limit, 100);
             List<Post> posts = postRecommendService.getRecommendedPosts(currentUserId, safeLimit);
-            return R.ok(posts == null ? new ArrayList<>() : posts);
+            if (posts == null) {
+                posts = new ArrayList<>();
+            }
+            enrichPostsWithAggregates(posts);
+            return R.ok(posts);
         } catch (Exception e) {
             System.err.println("获取推荐帖子失败: " + e.getMessage());
             e.printStackTrace();

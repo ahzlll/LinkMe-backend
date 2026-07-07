@@ -106,8 +106,9 @@ public class PostRecommendServiceImpl implements PostRecommendService {
             return getPopularPosts(userId, limit);
         }
 
-        // 6. 查询帖子详情
-        List<Post> recommendedPosts = postMapper.selectByIds(recommendedPostIds, userId);
+        // 6. 查询帖子详情（按推荐分数顺序返回）
+        List<Post> recommendedPosts = orderPostsByIds(
+                postMapper.selectByIds(recommendedPostIds, userId), recommendedPostIds);
         boolean fallbackUsed = false;
         int initialRecommendedCount = recommendedPosts.size();
 
@@ -134,6 +135,26 @@ public class PostRecommendServiceImpl implements PostRecommendService {
                 recommendedPosts.size());
 
         return recommendedPosts;
+    }
+
+    /**
+     * 按推荐 ID 顺序重排帖子列表（SQL IN 查询不保证顺序）
+     */
+    private List<Post> orderPostsByIds(List<Post> posts, List<Integer> orderedIds) {
+        if (posts == null || posts.isEmpty() || orderedIds == null || orderedIds.isEmpty()) {
+            return posts == null ? Collections.emptyList() : posts;
+        }
+        Map<Integer, Post> postMap = posts.stream()
+                .filter(p -> p != null && p.getPostId() != null)
+                .collect(Collectors.toMap(Post::getPostId, p -> p, (a, b) -> a));
+        List<Post> ordered = new ArrayList<>();
+        for (Integer id : orderedIds) {
+            Post post = postMap.get(id);
+            if (post != null) {
+                ordered.add(post);
+            }
+        }
+        return ordered;
     }
 
     /**
