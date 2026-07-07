@@ -42,6 +42,10 @@
         SELECT COUNT(*) FROM like_post WHERE user_id = #{userId}
     </select>
 
+    <select id="selectAll" resultMap="LikeMap">
+        SELECT * FROM like_post
+    </select>
+
 </mapper>
 
 

@@ -121,6 +121,26 @@
         LIMIT #{offset}, #{limit}
     </select>
 
+    <!-- 根据一组帖子ID批量查询帖子详情 -->
+    <select id="selectByIds" parameterType="map" resultMap="PostResultMap">
+        SELECT p.*,
+               u.nickname,
+               u.username,
+               u.avatar_url as avatarUrl,
+               COALESCE((SELECT COUNT(*) FROM like_post WHERE post_id = p.post_id), 0) as likeCount,
+               COALESCE((SELECT COUNT(*) FROM favorite WHERE post_id = p.post_id), 0) as favoriteCount,
+               COALESCE((SELECT COUNT(*) FROM comment WHERE post_id = p.post_id), 0) as commentCount,
+               (SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM follow
+                WHERE follower_id = #{currentUserId} AND followee_id = p.user_id) as isFollowed
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.user_id
+        WHERE COALESCE(p.moderation_status, 'visible') = 'visible'
+          AND p.post_id IN
+          <foreach collection="ids" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </select>
+
     <!-- 插入新帖子 -->
     <insert id="insert" parameterType="com.linkme.backend.entity.Post" useGeneratedKeys="true" keyProperty="postId">
         INSERT INTO post (user_id, content, topic, created_at)

@@ -6,6 +6,7 @@ import com.linkme.backend.common.JwtUtil;
 import com.linkme.backend.entity.Post;
 import com.linkme.backend.entity.Comment;
 import com.linkme.backend.entity.User;
+import com.linkme.backend.service.PostRecommendService;
 import com.linkme.backend.service.PostService;
 import com.linkme.backend.mapper.CommentMapper;
 import com.linkme.backend.mapper.LikeMapper;
@@ -50,6 +51,8 @@ public class PostController {
     
     @Autowired
     private PostService postService;
+    @Autowired
+    private PostRecommendService postRecommendService;
     @Autowired
     private CommentMapper commentMapper;
     @Autowired
@@ -177,6 +180,31 @@ public class PostController {
             System.err.println("获取帖子列表失败: " + e.getMessage());
             e.printStackTrace();
             return R.fail("获取帖子列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取推荐帖子（协同过滤 + 兜底热门/最新）
+     *
+     * 前端建议调用：GET /posts/recommended?limit=20
+     * - 已登录：根据当前用户点赞行为做协同过滤推荐
+     * - 未登录/冷启动：返回热门/最新兜底
+     */
+    @GetMapping("/recommended")
+    @Operation(summary = "获取推荐帖子", description = "基于点赞协同过滤推荐，不足时用热门/最新补齐",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<Post>> getRecommendedPosts(@RequestParam(defaultValue = "20") Integer limit,
+                                            HttpServletRequest request) {
+        try {
+            Integer currentUserId = getCurrentUserId(request);
+            // limit 做简单保护，避免过大导致性能问题
+            int safeLimit = limit == null || limit < 1 ? 20 : Math.min(limit, 100);
+            List<Post> posts = postRecommendService.getRecommendedPosts(currentUserId, safeLimit);
+            return R.ok(posts == null ? new ArrayList<>() : posts);
+        } catch (Exception e) {
+            System.err.println("获取推荐帖子失败: " + e.getMessage());
+            e.printStackTrace();
+            return R.fail("获取推荐帖子失败: " + e.getMessage());
         }
     }
     
