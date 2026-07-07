@@ -13,7 +13,6 @@ import com.linkme.backend.mapper.MessageMapper;
 import com.linkme.backend.mapper.UserMapper;
 import com.linkme.backend.mapper.BlockMapper;
 import com.linkme.backend.service.ChatService;
-import com.linkme.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,9 +49,6 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private ChatWebSocketHandler webSocketHandler;
-
-    @Autowired
-    private NotificationService notificationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -281,10 +277,6 @@ public class ChatServiceImpl implements ChatService {
                 System.err.println("WebSocket推送消息失败: " + e.getMessage());
                 e.printStackTrace();
             }
-
-            // 创建通知
-            notificationService.createMessageNotification(receiverId, senderId, message.getMessageId(),
-                    message.getContentType(), message.getContent());
         } else {
             System.out.println("用户 " + receiverId + " 已屏蔽用户 " + senderId + "，不推送实时消息和通知");
         }

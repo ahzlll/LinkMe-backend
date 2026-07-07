@@ -87,7 +87,7 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
                 ? userMatchingPreferenceMapper.selectByUserId(currentUserId)
                 : null;
 
-        List<User> candidates = userMapper.selectMatchCandidates(currentUserId, 0, candidateFetchSize);
+        List<User> candidates = userMapper.selectMatchCandidates(currentUserId, 0, candidateFetchSize, questionnaireCompleted);
         if (candidates == null || candidates.isEmpty()) {
             return Collections.emptyList();
         }

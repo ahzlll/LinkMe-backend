@@ -120,7 +120,8 @@ public interface UserMapper {
      */
     List<User> selectMatchCandidates(@Param("currentUserId") Integer currentUserId,
                                      @Param("offset") Integer offset,
-                                     @Param("limit") Integer limit);
+                                     @Param("limit") Integer limit,
+                                     @Param("questionnaireCompleted") Boolean questionnaireCompleted);
 
     /**
      * 更新用户问卷完成状态
