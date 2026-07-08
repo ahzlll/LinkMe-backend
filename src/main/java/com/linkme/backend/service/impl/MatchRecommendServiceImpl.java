@@ -324,7 +324,7 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
                         Map.entry("骑行", "cycling"),
                         Map.entry("钓鱼", "fishing"),
                         Map.entry("瑜伽", "yoga"),
-                        Map.entry("¶Ӫ", "camping"),
+                        Map.entry("露营", "camping"),
                         Map.entry("武术", "martial_arts"),
                         Map.entry("登山", "mountaineering"),
                         Map.entry("攀岩", "climbing"),

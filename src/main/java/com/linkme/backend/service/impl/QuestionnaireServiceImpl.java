@@ -1,6 +1,9 @@
 package com.linkme.backend.service.impl;
 
+import com.linkme.backend.controller.dto.HobbyOptionResponse;
 import com.linkme.backend.controller.dto.PostCreateRequest;
+import com.linkme.backend.entity.Hobby;
+import com.linkme.backend.entity.HobbyCategory;
 import com.linkme.backend.entity.User;
 import com.linkme.backend.entity.UserMatchingPreference;
 import com.linkme.backend.entity.UserPersonalitySelection;
@@ -45,6 +48,9 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
     private UserHobbyMapper userHobbyMapper;
 
     @Autowired
+    private HobbyMapper hobbyMapper;
+
+    @Autowired
     private PersonalityTraitOptionMapper personalityTraitOptionMapper;
 
     // 兴趣代码 → 中文名映射（与 test_base.sql 中的 hobby 表一致）
@@ -75,7 +81,7 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         Map.entry("cycling", "骑行"),
         Map.entry("fishing", "钓鱼"),
         Map.entry("yoga", "瑜伽"),
-        Map.entry("camping", "¶Ӫ"),
+        Map.entry("camping", "露营"),
         Map.entry("martial_arts", "武术"),
         Map.entry("mountaineering", "登山"),
         Map.entry("climbing", "攀岩"),
@@ -179,10 +185,14 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         // 2. 保存用户爱好（先删除旧的，再插入新的）
         userHobbyMapper.deleteByUserId(userId);
         if (request.getInterests() != null && !request.getInterests().isEmpty()) {
-            for (String code : request.getInterests()) {
-                String name = HOBBY_CODE_TO_NAME.get(code);
-                if (name == null) {
+            for (String item : request.getInterests()) {
+                if (item == null || item.isBlank()) {
                     continue;
+                }
+                String trimmed = item.trim();
+                String name = HOBBY_CODE_TO_NAME.get(trimmed);
+                if (name == null) {
+                    name = trimmed;
                 }
                 Integer hobbyId = userHobbyMapper.selectHobbyIdByName(name);
                 if (hobbyId != null) {
@@ -290,6 +300,45 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         }
 
         return response;
+    }
+
+    @Override
+    public List<HobbyOptionResponse> listHobbyOptions() {
+        List<HobbyCategory> categories = hobbyMapper.selectAllCategories();
+        List<Hobby> hobbies = hobbyMapper.selectAllHobbies();
+        if (categories == null || categories.isEmpty()) {
+            return List.of();
+        }
+
+        List<HobbyOptionResponse> result = new ArrayList<>();
+        for (HobbyCategory category : categories) {
+            if (category == null) {
+                continue;
+            }
+            HobbyOptionResponse response = new HobbyOptionResponse();
+            response.setCategoryId(category.getCategoryId());
+            response.setName(category.getName());
+
+            List<HobbyOptionResponse.HobbyItem> items = new ArrayList<>();
+            if (hobbies != null) {
+                for (Hobby hobby : hobbies) {
+                    if (hobby == null || hobby.getCategoryId() == null || category.getCategoryId() == null) {
+                        continue;
+                    }
+                    if (!category.getCategoryId().equals(hobby.getCategoryId())) {
+                        continue;
+                    }
+                    HobbyOptionResponse.HobbyItem item = new HobbyOptionResponse.HobbyItem();
+                    item.setHobbyId(hobby.getHobbyId());
+                    item.setName(hobby.getName());
+                    item.setCode(HOBBY_NAME_TO_CODE.get(hobby.getName()));
+                    items.add(item);
+                }
+            }
+            response.setHobbies(items);
+            result.add(response);
+        }
+        return result;
     }
 
     @Override

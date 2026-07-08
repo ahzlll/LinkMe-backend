@@ -1,5 +1,6 @@
 package com.linkme.backend.service;
 
+import com.linkme.backend.controller.dto.HobbyOptionResponse;
 import com.linkme.backend.controller.dto.PostCreateRequest;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,8 @@ public interface QuestionnaireService {
      *         - 主要包含兴趣爱好等可公开信息
      */
     PostCreateRequest.QuestionnaireResponse getPublicQuestionnaireByUserId(Integer userId);
+
+    List<HobbyOptionResponse> listHobbyOptions();
     
     List<Map<String, Object>> listCompletedUsers(Integer page, Integer size);
 }

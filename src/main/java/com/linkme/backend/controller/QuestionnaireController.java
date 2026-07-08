@@ -1,5 +1,6 @@
 package com.linkme.backend.controller;
 
+import com.linkme.backend.controller.dto.HobbyOptionResponse;
 import com.linkme.backend.controller.dto.PostCreateRequest;
 import com.linkme.backend.service.QuestionnaireService;
 import com.linkme.backend.common.JwtUtil;
@@ -11,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
 
 /**
  * 问卷控制器
@@ -187,6 +190,17 @@ public class QuestionnaireController {
      * @param request HTTP请求对象，用于获取认证信息
      * @return 统一响应对象，包含问卷数据或错误信息
      */
+    @GetMapping("/hobby-options")
+    @Operation(summary = "获取爱好选项", description = "从数据库 hobby_category / hobby 表读取问卷第一题可选项",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public R<List<HobbyOptionResponse>> listHobbyOptions(HttpServletRequest request) {
+        Integer currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return R.fail(401, "未授权，请先登录");
+        }
+        return R.ok(questionnaireService.listHobbyOptions());
+    }
+
     @GetMapping("/{userId}")
     @Operation(summary = "获取指定用户问卷", description = "获取指定用户的问卷数据（仅自己可见），需要Bearer Token认证",
             security = @SecurityRequirement(name = "bearerAuth"))
