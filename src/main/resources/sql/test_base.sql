@@ -2,13 +2,14 @@
 -- LinkMe 生产环境基础数据（系统字典 + 管理员）
 -- ============================================
 -- 使用顺序：
---   1. 先执行 new_data.sql（建库建表）
+--   1. 先执行 new_data.sql 或 admin_operation_log.sql（建库建表）
 --   2. 再执行本脚本（灌入系统必备数据）
 --
 -- 说明：
 --   - 不含 test.sql 中的大量演示用户/帖子/聊天等测试数据
 --   - 仅包含标签、匹配问卷选项等系统运行所需字典数据
 --   - 预置管理员账号，供管理端登录
+--   - 所有 INSERT 显式指定主键 ID，不受建表 AUTO_INCREMENT 影响
 --
 -- 管理员账号（与 test.sql 一致）：
 --   用户名：admin1
@@ -23,8 +24,8 @@ USE linkme;
 -- ============================================
 -- 1. 管理员账号
 -- ============================================
-INSERT INTO user (username, email, phone, password_hash, nickname, gender, birthday, region, avatar_url, bio, role, account_status) VALUES
-('admin1', 'admin@linkme.com', '13800000000', '$2a$10$NU9vzCL9g8q1EMP6lf0NiO4NgNeM2Yht1oF6TVZz/MhcdjQKFqvqK', '系统管理员', 'male', '1990-01-01', '北京', '', '系统管理员账号', 'admin', 'normal');
+INSERT INTO user (user_id, username, email, phone, password_hash, nickname, gender, birthday, region, avatar_url, bio, role, account_status) VALUES
+(1, 'admin1', 'admin@linkme.com', '13800000000', '$2a$10$NU9vzCL9g8q1EMP6lf0NiO4NgNeM2Yht1oF6TVZz/MhcdjQKFqvqK', '系统管理员', 'male', '1990-01-01', '北京', '', '系统管理员账号', 'admin', 'normal');
 
 INSERT INTO privacy_setting (user_id, allow_match, allow_private_messages, allow_profile_view) VALUES
 (1, true, 'all', 'all');
@@ -32,62 +33,62 @@ INSERT INTO privacy_setting (user_id, allow_match, allow_private_messages, allow
 -- ============================================
 -- 2. 标签定义（系统预设）
 -- ============================================
-INSERT INTO tag_def (name, created_by, tag_type) VALUES
+INSERT INTO tag_def (tag_id, name, created_by, tag_type) VALUES
 -- 用户标签 - 职业类
-('程序员', NULL, 'user'),
-('设计师', NULL, 'user'),
-('摄影师', NULL, 'user'),
-('产品经理', NULL, 'user'),
-('运营专员', NULL, 'user'),
-('市场专员', NULL, 'user'),
-('教师', NULL, 'user'),
-('医生', NULL, 'user'),
-('律师', NULL, 'user'),
-('工程师', NULL, 'user'),
+(1, '程序员', NULL, 'user'),
+(2, '设计师', NULL, 'user'),
+(3, '摄影师', NULL, 'user'),
+(4, '产品经理', NULL, 'user'),
+(5, '运营专员', NULL, 'user'),
+(6, '市场专员', NULL, 'user'),
+(7, '教师', NULL, 'user'),
+(8, '医生', NULL, 'user'),
+(9, '律师', NULL, 'user'),
+(10, '工程师', NULL, 'user'),
 -- 用户标签 - 兴趣类
-('音乐爱好者', NULL, 'user'),
-('美食家', NULL, 'user'),
-('旅行达人', NULL, 'user'),
-('健身爱好者', NULL, 'user'),
-('读书人', NULL, 'user'),
-('电影迷', NULL, 'user'),
-('游戏玩家', NULL, 'user'),
-('创业者', NULL, 'user'),
-('投资人', NULL, 'user'),
-('咖啡爱好者', NULL, 'user'),
-('运动达人', NULL, 'user'),
-('艺术爱好者', NULL, 'user'),
+(11, '音乐爱好者', NULL, 'user'),
+(12, '美食家', NULL, 'user'),
+(13, '旅行达人', NULL, 'user'),
+(14, '健身爱好者', NULL, 'user'),
+(15, '读书人', NULL, 'user'),
+(16, '电影迷', NULL, 'user'),
+(17, '游戏玩家', NULL, 'user'),
+(18, '创业者', NULL, 'user'),
+(19, '投资人', NULL, 'user'),
+(20, '咖啡爱好者', NULL, 'user'),
+(21, '运动达人', NULL, 'user'),
+(22, '艺术爱好者', NULL, 'user'),
 -- 用户标签 - 性格类
-('乐观派', NULL, 'user'),
-('内向型', NULL, 'user'),
-('外向型', NULL, 'user'),
-('理性派', NULL, 'user'),
-('感性派', NULL, 'user'),
+(23, '乐观派', NULL, 'user'),
+(24, '内向型', NULL, 'user'),
+(25, '外向型', NULL, 'user'),
+(26, '理性派', NULL, 'user'),
+(27, '感性派', NULL, 'user'),
 -- 帖子标签 - 技术类
-('技术分享', NULL, 'post'),
-('编程技巧', NULL, 'post'),
-('工具推荐', NULL, 'post'),
-('学习笔记', NULL, 'post'),
+(28, '技术分享', NULL, 'post'),
+(29, '编程技巧', NULL, 'post'),
+(30, '工具推荐', NULL, 'post'),
+(31, '学习笔记', NULL, 'post'),
 -- 帖子标签 - 生活类
-('生活感悟', NULL, 'post'),
-('日常分享', NULL, 'post'),
-('心情日记', NULL, 'post'),
-('美食推荐', NULL, 'post'),
-('旅行见闻', NULL, 'post'),
+(32, '生活感悟', NULL, 'post'),
+(33, '日常分享', NULL, 'post'),
+(34, '心情日记', NULL, 'post'),
+(35, '美食推荐', NULL, 'post'),
+(36, '旅行见闻', NULL, 'post'),
 -- 帖子标签 - 兴趣类
-('摄影作品', NULL, 'post'),
-('音乐推荐', NULL, 'post'),
-('健身心得', NULL, 'post'),
-('读书笔记', NULL, 'post'),
-('电影推荐', NULL, 'post'),
-('游戏分享', NULL, 'post'),
+(37, '摄影作品', NULL, 'post'),
+(38, '音乐推荐', NULL, 'post'),
+(39, '健身心得', NULL, 'post'),
+(40, '读书笔记', NULL, 'post'),
+(41, '电影推荐', NULL, 'post'),
+(42, '游戏分享', NULL, 'post'),
 -- 帖子标签 - 其他类
-('求助问答', NULL, 'post'),
-('经验分享', NULL, 'post'),
-('观点讨论', NULL, 'post'),
-('活动召集', NULL, 'post'),
-('工作日常', NULL, 'post'),
-('情感交流', NULL, 'post');
+(43, '求助问答', NULL, 'post'),
+(44, '经验分享', NULL, 'post'),
+(45, '观点讨论', NULL, 'post'),
+(46, '活动召集', NULL, 'post'),
+(47, '工作日常', NULL, 'post'),
+(48, '情感交流', NULL, 'post');
 
 -- ============================================
 -- 3. 匹配机制字典数据
