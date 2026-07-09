@@ -26,10 +26,11 @@ import java.util.stream.Collectors;
  *   - 同城: region 相同 +25
  *   - 年龄差: 0岁 +25; 1-3岁 +20; 4-7岁 +12; 8-12岁 +5; 13+ +0
  * - 问卷加分（仅当前用户已完成问卷时叠加）
- *   - 兴趣重合: 每项 +1，运动户外类 +2
- *   - 自身性格: self-self 同维度同选项，每维 +2（最多 3 维 = +6）
- *   - 年龄偏好: 超出问卷 min/max 扣 10
- *   - 距离偏好: 选 same_city 且不同 region 扣 8
+ *   - 兴趣重合: 每项 +4
+ *   - 自身性格: self-self 同维度同选项，每维 +3（最多 3 维 = +9）
+ *   - 年龄偏好违规: -50（候选人年龄超出问卷范围，或候选人反向过滤不通过）
+ *   - 距离偏好违规: -50（选仅同城但异地，含双向）
+ * - 总分 < 50 的候选人直接过滤，不显示
  *
  * @author riki
  * @version 2.0
@@ -46,9 +47,9 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
     private static final int AGE_DIFF_8_12_BONUS = 5;
 
     // 问卷加分/扣分
-    private static final int AGE_OUT_OF_RANGE_PENALTY = 10;
-    private static final int SAME_CITY_PENALTY = 8;
-    private static final int PERSONALITY_SELF_MATCH_BONUS = 2;
+    private static final int AGE_OUT_OF_RANGE_PENALTY = 50;
+    private static final int SAME_CITY_PENALTY = 50;
+    private static final int PERSONALITY_SELF_MATCH_BONUS = 3;
 
     @Autowired
     private UserMapper userMapper;
@@ -164,6 +165,9 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
             scored.add(new ScoredUser(candidate, score));
         }
 
+        // 过滤掉总分低于50的用户（偏好严重不匹配）
+        scored.removeIf(su -> su.score() < 50);
+
         // 按分数降序排序，同分按 userId 升序
         scored.sort(Comparator.comparingInt(ScoredUser::score).reversed().thenComparingInt(su -> su.user().getUserId()));
 
@@ -228,7 +232,7 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
             return clamp(score, 0, 100);
         }
 
-        // 1. 兴趣重合：每项 +1，运动户外类(category_id=3) +2
+        // 1. 兴趣重合：每项 +4
         List<Hobby> candidateHobbies = userHobbyMapper.selectHobbiesByUserId(candidateUserId);
         if (candidateHobbies != null && !candidateHobbies.isEmpty() && currentHobbyMap != null && !currentHobbyMap.isEmpty()) {
             for (Hobby h : candidateHobbies) {
@@ -236,16 +240,12 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
                     continue;
                 }
                 if (currentHobbyMap.containsKey(h.getHobbyId())) {
-                    if (h.getCategoryId() != null && h.getCategoryId() == 3) {
-                        score += 2;
-                    } else {
-                        score += 1;
-                    }
+                    score += 4;
                 }
             }
         }
 
-        // 2. 自身性格匹配：self-self 同维度同选项，每维 +2（最多 3 维 = +6）
+        // 2. 自身性格匹配：self-self 同维度同选项，每维 +3（最多 3 维 = +9）
         if (!currentSelf.isEmpty() && !candidateSelf.isEmpty()) {
             for (Map.Entry<String, String> e : currentSelf.entrySet()) {
                 String cat = e.getKey();
@@ -268,7 +268,7 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
             }
         }
 
-        // 4. 距离偏好：当前用户选 same_city 且不同 region → -8
+        // 4. 距离偏好：当前用户选 same_city 且不同 region → -50
         if (preference != null && "same_city".equals(preference.getDistancePreference())) {
             String a = normalizeRegion(currentUser.getRegion());
             String b = normalizeRegion(candidate.getRegion());
@@ -324,7 +324,7 @@ public class MatchRecommendServiceImpl implements MatchRecommendService {
                         Map.entry("骑行", "cycling"),
                         Map.entry("钓鱼", "fishing"),
                         Map.entry("瑜伽", "yoga"),
-                        Map.entry("¶Ӫ", "camping"),
+                        Map.entry("露营", "camping"),
                         Map.entry("武术", "martial_arts"),
                         Map.entry("登山", "mountaineering"),
                         Map.entry("攀岩", "climbing"),

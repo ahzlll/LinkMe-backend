@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linkme.backend.mapper.HobbyMapper">
+
+    <resultMap id="HobbyCategoryResultMap" type="com.linkme.backend.entity.HobbyCategory">
+        <id column="category_id" property="categoryId"/>
+        <result column="name" property="name"/>
+        <result column="icon" property="icon"/>
+        <result column="display_order" property="displayOrder"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <resultMap id="HobbyResultMap" type="com.linkme.backend.entity.Hobby">
+        <id column="hobby_id" property="hobbyId"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="name" property="name"/>
+        <result column="display_order" property="displayOrder"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="selectAllCategories" resultMap="HobbyCategoryResultMap">
+        SELECT category_id, name, icon, display_order, created_at
+        FROM hobby_category
+        ORDER BY display_order ASC, category_id ASC
+    </select>
+
+    <select id="selectAllHobbies" resultMap="HobbyResultMap">
+        SELECT hobby_id, category_id, name, display_order, created_at
+        FROM hobby
+        ORDER BY category_id ASC, display_order ASC, hobby_id ASC
+    </select>
+
+</mapper>
