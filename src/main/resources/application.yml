@@ -59,11 +59,10 @@ aliyun:
 
 # AI 配置
 ai:
-  api-url: https://api.deepseek.com/v1/chat/completions # 请替换为实际 API URL
-  api-key: sk-4e530d89ba6d472cb4140661839e669d # 请替换为实际 API Key
-  model: deepseek-chat # 请替换为实际模型名，例如 "gpt-4-turbo"
+  api-url: https://gpt-agent.cc/v1/chat/completions # 请替换为实际 API URL
+  api-key: sk-ysHtxY7wg29rxTClEpM9f2w4xjPS14YKwerEPT2cxWqru2lE # 请替换为实际 API Key
+  model: claude-sonnet-4-6 # 请替换为实际模型名
   enabled: false
-
 logging:
   level:
     root: INFO
